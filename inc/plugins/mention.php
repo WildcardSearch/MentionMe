@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: MentionMe v1.0 for MyBB 1.6.*
- * Copyright © 2012 Wildcard
+ * Copyright ï¿½ 2012 Wildcard
  * http://www.rantcentralforums.com
  *
  * This program is free software: you can redistribute it and/or modify
@@ -255,12 +255,14 @@ function mention_alerts_output(&$alert)
 		// If this is a reply then a pid will be present,
 		if($alert['content']['pid'])
 		{
-			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], 'showthread.php?tid=' . $alert['tid'] . '&amp;pid=' . $alert['content']['pid'] . '#pid' . $alert['content']['pid'], $alert['dateline']);
+			$alert['postLink'] = $mybb->settings['bburl'].'/'.get_post_link($alert['content']['pid'], $alert['tid']).'#pid'.$alert['content']['pid'];
+			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['postLink'], $alert['dateline']);
 		}
 		else
 		{
 			// otherwise, just link to the new thread.
-			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], 'showthread.php?tid=' . $alert['tid'], $alert['dateline']);
+			$alert['threadLink'] = get_thread_link($alert['tid']);
+			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['threadLink'], $alert['dateline']);
 		}
 		
 		$alert['rowType'] = 'mentionAlert';
