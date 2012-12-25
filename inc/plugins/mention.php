@@ -16,7 +16,7 @@
  * along with this program.  If not, see http://www.gnu.org/licenses
  */
 
-// Deny outside access.
+// deny outside access.
 if(!defined("IN_MYBB"))
 {
 	die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
@@ -26,7 +26,7 @@ if(!defined("IN_MYBB"))
 global $settings;
 
 // If MyAlerts isn't installed there is no need to install
-if(defined("IN_ADMINCP") && ($settings['myalerts_enabled'] || mention_get_setting()))
+if(defined("IN_ADMINCP") && $settings['myalerts_enabled'])
 {
 	require_once MYBB_ROOT . "inc/plugins/MentionMe/mention_install.php";
 }
@@ -43,13 +43,16 @@ function mention_info()
 	
 	$mention_description = '';
 	
-	if($settings['myalerts_enabled'] && !mention_get_setting())
+	if($settings['myalerts_enabled'])
 	{
-		$mention_description = $lang->sprintf($lang->mention_myalerts_integration_message, "<ul><li><a href=\"{$mybb->settings['bburl']}/admin/index.php?module=config-plugins&amp;action=activate&amp;plugin=mention&amp;my_post_key={$mybb->post_code}\">{$lang->mention_myalerts_integrate}</a></li></ul>");
-	}
-	elseif($settings['myalerts_enabled'] && mention_get_setting())
-	{
-		$mention_description = $lang->mention_myalerts_working;
+		if(mention_get_setting())
+		{
+			$mention_description = "<ul><li style=\"list-style-image: url(../images/valid.gif)\">{$lang->mention_myalerts_working}</li></ul>";
+		}
+		else
+		{		
+			$mention_description = "<ul><li style=\"list-style-image: url(styles/default/images/icons/warning.gif)\">{$lang->mention_myalerts_integration_message}</li><br /><li><a href=\"{$mybb->settings['bburl']}/admin/index.php?module=config-plugins&amp;action=activate&amp;plugin=mention&amp;my_post_key={$mybb->post_code}\">{$lang->mention_myalerts_integrate}</a></li></ul>";
+		}
 	}
 
     return array(
@@ -77,19 +80,28 @@ function Mention__filter(array $match)
 	global $db;
 	static $namecache = array();
 
+	// save the original name
 	$origName = $match[0];
+	
+	// if the user entered the mention in quotes then it will be returned in @match[1],
+	// if not it will be returned in $match[2]
 	array_shift($match);
 	while (strlen(trim($match[0])) == 0)
+	{
 		array_shift($match);
+	}
 		
+	// generate a lowercase and DB-friendly username to search with
 	$usernameLower = my_strtolower(html_entity_decode($match[0]));
 	
+	// if the name is already in the cache then simply return it and save the query
 	if (isset($namecache[$usernameLower]))
 	{
 		return $namecache[$usernameLower];
 	}
 	else
 	{
+		// if not, query the db for the name entered
 		$query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='".$db->escape_string($usernameLower)."'", array('limit' => 1));
 		if($db->num_rows($query) === 1)
 		{
@@ -97,8 +109,11 @@ function Mention__filter(array $match)
 		}
 		else
 		{
+			// if it isn't found then do nothing
 			return $origName;
 		}
+		
+		// set up the username link so that it displays correctly for the display group of the user
 		$username = htmlspecialchars_uni($user['username']);
 		$usergroup = $user['usergroup'];
 		$uid = $user['uid'];
@@ -106,15 +121,19 @@ function Mention__filter(array $match)
 		$username = format_name($username, $usergroup, $displaygroup);
 		$link = get_profile_link($user['uid']);
 		
+		// and return the mention
+		// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
 		return $namecache[$usernameLower] = "@<a id=\"mention_$uid\" href=\"{$link}\">{$username}</a>";
 	}
 }
 
+// if MyAlerts is installed and alerts are enabled globally for mentions then require the alerts functions
 if ($settings['myalerts_enabled'] && $settings['myalerts_alert_mention'])
 {
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/mention_alerts.php';
 }
 
+// used by _info to verify the mention setting
 function mention_get_setting()
 {
 	global $db;

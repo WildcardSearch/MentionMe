@@ -28,6 +28,8 @@ function myalerts_alert_mentioned()
 	$match = array();
 	preg_match_all($pattern, $message, $match, PREG_SET_ORDER);
 	
+	$mentioned_already = array();
+	
 	// loop through all matches (if any)
 	foreach($match as $val)
 	{
@@ -36,9 +38,10 @@ function myalerts_alert_mentioned()
 		{
 			$uid = $val[1];
 			
-			// Create an alert if enabled and the user hasn't mentioned themselves.
-			if ($mybb->settings['myalerts_enabled'] AND $Alerts instanceof Alerts AND $mybb->user['uid'] != $uid)
+			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
+			if ($mybb->settings['myalerts_enabled'] && $Alerts instanceof Alerts && $mybb->user['uid'] != $uid && !$mentioned_already[$uid])
 			{
+				$mentioned_already[$uid] = true;
 				$Alerts->addAlert((int) $uid, 'mention', (int) $tid, (int) $mybb->user['uid'], array('pid' => $pid)); 
 			}
 		}

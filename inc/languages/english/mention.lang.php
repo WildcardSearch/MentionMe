@@ -11,8 +11,8 @@ $l['myalerts_help_alert_types_mentioned'] = '<strong>Mentioned in a post</strong
 	This alert type is received whenever another member of the site mentions you within a post anywhere on the site using <a href="http://mods.mybb.com/view/mentionme"><span style="color: #32CD32;"><strong>MentionMe</strong></span></a> Twitter-style mention tags.
 </p>';
 
-$l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed. To take advantage of mention alerts you will need to update this plugin by clicking the link below.<br /><br />{1}';
+$l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe!';
 $l['mention_myalerts_integrate'] = 'Integrate With MyAlerts';
-$l['mention_myalerts_working'] = '<ul><li>MentionMe has been successfully configured with MyAlerts</li></ul>';
+$l['mention_myalerts_working'] = 'MentionMe has been successfully integrated with MyAlerts';
 
 ?>

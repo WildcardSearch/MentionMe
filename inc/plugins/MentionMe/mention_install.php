@@ -14,49 +14,46 @@ function mention_install ()
 {
 	global $db, $lang;
 	
-	if($db->field_exists('myalerts_settings', 'users'))
+	if (!$lang->mention)
 	{
-		if (!$lang->mention)
-		{
-			$lang->load('mention');
-		}
+		$lang->load('mention');
+	}
 
-		// search for myalerts existing settings and add our custom ones
-		$query = $db->simple_select("settinggroups", "gid", "name='myalerts'");
-		$gid = intval($db->fetch_field($query, "gid"));
-		
-		$mention_setting_1 = array(
-			"sid"			=> "NULL",
-			"name"			=> "myalerts_alert_mention", // creating this setting is necessary for the display of the user cp setting
-			"title"			=> $lang->mention_acpsetting_description,
-			"description"	=> "",
-			"optionscode"	=> "yesno",
-			"value"			=> '1',
-			"disporder"		=> '100',
-			"gid"			=> $gid,
-		);
+	// search for myalerts existing settings and add our custom ones
+	$query = $db->simple_select("settinggroups", "gid", "name='myalerts'");
+	$gid = intval($db->fetch_field($query, "gid"));
+	
+	$mention_setting_1 = array(
+		"sid"			=> "NULL",
+		"name"			=> "myalerts_alert_mention",
+		"title"			=> $lang->mention_acpsetting_description,
+		"description"	=> "",
+		"optionscode"	=> "yesno",
+		"value"			=> '1',
+		"disporder"		=> '100',
+		"gid"			=> $gid,
+	);
 
-		$db->insert_query("settings", $mention_setting_1);
-		rebuild_settings();
+	$db->insert_query("settings", $mention_setting_1);
+	rebuild_settings();
+	
+	// mention alerts on by default
+	$possible_settings = array(
+			'mention' => "on",
+			);
+	
+	$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
+	
+	while($settings = $db->fetch_array($query))
+	{
+		// decode existing alerts with corresponding key values
+		$alert_settings = json_decode($settings['myalerts_settings']);
 		
-		// mention alerts on by default
-		$possible_settings = array(
-				'mention' => "on",
-				);
+		// merge our settings with existing ones...
+		$my_settings = array_merge($possible_settings, (array) $alert_settings);
 		
-		$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
-		
-		while($settings = $db->fetch_array($query))
-		{
-			// decode existing alerts with corresponding key values
-			$alert_settings = json_decode($settings['myalerts_settings']);
-			
-			// merge our settings with existing ones...
-			$my_settings = array_merge($possible_settings, (array) $alert_settings);
-			
-			// and update the table cell
-			$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
-		}
+		// and update the table cell
+		$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
 	}
 }
 
@@ -64,26 +61,22 @@ function mention_uninstall()
 {
 	global $db;
 
-	if($db->field_exists('myalerts_settings', 'users'))
-	{
+	// delete setting
+	$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='myalerts_alert_mention'");
 	
-		// delete setting
-		$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='myalerts_alert_mention'");
+	// Remove myalerts_settings['mention'] from all users
+	$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
+	
+	while($settings = $db->fetch_array($query))
+	{
+		// decode existing alerts with corresponding key values.
+		$my_settings = (array) json_decode($settings['myalerts_settings']);
 		
-		// Remove myalerts_settings['mention'] from all users
-		$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
+		// delete the mention index
+		unset($my_settings['mention']);
 		
-		while($settings = $db->fetch_array($query))
-		{
-			// decode existing alerts with corresponding key values.
-			$my_settings = (array) json_decode($settings['myalerts_settings']);
-			
-			// delete the mention index
-			unset($my_settings['mention']);
-			
-			// and update the table cell
-			$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
-		}
+		// and update the table cell
+		$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
 	}
 }
 
