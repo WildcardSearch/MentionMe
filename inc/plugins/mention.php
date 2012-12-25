@@ -22,9 +22,11 @@ if(!defined("IN_MYBB"))
 	die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
 }
 
+// make sure we have access to ACP settings in the main script
 global $settings;
 
-if($settings['myalerts_enabled'] || mention_get_setting())
+// If MyAlerts isn't installed there is no need to install
+if(defined("IN_ADMINCP") && ($settings['myalerts_enabled'] || mention_get_setting()))
 {
 	require_once MYBB_ROOT . "inc/plugins/MentionMe/mention_install.php";
 }
@@ -32,16 +34,27 @@ if($settings['myalerts_enabled'] || mention_get_setting())
 // Used by MyBB to provide relevant information about the plugin and also link users to updates.
 function mention_info()
 {
-	global $lang;
+	global $lang, $settings, $mybb;
 	
 	if (!$lang->mention)
 	{
 		$lang->load('mention');
 	}
+	
+	$mention_description = '';
+	
+	if($settings['myalerts_enabled'] && !mention_get_setting())
+	{
+		$mention_description = $lang->sprintf($lang->mention_myalerts_integration_message, "<ul><li><a href=\"{$mybb->settings['bburl']}/admin/index.php?module=config-plugins&amp;action=activate&amp;plugin=mention&amp;my_post_key={$mybb->post_code}\">{$lang->mention_myalerts_integrate}</a></li></ul>");
+	}
+	elseif($settings['myalerts_enabled'] && mention_get_setting())
+	{
+		$mention_description = $lang->mention_myalerts_working;
+	}
 
     return array(
         'name'			=> 'MentionMe',
-        'description'	=> $lang->mention_description,
+        'description'	=> $lang->mention_description . $mention_description,
         'website'		=> 'http://www.rantcentralforums.com/',
         'version'		=> '1.0',
         'author'			=> 'Wildcard',
