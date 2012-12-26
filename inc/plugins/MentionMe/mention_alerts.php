@@ -1,6 +1,6 @@
 <?php
 /**
- * This file is part of MentionMe v1.0 and provide MyAlerts routines for mention.php
+ * This file is part of MentionMe and provide MyAlerts routines for mention.php
  *
  * Copyright © 2012 Wildcard
  * http://www.rantcentralforums.com

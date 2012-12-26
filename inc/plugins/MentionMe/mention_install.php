@@ -1,6 +1,6 @@
 <?php
 /**
- * This file is part of MentionMe v1.0 and provide install routines for mention.php
+ * This file is part of MentionMe and provide install routines for mention.php
  *
  * Copyright © 2012 Wildcard
  * http://www.rantcentralforums.com
@@ -56,7 +56,7 @@ function mention_info()
         'name'			=> 'MentionMe',
         'description'	=> $lang->mention_description . $mention_description,
         'website'		=> 'http://www.rantcentralforums.com/',
-        'version'		=> '1.0',
+        'version'		=> '1.5',
         'author'			=> 'Wildcard',
         'authorsite'	=> 'http://www.rantcentralforums.com/',
         'guid'				=> '273104cdd4918caf9554d1567954d2ef',
