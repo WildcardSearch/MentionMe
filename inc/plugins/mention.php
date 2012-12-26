@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: MentionMe v1.0 for MyBB 1.6.*
+ * MentionMe v1.0 for MyBB 1.6.*
  * Copyright © 2012 Wildcard
  * http://www.rantcentralforums.com
  *
@@ -16,70 +16,62 @@
  * along with this program.  If not, see http://www.gnu.org/licenses
  */
 
-// deny outside access.
-if(!defined("IN_MYBB"))
+// disallow direct access to this file for security reasons.
+if(!defined('IN_MYBB'))
 {
-	die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
+    die('Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.');
 }
+
+// checked by other plugin files
+define("IN_MENTIONME", true);
 
 // make sure we have access to ACP settings in the main script
 global $settings;
 
-// If MyAlerts isn't installed there is no need to install
-if(defined("IN_ADMINCP") && $settings['myalerts_enabled'])
+// load install routines only if in ACP
+if(defined("IN_ADMINCP"))
 {
 	require_once MYBB_ROOT . "inc/plugins/MentionMe/mention_install.php";
 }
 
-// Used by MyBB to provide relevant information about the plugin and also link users to updates.
-function mention_info()
+// load the alerts functions only if MyAlerts and mention alerts are enabled
+if ($settings['myalerts_enabled'] && $settings['myalerts_alert_mention'])
 {
-	global $lang, $settings, $mybb;
-	
-	if (!$lang->mention)
-	{
-		$lang->load('mention');
-	}
-	
-	$mention_description = '';
-	
-	if($settings['myalerts_enabled'])
-	{
-		if(mention_get_setting())
-		{
-			$mention_description = "<ul><li style=\"list-style-image: url(../images/valid.gif)\">{$lang->mention_myalerts_working}</li></ul>";
-		}
-		else
-		{		
-			$mention_description = "<ul><li style=\"list-style-image: url(styles/default/images/icons/warning.gif)\">{$lang->mention_myalerts_integration_message}</li><br /><li><a href=\"{$mybb->settings['bburl']}/admin/index.php?module=config-plugins&amp;action=activate&amp;plugin=mention&amp;my_post_key={$mybb->post_code}\">{$lang->mention_myalerts_integrate}</a></li></ul>";
-		}
-	}
-
-    return array(
-        'name'			=> 'MentionMe',
-        'description'	=> $lang->mention_description . $mention_description,
-        'website'		=> 'http://www.rantcentralforums.com/',
-        'version'		=> '1.0',
-        'author'			=> 'Wildcard',
-        'authorsite'	=> 'http://www.rantcentralforums.com/',
-        'guid'				=> '273104cdd4918caf9554d1567954d2ef',
-		'compatibility'	=> '16*'
-    );
+	require_once MYBB_ROOT . 'inc/plugins/MentionMe/mention_alerts.php';
 }
 
+// main hook
 $plugins->add_hook("parse_message_end", "mention_run");
  
+/*
+ * mention_run()
+ *
+ * use a regex to either match a double-quoted mention (@"user name") or just grab the @ symbol and everything after it that is qualifies as a word
+ */
 function mention_run($message)
 {
+	global $mybb;
+	
 	// use function Mention__filter to repeatedly process mentions in the current post
-	return preg_replace_callback('/@"([^<]+?)"|@([^\s<)]+)/', "Mention__filter", $message);
+	return preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
 }
 
+/*
+ * Mention__filter()
+ *
+ * matches any mentions of existing user in the post
+ *
+ * advanced search routines rely on $mybb->settings['mention_advanced_matching'], if set to true mention will match user names with spaces in them without necessitating the use of double quotes.
+ */
 function Mention__filter(array $match)
 {
-	global $db;
+	global $db, $settings;
+	
+	// cache names to reduce queries
 	static $namecache = array();
-
+	$name_parts = array();
+	$shift_count = 0;
+	
 	// save the original name
 	$origName = $match[0];
 	
@@ -89,28 +81,106 @@ function Mention__filter(array $match)
 	while (strlen(trim($match[0])) == 0)
 	{
 		array_shift($match);
+		++$shift_count;
 	}
-		
-	// generate a lowercase and DB-friendly username to search with
-	$usernameLower = my_strtolower(html_entity_decode($match[0]));
 	
-	// if the name is already in the cache then simply return it and save the query
-	if (isset($namecache[$usernameLower]))
+	// if the array was shifted then no quotes were used
+	if($shift_count)
 	{
-		return $namecache[$usernameLower];
+		// padding is only needed for the @
+		$shift_pad = 1;
+		
+		// split the string into an array of words
+		$name_parts = explode(' ', $match[0]);
+		
+		// and start with first one
+		$usernameLower = $name_parts[0];
 	}
 	else
 	{
-		// if not, query the db for the name entered
-		$query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='".$db->escape_string($usernameLower)."'", array('limit' => 1));
-		if($db->num_rows($query) === 1)
+		// @ and two double quotes
+		$shift_pad = 3;
+		
+		// grab the entire match
+		$usernameLower = $match[0];
+	}
+
+	// generate a lowercase and db-friendly username to search with
+	$usernameLower = my_strtolower(html_entity_decode(trim($usernameLower)));
+	
+	// if the name is already in the cache . . .
+	if (isset($namecache[$usernameLower]))
+	{
+		// . . . simply return it and save the query
+		//  restore any surrounding characters from the original match
+		return $namecache[$usernameLower] . substr($origName, strlen($usernameLower) + $shift_pad);
+	}
+	else
+	{
+		// lookup the username
+		$user = mention_try_name($usernameLower);
+		
+		// if the username exists . . .
+		if($user['uid'] != 0)
 		{
-			$user = $db->fetch_array($query);
+			// preserve any surrounding chars
+			$left_over = substr($origName, strlen($user['username']) + $shift_pad);
 		}
 		else
 		{
-			// if it isn't found then do nothing
-			return $origName;
+			// if no match and advanced matching is enabled . . .
+			if($settings['mention_advanced_matching'])
+			{
+				// we've already checked the first part, discard it
+				array_shift($name_parts);
+				
+				// if there are more parts and quotes weren't used
+				if(!empty($name_parts) && $shift_pad != 3)
+				{
+					// start with the first part . . .
+					$try_this = $usernameLower;
+
+					// . . . loop through each part and try them in serial
+					foreach($name_parts as $val)
+					{
+						// add the next part
+						$try_this .= ' ' . $val;
+						
+						// check the cache for a match to save a query
+						if(isset($namecache[$try_this]))
+						{
+							// preserve any surrounding chars from the original match
+							$left_over = substr($origName, strlen($try_this) + $shift_pad);
+							
+							return $namecache[$try_this] . $left_over;
+						}
+						
+						// check the db
+						$user = mention_try_name($try_this);
+						
+						// if there is a match . . .
+						if($user['uid'] != 0)
+						{
+							// cache the username HTML
+							$usernameLower = strtolower($user['username']);
+							
+							// preserve any surrounding chars from the original match
+							$left_over = substr($origName, strlen($user['username']) + $shift_pad);
+							
+							// and gtfo
+							break;
+						}
+					}
+				}
+				else
+				{
+					return $origName;
+				}
+			}
+			else
+			{
+				return $origName;
+			}
 		}
 		
 		// set up the username link so that it displays correctly for the display group of the user
@@ -123,23 +193,32 @@ function Mention__filter(array $match)
 		
 		// and return the mention
 		// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
-		return $namecache[$usernameLower] = "@<a id=\"mention_$uid\" href=\"{$link}\">{$username}</a>";
+		$namecache[$usernameLower] = "@<a id=\"mention_$uid\" href=\"{$link}\">{$username}</a>";
+		return $namecache[$usernameLower] . $left_over;
 	}
 }
 
-// if MyAlerts is installed and alerts are enabled globally for mentions then require the alerts functions
-if ($settings['myalerts_enabled'] && $settings['myalerts_alert_mention'])
-{
-	require_once MYBB_ROOT . 'inc/plugins/MentionMe/mention_alerts.php';
-}
-
-// used by _info to verify the mention setting
-function mention_get_setting()
+/*
+ * mention_try_name()
+ *
+ * 
+ */
+function mention_try_name($username = '')
 {
 	global $db;
 	
-	$query = $db->simple_select("settings", "sid", "name='myalerts_alert_mention'");
-	return $db->fetch_field($query, 'sid');
+	static $name_list = array();
+	
+	if($username)
+	{
+		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='" . $db->escape_string(strtolower($username)) . "'", array('limit' => 1));
+		
+		if($db->num_rows($user_query) === 1)
+		{
+			return $db->fetch_array($user_query);
+		}
+	}
+	return false;
 }
 
 ?>
