@@ -23,6 +23,84 @@ if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
     die('Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.');
 }
 
+define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MyAlerts/');
+
+$plugins->add_hook("datahandler_post_update", "myalerts_alert_mentioned_editpost");
+
+// create alerts when users edit a post and add a new mention. try to avoid sending any duplicate alerts.
+function myalerts_alert_mentioned_editpost($this_post)
+{
+	global $db, $mybb, $Alerts;
+	
+	// Is the alerts class present?
+	require_once MYALERTS_PLUGIN_PATH . 'Alerts.class.php';
+	try
+	{
+		$Alerts = new Alerts($mybb, $db);
+	}
+	catch (Exception $e)
+	{
+		die($e->getMessage());
+	}
+	
+	// grab the post data
+	$message = $this_post->data['message'];
+	$tid = $this_post->data['tid'];
+	$pid = $this_post->data['pid'];
+	$edit_uid = $mybb->user['uid'];
+	
+	// Do the replacement in the message
+	$message =  preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
+
+	// Then match all the mentions in this post
+	$pattern = '#@<a id="mention_(.*?)"#is';
+	$match = array();
+	preg_match_all($pattern, $message, $match, PREG_SET_ORDER);
+	
+	// avoid duplicate mention alerts
+	$mentioned_already = array();
+	
+	// loop through all matches (if any)
+	foreach($match as $val)
+	{
+		// if there are matches, create alerts
+		if($val[0])
+		{
+			$uid = $val[1];
+			
+			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
+			if (!$mentioned_already[$uid] && $edit_uid != $uid )
+			{
+				// make sure if the user was already alerted for being mentioned in this post that a duplicate mention isn't created
+				$mentioned_already[$uid] = true;
+				$already_alerted = false;
+				
+				// check that we haven't already sent an alert for this mention
+				$query = $db->simple_select('alerts', '*', "uid='$uid' AND from_id='$edit_uid' AND tid='$tid' AND alert_type='mention'");
+				if($db->num_rows($query) > 0)
+				{
+					while($this_alert = $db->fetch_array($query))
+					{
+						 $this_alert['content'] = json_decode($this_alert['content'], true);
+						 
+						 // if an alert exists for this specific post then we have already alerted the user
+						 if($this_alert['content']['pid'] == $pid)
+						 {
+							$already_alerted = true;
+						 }
+					}
+				}
+				
+				// no duplicates
+				if(!$already_alerted)
+				{
+					$Alerts->addAlert((int) $uid, 'mention', (int) $tid, (int) $edit_uid, array('pid' => $pid));
+				}
+			}
+		}
+	}
+}
+
 $plugins->add_hook('newreply_do_newreply_end', 'myalerts_alert_mentioned');
 $plugins->add_hook('newthread_do_newthread_end', 'myalerts_alert_mentioned');
 
@@ -44,7 +122,7 @@ function myalerts_alert_mentioned()
 	}
 
 	// Do the replacement in the message
-	$message = preg_replace_callback('/@"([^<]+?)"|@([^\s<)]+)/', "Mention__filter", $message);
+	$message =  preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
 
 	// Then match all the mentions in this post
 	$pattern = '#@<a id="mention_(.*?)"#is';
@@ -62,7 +140,7 @@ function myalerts_alert_mentioned()
 			$uid = $val[1];
 			
 			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
-			if ($mybb->settings['myalerts_enabled'] && $Alerts instanceof Alerts && $mybb->user['uid'] != $uid && !$mentioned_already[$uid])
+			if ($mybb->user['uid'] != $uid && !$mentioned_already[$uid])
 			{
 				$mentioned_already[$uid] = true;
 				$Alerts->addAlert((int) $uid, 'mention', (int) $tid, (int) $mybb->user['uid'], array('pid' => $pid)); 

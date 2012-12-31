@@ -1,6 +1,6 @@
 <?php
 /**
- * MentionMe v1.0 for MyBB 1.6.*
+ * MentionMe v1.5.1 for MyBB 1.6.*
  * Copyright © 2012 Wildcard
  * http://www.rantcentralforums.com
  *
@@ -41,7 +41,7 @@ if ($settings['myalerts_enabled'] && $settings['myalerts_alert_mention'])
 }
 
 // main hook
-$plugins->add_hook("parse_message_end", "mention_run");
+$plugins->add_hook("parse_message", "mention_run");
  
 /*
  * mention_run()
