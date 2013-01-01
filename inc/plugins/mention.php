@@ -46,7 +46,7 @@ $plugins->add_hook("parse_message", "mention_run");
 /*
  * mention_run()
  *
- * use a regex to either match a double-quoted mention (@"user name") or just grab the @ symbol and everything after it that is qualifies as a word
+ * use a regex to either match a double-quoted mention (@"user name") or just grab the @ symbol and everything after it that is qualifies as a word and is within name length
  */
 function mention_run($message)
 {
@@ -75,13 +75,20 @@ function Mention__filter(array $match)
 	// save the original name
 	$origName = $match[0];
 	
-	// if the user entered the mention in quotes then it will be returned in @match[1],
+	// if the user entered the mention in quotes then it will be returned in $match[1],
 	// if not it will be returned in $match[2]
 	array_shift($match);
-	while (strlen(trim($match[0])) == 0)
+	while(strlen(trim($match[0])) == 0)
 	{
 		array_shift($match);
 		++$shift_count;
+	}
+	
+	// if the name is already in the cache . . .
+	if(isset($namecache[strtolower($match[0])]))
+	{
+		// . . . simply return it and save the query
+		return $namecache[strtolower($match[0])];
 	}
 	
 	// if the array was shifted then no quotes were used
@@ -93,8 +100,13 @@ function Mention__filter(array $match)
 		// split the string into an array of words
 		$name_parts = explode(' ', $match[0]);
 		
-		// and start with first one
 		$usernameLower = $name_parts[0];
+		
+		while(strlen($usernameLower) < $mybb->settings['minnamelength'])
+		{
+			array_shift($name_parts);
+			$usernameLower .= ' ' . $name_parts[0];
+		}
 	}
 	else
 	{
