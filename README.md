@@ -1,4 +1,4 @@
-MentionMe 1.5.1
+MentionMe 1.5.2
 ============
 
 A plugin for MyBB 1.6.x that allows Twitter-style tagging and integration with MyAlerts (https://github.com/euantor/MyAlerts).
@@ -9,10 +9,11 @@ MyBB Release Thread: http://community.mybb.com/thread-131448.html
 
 Change log
 =========
+01-02-2013 1.5.2 released to improve name caching and apply a fix a bug that only surfaced when given a certain set of chracters to work with.
 
-12-31-2012 1.5.1 released to add alerts for mentions edited into posts and to fix some small slert creation problems.
+12-31-2012 1.5.1 released to add alerts for mentions edited into posts and to fix some small alert creation problems.
 
-12-26-2012 1.5 released featuring optional advanced matching and a bug fix for _is_installed
+12-26-2012 1.5 released featuring optional advanced matching and a bug fix for _is_installed().
 
-12-24-2012 Initial commit
+12-24-2012 Initial commit.
 
