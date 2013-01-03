@@ -198,7 +198,7 @@ function Mention__filter(array $match)
 						}
 					}
 					// still no matches?
-					return origName;
+					return $origName;
 				}
 				else
 				{
