@@ -65,7 +65,7 @@ function mention_run($message)
  */
 function Mention__filter(array $match)
 {
-	global $db, $settings;
+	global $db, $mybb, $settings;
 	
 	// cache names to reduce queries
 	static $namecache = array();
@@ -100,12 +100,26 @@ function Mention__filter(array $match)
 		// split the string into an array of words
 		$name_parts = explode(' ', $match[0]);
 		
+		// add the first part
 		$usernameLower = $name_parts[0];
 		
-		while(strlen($usernameLower) < $mybb->settings['minnamelength'])
+		// if the name part we have is shorter than the minimum username length (set in ACP) we need to loop through all the name parts and keep adding them until we at least reach the minimum length
+		while(strlen($usernameLower) < $mybb->settings['minnamelength'] && !empty($name_parts))
 		{
+			// discard the first part (we have it stored)
 			array_shift($name_parts);
-			$usernameLower .= ' ' . $name_parts[0];
+			
+			// there is another part
+			if(strlen($name_parts[0]) > 0)
+			{
+				// add it
+				$usernameLower .= ' ' . $name_parts[0];
+			}
+			else
+			{
+				// no more parts?
+				break;
+			}
 		}
 	}
 	else
@@ -147,7 +161,7 @@ function Mention__filter(array $match)
 				array_shift($name_parts);
 				
 				// if there are more parts and quotes weren't used
-				if(!empty($name_parts) && $shift_pad != 3)
+				if(!empty($name_parts) && $shift_pad != 3 && strlen($name_parts[0]) > 0)
 				{
 					// start with the first part . . .
 					$try_this = $usernameLower;
@@ -183,14 +197,18 @@ function Mention__filter(array $match)
 							break;
 						}
 					}
+					// still no matches?
+					return origName;
 				}
 				else
 				{
+					// nothing else to try
 					return $origName;
 				}
 			}
 			else
 			{
+				// advanced matching is disabled
 				return $origName;
 			}
 		}
@@ -213,23 +231,49 @@ function Mention__filter(array $match)
 /*
  * mention_try_name()
  *
- * 
+ * searches the db for a user by name
+ *
+ * return an array containing uid, username, usergroup and displaygroup upon success
+ * return false on failure
  */
 function mention_try_name($username = '')
 {
 	global $db;
 	
+	// create another name cache here to save queries if names with spaces are used more than once in the same post.
 	static $name_list = array();
 	
-	if($username)
+	if(strtolower($username))
 	{
+		// if the name is in this cache (has been searched for before)
+		if($name_list[$username])
+		{
+			// . . . just return the data and save the query
+			return $name_list[$username];
+		}
+		
+		// query the db
 		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='" . $db->escape_string(strtolower($username)) . "'", array('limit' => 1));
 		
+		// result?
 		if($db->num_rows($user_query) === 1)
 		{
-			return $db->fetch_array($user_query);
+			// fetch the user info
+			$return_array = $db->fetch_array($user_query);
+			
+			// cache the name
+			$name_list[strtolower($username)] = $return_array;
+			
+			// and return it
+			return $return_array;
+		}
+		else
+		{
+			// no matches
+			return false;
 		}
 	}
+	// no username supplied
 	return false;
 }
 

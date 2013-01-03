@@ -56,7 +56,7 @@ function mention_info()
         'name'			=> 'MentionMe',
         'description'	=> $lang->mention_description . $mention_description,
         'website'		=> 'http://www.rantcentralforums.com/',
-        'version'		=> '1.5.1',
+        'version'		=> '1.5.2',
         'author'			=> 'Wildcard',
         'authorsite'	=> 'http://www.rantcentralforums.com/',
         'guid'				=> '273104cdd4918caf9554d1567954d2ef',
