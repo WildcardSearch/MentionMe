@@ -78,10 +78,15 @@ function Mention__filter(array $match)
 	// if the user entered the mention in quotes then it will be returned in $match[1],
 	// if not it will be returned in $match[2]
 	array_shift($match);
-	while(strlen(trim($match[0])) == 0)
+	while(strlen(trim($match[0])) == 0 && !empty($match))
 	{
 		array_shift($match);
 		++$shift_count;
+	}
+	
+	if(empty($match) || strlen(trim($match[0])) == 0)
+	{
+		return origName;
 	}
 	
 	// if the name is already in the cache . . .
