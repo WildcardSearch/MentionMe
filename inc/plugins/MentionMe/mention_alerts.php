@@ -2,7 +2,7 @@
 /**
  * This file is part of MentionMe and provide MyAlerts routines for mention.php
  *
- * Copyright © 2012 Wildcard
+ * Copyright © 2013 Wildcard
  * http://www.rantcentralforums.com
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,12 @@ define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MyAlerts/');
 
 $plugins->add_hook("datahandler_post_update", "myalerts_alert_mentioned_editpost");
 
-// create alerts when users edit a post and add a new mention. try to avoid sending any duplicate alerts.
+/* myalerts_alert_mentioned_editpost()
+ *
+ * create alerts when users edit a post and add a new mention. try to avoid sending any duplicate alerts.
+ *
+ * @param - $this_post is an object containing post info
+ */
 function myalerts_alert_mentioned_editpost($this_post)
 {
 	global $db, $mybb, $Alerts;
@@ -49,13 +54,15 @@ function myalerts_alert_mentioned_editpost($this_post)
 	$pid = $this_post->data['pid'];
 	$edit_uid = $mybb->user['uid'];
 	
-	// Do the replacement in the message
-	$message =  preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
-
-	// Then match all the mentions in this post
-	$pattern = '#@<a id="mention_(.*?)"#is';
+	// get all mentions
 	$match = array();
-	preg_match_all($pattern, $message, $match, PREG_SET_ORDER);
+	mention_find_in_post($message, $match);
+	
+	// no results, no alerts
+	if(!is_array($match))
+	{
+		return;
+	}
 	
 	// avoid duplicate mention alerts
 	$mentioned_already = array();
@@ -104,7 +111,10 @@ function myalerts_alert_mentioned_editpost($this_post)
 $plugins->add_hook('newreply_do_newreply_end', 'myalerts_alert_mentioned');
 $plugins->add_hook('newthread_do_newthread_end', 'myalerts_alert_mentioned');
 
-// check posts for mentions when they are initially created and create alerts accordingly
+/* myalerts_alert_mentioned()
+ *
+ * check posts for mentions when they are initially created and create alerts accordingly
+ */
 function myalerts_alert_mentioned()
 {
 	global $mybb, $Alerts, $pid, $tid, $post, $thread;
@@ -121,14 +131,17 @@ function myalerts_alert_mentioned()
 		$tid = $thread['tid'];
 	}
 
-	// Do the replacement in the message
-	$message =  preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
-
-	// Then match all the mentions in this post
-	$pattern = '#@<a id="mention_(.*?)"#is';
+	// get all mentions
 	$match = array();
-	preg_match_all($pattern, $message, $match, PREG_SET_ORDER);
+	mention_find_in_post($message, $match);
 	
+	// no matches, no alerts
+	if(!is_array($match))
+	{
+		return;
+	}
+	
+	// avoid duplicate mention alerts
 	$mentioned_already = array();
 	
 	// loop through all matches (if any)
@@ -151,7 +164,12 @@ function myalerts_alert_mentioned()
 
 $plugins->add_hook('myalerts_alerts_output_start', 'mention_alerts_output');
 
-// Hook into MyAlerts to display alerts in the drop-down and in User CP
+/* mention_alerts_output()
+ *
+ * Hook into MyAlerts to display alerts in the drop-down and in User CP
+ *
+ * @param - $alert by value is a valid Alert class object
+ */
 function mention_alerts_output(&$alert)
 {
 	global $mybb, $lang;
@@ -183,7 +201,12 @@ function mention_alerts_output(&$alert)
 
 $plugins->add_hook('myalerts_possible_settings', 'mention_alerts_setting');
 
-// Add the setting in User CP
+/* mention_alerts_setting()
+ *
+ * Add the setting in User CP
+ *
+ * @param - &$possible_settings is an array of UCP settings
+ */
 function mention_alerts_setting(&$possible_settings)
 {
 	global $lang;
@@ -198,6 +221,10 @@ function mention_alerts_setting(&$possible_settings)
 
 $plugins->add_hook('misc_help_helpdoc_start', 'mention_myalerts_helpdoc');
 
+/* mention_myalerts_helpdoc()
+ *
+ * adds documentation for mention alerts
+ */
 function mention_myalerts_helpdoc()
 {
 	global $helpdoc, $lang, $mybb;
@@ -218,6 +245,73 @@ function mention_myalerts_helpdoc()
 			$helpdoc['document'] .= $lang->myalerts_help_alert_types_mentioned;
 		}
 	}
+}
+
+/* mention_strip_quotes()
+ *
+ * strips all quotes and their content from the post
+ *
+ * @param - $message is the content of the post
+ */
+function mention_strip_quotes($message)
+{
+	global $lang, $templates, $theme, $mybb;
+
+	// Assign pattern and replace values.
+	$pattern = array(
+		"#\[quote=([\"']|&quot;|)(.*?)(?:\\1)(.*?)(?:[\"']|&quot;)?\](.*?)\[/quote\](\r\n?|\n?)#esi",
+		"#\[quote\](.*?)\[\/quote\](\r\n?|\n?)#si"
+	);
+
+	$replace = array(
+		"",
+		""
+	);
+
+	do
+	{
+		$previous_message = $message;
+		$message = preg_replace($pattern, $replace, $message, -1, $count);
+	} while($count);
+
+	if(!$message)
+	{
+		$message = $previous_message;
+	}
+
+	$find = array(
+		"#(\r\n*|\n*)<\/cite>(\r\n*|\n*)#",
+		"#(\r\n*|\n*)<\/blockquote>#"
+	);
+
+	$replace = array(
+		"",
+		""
+	);
+	$message = preg_replace($find, $replace, $message);
+	
+	return $message;
+}
+
+/* mention_find_in_post()
+ *
+ * find all mentions in the current post that are not within quote tags
+ *
+ * @param - $message
+ * @param - &$match
+ */
+function mention_find_in_post($message, &$match)
+{
+	global $mybb;
+	
+	// Do the replacement in the message
+	$message = mention_strip_quotes($message);
+	
+	$message =  preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
+
+	// Then match all the mentions in this post
+	$pattern = '#@<a id="mention_(.*?)"#is';
+	preg_match_all($pattern, $message, $match, PREG_SET_ORDER);
 }
 
 ?>

@@ -1,8 +1,8 @@
 <?php
 /**
- * This file is part of MentionMe and provide install routines for mention.php
+ * This file is part of MentionMe and provides install routines for mention.php
  *
- * Copyright © 2012 Wildcard
+ * Copyright © 2013 Wildcard
  * http://www.rantcentralforums.com
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,12 +23,16 @@ if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
     die('Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.');
 }
 
-// Used by MyBB to provide relevant information about the plugin and also link users to updates.
+/*
+ * mention_info()
+ *
+ * Used by MyBB to provide relevant information about the plugin and also link users to updates.
+ */
 function mention_info()
 {
 	global $db, $lang;
 	
-	if (!$lang->mention)
+	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
@@ -56,7 +60,7 @@ function mention_info()
         'name'			=> 'MentionMe',
         'description'	=> $lang->mention_description . $mention_description,
         'website'		=> 'http://www.rantcentralforums.com/',
-        'version'		=> '1.5.2',
+        'version'		=> '1.5.3',
         'author'			=> 'Wildcard',
         'authorsite'	=> 'http://www.rantcentralforums.com/',
         'guid'				=> '273104cdd4918caf9554d1567954d2ef',
@@ -64,8 +68,11 @@ function mention_info()
     );
 }
 
-// check to see if the plugin is installed
-function mention_is_installed ()
+/* mention_is_installed()
+ *
+ * check to see if the plugin is installed
+ */
+function mention_is_installed()
 {
 	global $db;
 	
@@ -74,12 +81,13 @@ function mention_is_installed ()
 	return $db->num_rows($query);
 }
 
-/* 
+/* mention_install()
+ *
  * Adds a settings group with one setting for advanced matching,
  * adds a setting to the myalerts settinggroup with on/off setting (if installed)
  * and enables mention alerts for every user by default (if MyAlerts is installed)
  */
-function mention_install ()
+function mention_install()
 {
 	global $db, $lang;
 	
@@ -114,6 +122,17 @@ function mention_install ()
 			"gid"					=> intval($gid),
 		);
 		$db->insert_query("settings", $mention_setting_1);
+		$mention_setting_2 = array(
+			"sid"					=> "NULL",
+			"name"				=> "mention_max_per_post",
+			"title"				=> $lang->mention_max_per_post,
+			"description"		=> $lang->mention_max_per_post_desc,
+			"optionscode"	=> "text",
+			"value"				=> '5',
+			"disporder"		=> '2',
+			"gid"					=> intval($gid),
+		);
+		$db->insert_query("settings", $mention_setting_2);
 	}
 	
 	if($db->table_exists('alerts') && !mention_get_alert_setting())
@@ -157,7 +176,8 @@ function mention_install ()
 	}
 }
 
-/*
+/* mention_uninstall()
+ *
  * delete settinggroup and setting,
  * delete myalert mention setting (if applicable)
  * remove mention index from user settings
@@ -168,6 +188,7 @@ function mention_uninstall()
 	
 	$db->query("DELETE FROM ".TABLE_PREFIX."settinggroups WHERE name='mention_settings'");
 	$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='mention_advanced_matching'");
+	$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='mention_max_per_post'");
 	
 	if($db->table_exists('alerts'))
 	{
@@ -191,7 +212,10 @@ function mention_uninstall()
 	}
 }
 
-// used by _info to verify the mention myalerts setting
+/* mention_get_alert_setting()
+ *
+ * used by _info to verify the mention myalerts setting
+ */
 function mention_get_alert_setting()
 {
 	global $db;
