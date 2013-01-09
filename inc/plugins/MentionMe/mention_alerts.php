@@ -50,9 +50,9 @@ function myalerts_alert_mentioned_editpost($this_post)
 	
 	// grab the post data
 	$message = $this_post->data['message'];
-	$tid = $this_post->data['tid'];
-	$pid = $this_post->data['pid'];
-	$edit_uid = $mybb->user['uid'];
+	$tid = (int) $this_post->data['tid'];
+	$pid = (int) $this_post->data['pid'];
+	$edit_uid = (int) $mybb->user['uid'];
 	
 	// get all mentions
 	$match = array();
@@ -73,7 +73,7 @@ function myalerts_alert_mentioned_editpost($this_post)
 		// if there are matches, create alerts
 		if($val[0])
 		{
-			$uid = $val[1];
+			$uid = (int) $val[1];
 			
 			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
 			if (!$mentioned_already[$uid] && $edit_uid != $uid )
@@ -86,7 +86,7 @@ function myalerts_alert_mentioned_editpost($this_post)
 				$query = $db->simple_select('alerts', '*', "uid='$uid' AND from_id='$edit_uid' AND tid='$tid' AND alert_type='mention'");
 				if($db->num_rows($query) > 0)
 				{
-					while($this_alert = $db->fetch_array($query))
+					while($this_alert = $db->fetch_array($query) && !$already_alerted)
 					{
 						 $this_alert['content'] = json_decode($this_alert['content'], true);
 						 
@@ -128,7 +128,7 @@ function myalerts_alert_mentioned()
 	else
 	{	
 		$message = $post['message'];
-		$tid = $thread['tid'];
+		$tid = (int) $thread['tid'];
 	}
 
 	// get all mentions
@@ -150,13 +150,13 @@ function myalerts_alert_mentioned()
 		// if there are matches, create alerts
 		if($val[0])
 		{
-			$uid = $val[1];
+			$uid = (int) $val[1];
 			
 			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
 			if ($mybb->user['uid'] != $uid && !$mentioned_already[$uid])
 			{
 				$mentioned_already[$uid] = true;
-				$Alerts->addAlert((int) $uid, 'mention', (int) $tid, (int) $mybb->user['uid'], array('pid' => $pid)); 
+				$Alerts->addAlert((int) $uid, 'mention', $tid, (int) $mybb->user['uid'], array('pid' => (int) $pid)); 
 			}
 		}
 	}	
