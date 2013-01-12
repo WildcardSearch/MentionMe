@@ -86,15 +86,19 @@ function myalerts_alert_mentioned_editpost($this_post)
 				$query = $db->simple_select('alerts', '*', "uid='$uid' AND from_id='$edit_uid' AND tid='$tid' AND alert_type='mention'");
 				if($db->num_rows($query) > 0)
 				{
-					while($this_alert = $db->fetch_array($query) && !$already_alerted)
+					while($this_alert = $db->fetch_array($query))
 					{
-						 $this_alert['content'] = json_decode($this_alert['content'], true);
+						if($this_alert['content'])
+						{
+							$this_alert['content'] = json_decode($this_alert['content'], true);
 						 
-						 // if an alert exists for this specific post then we have already alerted the user
-						 if($this_alert['content']['pid'] == $pid)
-						 {
-							$already_alerted = true;
-						 }
+							// if an alert exists for this specific post then we have already alerted the user
+							if($this_alert['content']['pid'] == $pid)
+							{
+								$already_alerted = true;
+								break;
+							}
+						}
 					}
 				}
 				
