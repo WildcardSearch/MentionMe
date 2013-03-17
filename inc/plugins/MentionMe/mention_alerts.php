@@ -23,7 +23,10 @@ if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
     die('Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.');
 }
 
-define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MyAlerts/');
+if(!defined('MYALERTS_PLUGIN_PATH'))
+{
+	define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MyAlerts/');
+}
 
 $plugins->add_hook("datahandler_post_update", "myalerts_alert_mentioned_editpost");
 
@@ -203,21 +206,17 @@ function mention_alerts_output(&$alert)
 	}
 }
 
-$plugins->add_hook('myalerts_possible_settings', 'mention_alerts_setting');
+$plugins->add_hook('myalerts_load_lang', 'mention_alerts_language');
 
-/* mention_alerts_setting()
+/* mention_alerts_language()
  *
- * Add the setting in User CP
- *
- * @param - &$possible_settings is an array of UCP settings
+ * loads custom language for alert settings
  */
-function mention_alerts_setting(&$possible_settings)
+function mention_alerts_language()
 {
 	global $lang;
 	
-	$possible_settings[] = 'mention';
-	
-	if (!$lang->mention)
+	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}

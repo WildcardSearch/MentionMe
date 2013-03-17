@@ -42,7 +42,7 @@ if($settings['myalerts_enabled'] && $settings['myalerts_alert_mention'])
 
 // main hook
 $plugins->add_hook("parse_message", "mention_run");
- 
+
 /*
  * mention_run()
  *
@@ -53,7 +53,7 @@ $plugins->add_hook("parse_message", "mention_run");
 function mention_run($message)
 {
 	global $mybb;
-	
+
 	// use function Mention__filter to repeatedly process mentions in the current post
 	return preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
 }
@@ -70,15 +70,22 @@ function mention_run($message)
 function Mention__filter(array $match)
 {
 	global $db, $mybb, $settings;
-	
+
 	// cache names to reduce queries
 	static $namecache = array();
 	$name_parts = array();
 	$shift_count = 0;
-	
+
 	// save the original name
 	$origName = $match[0];
-	
+
+	// if the name is already in the cache . . .
+	if(isset($namecache[strtolower($origName)]))
+	{
+		// . . . simply return it and save the query
+		return $namecache[strtolower($origName)];
+	}
+
 	// if the user entered the mention in quotes then it will be returned in $match[1],
 	// if not it will be returned in $match[2]
 	array_shift($match);
@@ -87,37 +94,37 @@ function Mention__filter(array $match)
 		array_shift($match);
 		++$shift_count;
 	}
-	
+
 	if(empty($match) || strlen(trim($match[0])) == 0)
 	{
 		return origName;
 	}
-	
+
 	// if the name is already in the cache . . .
 	if(isset($namecache[strtolower($match[0])]))
 	{
 		// . . . simply return it and save the query
 		return $namecache[strtolower($match[0])];
 	}
-	
+
 	// if the array was shifted then no quotes were used
 	if($shift_count)
 	{
 		// padding is only needed for the @
 		$shift_pad = 1;
-		
+
 		// split the string into an array of words
 		$name_parts = explode(' ', $match[0]);
-		
+
 		// add the first part
 		$usernameLower = $name_parts[0];
-		
+
 		// if the name part we have is shorter than the minimum username length (set in ACP) we need to loop through all the name parts and keep adding them until we at least reach the minimum length
 		while(strlen($usernameLower) < $mybb->settings['minnamelength'] && !empty($name_parts))
 		{
 			// discard the first part (we have it stored)
 			array_shift($name_parts);
-			
+
 			// there is another part
 			if(strlen($name_parts[0]) > 0)
 			{
@@ -135,16 +142,16 @@ function Mention__filter(array $match)
 	{
 		// @ and two double quotes
 		$shift_pad = 3;
-		
+
 		// grab the entire match
 		$usernameLower = $match[0];
 	}
 
 	// generate a lowercase and db-friendly username to search with
 	$usernameLower = my_strtolower(html_entity_decode(trim($usernameLower)));
-	
+
 	// if the name is already in the cache . . .
-	if (isset($namecache[$usernameLower]))
+	if(isset($namecache[$usernameLower]))
 	{
 		// . . . simply return it and save the query
 		//  restore any surrounding characters from the original match
@@ -154,7 +161,7 @@ function Mention__filter(array $match)
 	{
 		// lookup the username
 		$user = mention_try_name($usernameLower);
-		
+
 		// if the username exists . . .
 		if($user['uid'] != 0)
 		{
@@ -168,46 +175,53 @@ function Mention__filter(array $match)
 			{
 				// we've already checked the first part, discard it
 				array_shift($name_parts);
-				
+
 				// if there are more parts and quotes weren't used
 				if(!empty($name_parts) && $shift_pad != 3 && strlen($name_parts[0]) > 0)
 				{
 					// start with the first part . . .
 					$try_this = $usernameLower;
 
+					$all_good = false;
+
 					// . . . loop through each part and try them in serial
 					foreach($name_parts as $val)
 					{
 						// add the next part
 						$try_this .= ' ' . $val;
-						
+
 						// check the cache for a match to save a query
 						if(isset($namecache[$try_this]))
 						{
 							// preserve any surrounding chars from the original match
 							$left_over = substr($origName, strlen($try_this) + $shift_pad);
-							
+
 							return $namecache[$try_this] . $left_over;
 						}
-						
+
 						// check the db
 						$user = mention_try_name($try_this);
-						
+
 						// if there is a match . . .
 						if($user['uid'] != 0)
 						{
 							// cache the username HTML
 							$usernameLower = strtolower($user['username']);
-							
+
 							// preserve any surrounding chars from the original match
 							$left_over = substr($origName, strlen($user['username']) + $shift_pad);
-							
+
 							// and gtfo
+							$all_good = true;
 							break;
 						}
 					}
-					// still no matches?
-					return $origName;
+
+					if(!$all_good)
+					{
+						// still no matches?
+						return $origName;
+					}
 				}
 				else
 				{
@@ -221,7 +235,7 @@ function Mention__filter(array $match)
 				return $origName;
 			}
 		}
-		
+
 		// set up the username link so that it displays correctly for the display group of the user
 		$username = htmlspecialchars_uni($user['username']);
 		$usergroup = $user['usergroup'];
@@ -229,7 +243,7 @@ function Mention__filter(array $match)
 		$displaygroup = $user['displaygroup'];
 		$username = format_name($username, $usergroup, $displaygroup);
 		$link = get_profile_link($user['uid']);
-		
+
 		// and return the mention
 		// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
 		$namecache[$usernameLower] = "@<a id=\"mention_$uid\" href=\"{$link}\">{$username}</a>";
@@ -250,11 +264,13 @@ function Mention__filter(array $match)
 function mention_try_name($username = '')
 {
 	global $db;
-	
+
 	// create another name cache here to save queries if names with spaces are used more than once in the same post.
 	static $name_list = array();
-	
-	if(strtolower($username))
+
+	$username = strtolower($username);
+
+	if($username)
 	{
 		// if the name is in this cache (has been searched for before)
 		if($name_list[$username])
@@ -262,19 +278,19 @@ function mention_try_name($username = '')
 			// . . . just return the data and save the query
 			return $name_list[$username];
 		}
-		
+
 		// query the db
-		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='" . $db->escape_string(strtolower($username)) . "'", array('limit' => 1));
-		
+		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='" . $db->escape_string($username) . "'", array('limit' => 1));
+
 		// result?
 		if($db->num_rows($user_query) === 1)
 		{
 			// fetch the user info
 			$return_array = $db->fetch_array($user_query);
-			
+
 			// cache the name
-			$name_list[strtolower($username)] = $return_array;
-			
+			$name_list[$username] = $return_array;
+
 			// and return it
 			return $return_array;
 		}
