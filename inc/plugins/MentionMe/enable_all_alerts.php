@@ -1,7 +1,7 @@
 <?php
 
 define('IN_MYBB', 1);
-require "../../../global.php";
+require_once "../../../global.php";
 
 global $db, $config;
 
@@ -18,22 +18,23 @@ else
 
 $db->query("DELETE FROM " . TABLE_PREFIX . "alert_setting_values WHERE setting_id='{$mention_id}'");
 
-$query = $db->simple_select('users');
+$query = $db->simple_select('users', 'uid');
 
+$settings = array();
 if($db->num_rows($query) > 0)
 {
-	while($user = $db->fetch_array($query))
+	while($uid = $db->fetch_field($query, 'uid'))
 	{
-		$settings_value = array
+		$settings[] = array
 		(
-			"user_id"			=>	$user['uid'],
+			"user_id"			=>	$uid,
 			"setting_id"		=>	$mention_id,
 			"value"				=>	1
 		);
-
-		$setting_query = $db->insert_query('alert_setting_values', $settings_value);
 	}
 }
+
+$db->insert_query_multiple('alert_setting_values', $settings);
 
 header("Location: ../../../" . $config['admin_dir'] . "/index.php?module=config-plugins");
 
