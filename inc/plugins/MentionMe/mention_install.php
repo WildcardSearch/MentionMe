@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses
  */
- 
+
 // Disallow direct access to this file for security reasons.
 if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
 {
@@ -31,15 +31,15 @@ if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
 function mention_info()
 {
 	global $db, $lang;
-	
+
 	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
-	
+
 	$mention_description = '';
-	
-	// if MyAlerts is installed 
+
+	// if MyAlerts is installed
 	if($db->table_exists('alerts') && mention_is_installed())
 	{
 		// check to see that we have created our setting
@@ -49,19 +49,22 @@ function mention_info()
 			$mention_description = "<ul><li style=\"list-style-image: url(../images/valid.gif)\">{$lang->mention_myalerts_working}</li><a href=\"../inc/plugins/MentionMe/enable_all_alerts.php\">Enable Mention Alerts For All Users</a></ul>";
 		}
 		else
-		{		
+		{
 			// if not, warn them and provide instructions for integration
 			$mention_description = "<ul><li style=\"list-style-image: url(styles/default/images/icons/warning.gif)\">{$lang->mention_myalerts_integration_message}</li></ul>";
 		}
 	}
 
+	$name = "<span style=\"font-familiy: arial; font-size: 1.5em; color: #258329; text-shadow: 2px 2px 2px #006A00;\">MentionMe</span>";
+	$author = "</a></small></i><a href=\"http://www.rantcentralforums.com\" title=\"Rant Central\"><span style=\"font-family: Courier New; font-weight: bold; font-size: 1.2em; color: #117eec;\">Wildcard</span></a><i><small><a>";
+
     // return the info
 	return array(
-        'name'				=> 'MentionMe',
+        'name'				=> $name,
         'description'	=> $lang->mention_description . $mention_description,
-        'website'			=> 'http://www.rantcentralforums.com/',
-        'version'			=> '1.6',
-        'author'			=> 'Wildcard',
+        'website'			=> 'https://github.com/WildcardSearch/MentionMe',
+        'version'			=> '1.6.1',
+        'author'			=> $author,
         'authorsite'		=> 'http://www.rantcentralforums.com/',
         'guid'				=> '273104cdd4918caf9554d1567954d2ef',
 		'compatibility'	=> '16*'
@@ -75,9 +78,9 @@ function mention_info()
 function mention_is_installed()
 {
 	global $db;
-	
+
 	$query = $db->simple_select('settinggroups', "gid", "name='mention_settings'");
-	
+
 	return $db->num_rows($query);
 }
 
@@ -90,9 +93,9 @@ function mention_is_installed()
 function mention_install()
 {
 	global $db;
-	
+
 	mention_build_settings();
-	
+
 	if($db->table_exists('alerts'))
 	{
 		build_myalerts_settings();
@@ -127,31 +130,31 @@ function mention_activate()
 function mention_uninstall()
 {
 	global $db;
-	
+
 	$db->query("DELETE FROM ".TABLE_PREFIX."settinggroups WHERE name='mention_settings'");
 	$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='mention_advanced_matching'");
 	$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='mention_max_per_post'");
-	
+
 	if($db->table_exists('alerts'))
 	{
 		// delete setting
 		$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='myalerts_alert_mention'");
-		
+
 		$myalerts_version = mention_get_myalerts_version();
-		
+
 		if(version_compare($myalerts_version, '1.0.4', '<'))
 		{
 			// Remove myalerts_settings['mention'] from all users
 			$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
-			
+
 			while($settings = $db->fetch_array($query))
 			{
 				// decode existing alerts with corresponding key values.
 				$my_settings = (array) json_decode($settings['myalerts_settings']);
-				
+
 				// delete the mention index
 				unset($my_settings['mention']);
-				
+
 				// and update the table cell
 				$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
 			}
@@ -161,7 +164,7 @@ function mention_uninstall()
 			$db->query("DELETE FROM ".TABLE_PREFIX."alert_settings WHERE code='mention'");
 		}
 	}
-	
+
 	mention_unset_cache_version();
 }
 
@@ -172,7 +175,7 @@ function mention_uninstall()
 function mention_get_alert_setting()
 {
 	global $db;
-	
+
 	$query = $db->simple_select("settings", "sid", "name='myalerts_alert_mention'");
 	return $db->fetch_field($query, 'sid');
 }
@@ -183,7 +186,7 @@ function mention_get_myalerts_version()
 
 	//get currently installed version, if there is one
 	$euantorPlugins = $cache->read('euantor_plugins');
-	
+
 	if(is_array($euantorPlugins))
 	{
         return $euantorPlugins['myalerts']['version'];
@@ -256,17 +259,22 @@ function mention_unset_cache_version()
     return true;
 }
 
+/*
+ * mention_build_settings()
+ *
+ * builds all settings and insert them or if they already exist update them
+ */
 function mention_build_settings()
 {
 	global $db, $lang;
-	
+
 	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
-	
+
 	$query = $db->simple_select('settinggroups', "gid", "name='mention_settings'");
-	
+
 	if($db->num_rows($query) == 0)
 	{
 		// settings group and settings
@@ -285,9 +293,9 @@ function mention_build_settings()
 	{
 		$gid = $db->fetch_field($query, 'gid');
 	}
-	
+
 	if($gid)
-	{	
+	{
 		$mention_setting_1 = array(
 			"sid"					=> "NULL",
 			"name"				=> "mention_advanced_matching",
@@ -298,9 +306,9 @@ function mention_build_settings()
 			"disporder"			=> '1',
 			"gid"					=> intval($gid)
 		);
-		
+
 		$query = $db->simple_select('settings', "sid", "name='mention_advanced_matching'");
-		
+
 		if($db->num_rows($query) == 1)
 		{
 			unset($mention_setting_1['sid']);
@@ -313,19 +321,24 @@ function mention_build_settings()
 	}
 }
 
+/*
+ * build_myalerts_settings()
+ *
+ * build the single ACP setting and add it to the myalerts group
+ */
 function build_myalerts_settings()
 {
 	global $db, $lang;
-	
+
 	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
-	
+
 	// search for myalerts existing settings and add our custom ones
 	$query = $db->simple_select("settinggroups", "gid", "name='myalerts'");
 	$gid = (int) $db->fetch_field($query, "gid");
-	
+
 	if($gid)
 	{
 		$mention_setting_1 = array
@@ -341,7 +354,7 @@ function build_myalerts_settings()
 		);
 
 		$query = $db->simple_select('settings', "sid", "name='myalerts_alert_mention'");
-			
+
 		if($db->num_rows($query) == 1)
 		{
 			unset($mention_setting_1['sid']);
@@ -352,26 +365,26 @@ function build_myalerts_settings()
 			$db->insert_query("settings", $mention_setting_1);
 		}
 		rebuild_settings();
-		
+
 		$myalerts_version = mention_get_myalerts_version();
-		
+
 		if(version_compare($myalerts_version, '1.0.4', '<'))
 		{
 			// mention alerts on by default
 			$possible_settings = array(
 					'mention' => "on",
 					);
-			
+
 			$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
-			
+
 			while($settings = $db->fetch_array($query))
 			{
 				// decode existing alerts with corresponding key values
 				$alert_settings = json_decode($settings['myalerts_settings']);
-				
+
 				// merge our settings with existing ones...
 				$my_settings = array_merge($possible_settings, (array) $alert_settings);
-				
+
 				// and update the table cell
 				$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
 			}
@@ -381,9 +394,9 @@ function build_myalerts_settings()
 			if($db->table_exists('alert_settings') && $db->table_exists('alert_setting_values'))
 			{
 				$query = $db->simple_select('alert_settings', "*", "code='mention'");
-				
+
 				if($db->num_rows($query) == 0)
-				{			
+				{
 					$db->insert_query('alert_settings', array('code' => 'mention'));
 				}
 			}
