@@ -8,7 +8,7 @@ $l['mention_advanced_matching_desc'] = 'This option allows usernames with whites
 $l['mention_settingsgroup_description'] = 'Enable or disable advanced matching';
 
 // MyAlerts
-$l['myalerts_mention'] = '{1} mentioned you in <a href="{2}">a post</a>. ({3})';
+$l['myalerts_mention'] = '{1} mentioned you in <a href="{2}">{3}</a>. ({4})';
 $l['myalerts_setting_mention'] = 'Receive alert when mentioned in a post?';
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
 $l['myalerts_help_alert_types_mentioned'] = '<strong>Mentioned in a post</strong>

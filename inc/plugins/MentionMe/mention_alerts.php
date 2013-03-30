@@ -56,7 +56,8 @@ function myalerts_alert_mentioned_editpost($this_post)
 	$tid = (int) $this_post->data['tid'];
 	$pid = (int) $this_post->data['pid'];
 	$edit_uid = (int) $mybb->user['uid'];
-	
+	$subject = $db->escape_string($post['subject']);
+
 	// get all mentions
 	$match = array();
 	mention_find_in_post($message, $match);
@@ -108,7 +109,7 @@ function myalerts_alert_mentioned_editpost($this_post)
 				// no duplicates
 				if(!$already_alerted)
 				{
-					$Alerts->addAlert((int) $uid, 'mention', (int) $tid, (int) $edit_uid, array('pid' => $pid));
+					$Alerts->addAlert((int) $uid, 'mention', (int) $tid, (int) $edit_uid, array('pid' => $pid, 'subject' => $subject));
 				}
 			}
 		}
@@ -130,12 +131,14 @@ function myalerts_alert_mentioned()
 	if($mybb->input['action'] == "do_newthread" && $mybb->request_method == "post")
 	{
 		$message = $mybb->input['message'];
+		$subject = $mybb->input['subject'];
 	}
 	// otherwise the message comes from $post['message'] and the $tid comes from $thread['tid']
 	else
 	{	
 		$message = $post['message'];
 		$tid = (int) $thread['tid'];
+		$subject = $thread['subject'];
 	}
 
 	// get all mentions
@@ -163,7 +166,7 @@ function myalerts_alert_mentioned()
 			if ($mybb->user['uid'] != $uid && !$mentioned_already[$uid])
 			{
 				$mentioned_already[$uid] = true;
-				$Alerts->addAlert((int) $uid, 'mention', $tid, (int) $mybb->user['uid'], array('pid' => (int) $pid)); 
+				$Alerts->addAlert((int) $uid, 'mention', $tid, (int) $mybb->user['uid'], array('pid' => (int) $pid, 'subject' => $subject)); 
 			}
 		}
 	}	
@@ -193,13 +196,13 @@ function mention_alerts_output(&$alert)
 		if($alert['content']['pid'])
 		{
 			$alert['postLink'] = $mybb->settings['bburl'] . '/' . get_post_link($alert['content']['pid'], $alert['tid']) . '#pid' . $alert['content']['pid'];
-			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['postLink'], $alert['dateline']);
+			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['postLink'], htmlspecialchars_uni($alert['content']['subject']), $alert['dateline']);
 		}
 		else
 		{
 			// otherwise, just link to the new thread.
 			$alert['threadLink'] = get_thread_link($alert['tid']);
-			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['threadLink'], $alert['dateline']);
+			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['threadLink'], htmlspecialchars_uni($alert['content']['subject']), $alert['dateline']);
 		}
 		
 		$alert['rowType'] = 'mentionAlert';
