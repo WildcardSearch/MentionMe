@@ -1,5 +1,7 @@
 <?php
 /**
+ * MentionMe
+ *
  * This script force-enables mention alerts for all users.
  *
  * Portions of this code written by Shade
@@ -22,6 +24,11 @@
 define('IN_MYBB', 1);
 require_once "../../../global.php";
 global $db, $config;
+
+if(!$db->table_exists('alert_settings'))
+{
+	die('MyAlerts not installed!');
+}
 
 // get MentionMe's alert id number
 $id_query = $db->simple_select('alert_settings', 'id', "code='mention'");

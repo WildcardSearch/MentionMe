@@ -1,6 +1,10 @@
 <?php
 /**
- * This is an upgrade script for MentionMe
+ * MentionMe
+ *
+ * This is an upgrade script for mention.php
+ *
+ * This code is derivative of the work of pavemen in MyBB Publisher (and I have used it in all my plugins since he showed me this technique :D )
  *
  * Copyright © 2013 Wildcard
  * http://www.rantcentralforums.com
@@ -18,18 +22,18 @@
  */
 
 	// versioning is introduced in 1.6 so just check everything
-	if(version_compare($old_version, '1.6', '<') || $old_version == '' || $old_version == 0)
+	if(version_compare($old_version, '2.0', '<') || $old_version == '' || $old_version == 0)
 	{
 		global $db;
-		
+
 		// check settings
 		mention_build_settings();
 
 		// if MyAlerts is installed . . .
-		if($db->table_exists('alerts') && !mention_get_alert_setting())
+		if($db->table_exists('alerts') && !mention_get_myalerts_status())
 		{
 			// make sure those settings are up-to-date
-			build_myalerts_settings();
+			mention_myalerts_integrate();
 		}
 
 		// just in case

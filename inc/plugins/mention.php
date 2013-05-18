@@ -1,6 +1,6 @@
 <?php
 /**
- * MentionMe for MyBB 1.6.x
+ * MentionMe
  * Copyright © 2013 Wildcard
  * http://www.rantcentralforums.com
  *
@@ -69,21 +69,28 @@ function mention_run($message)
  */
 function Mention__filter(array $match)
 {
-	global $db, $mybb, $settings;
-
-	// cache names to reduce queries
-	static $namecache = array();
+	global $db, $mybb, $settings, $cache;
+	static $name_cache;
 	$name_parts = array();
 	$shift_count = 0;
 
-	// save the original name
-	$origName = $match[0];
+	$cache_changed = false;
 
-	// if the name is already in the cache . . .
-	if(isset($namecache[strtolower($origName)]))
+	// cache names to reduce queries
+	if(!isset($name_cache) || empty($name_cache))
+	{
+		$wildcard_plugins = $cache->read('wildcard_plugins');
+		$name_cache = $wildcard_plugins['mentionme']['namecache'];
+	}
+
+	// save the original name
+	$orig_name = $match[0];
+
+	// if the name is already in the cache . . . (the @ is still on the text so test the rest of the string)
+	if(isset($name_cache[strtolower(substr($orig_name, 1))]))
 	{
 		// . . . simply return it and save the query
-		return $namecache[strtolower($origName)];
+		return $name_cache[strtolower(substr($orig_name, 1))];
 	}
 
 	// if the user entered the mention in quotes then it will be returned in $match[1],
@@ -97,14 +104,14 @@ function Mention__filter(array $match)
 
 	if(empty($match) || strlen(trim($match[0])) == 0)
 	{
-		return origName;
+		return orig_name;
 	}
 
 	// if the name is already in the cache . . .
-	if(isset($namecache[strtolower($match[0])]))
+	if(isset($name_cache[strtolower($match[0])]))
 	{
 		// . . . simply return it and save the query
-		return $namecache[strtolower($match[0])];
+		return $name_cache[strtolower($match[0])];
 	}
 
 	// if the array was shifted then no quotes were used
@@ -117,19 +124,19 @@ function Mention__filter(array $match)
 		$name_parts = explode(' ', $match[0]);
 
 		// add the first part
-		$usernameLower = $name_parts[0];
+		$username_lower = $name_parts[0];
 
 		// if the name part we have is shorter than the minimum username length (set in ACP) we need to loop through all the name parts and keep adding them until we at least reach the minimum length
-		while(strlen($usernameLower) < $mybb->settings['minnamelength'] && !empty($name_parts))
+		while(strlen($username_lower) < $mybb->settings['minnamelength'] && !empty($name_parts))
 		{
 			// discard the first part (we have it stored)
 			array_shift($name_parts);
 
-			// there is another part
+			// if there is another part
 			if(strlen($name_parts[0]) > 0)
 			{
 				// add it
-				$usernameLower .= ' ' . $name_parts[0];
+				$username_lower .= ' ' . $name_parts[0];
 			}
 			else
 			{
@@ -144,29 +151,31 @@ function Mention__filter(array $match)
 		$shift_pad = 3;
 
 		// grab the entire match
-		$usernameLower = $match[0];
+		$username_lower = $match[0];
 	}
 
 	// generate a lowercase and db-friendly username to search with
-	$usernameLower = my_strtolower(html_entity_decode(trim($usernameLower)));
+	$username_lower = my_strtolower(html_entity_decode(trim($username_lower)));
 
 	// if the name is already in the cache . . .
-	if(isset($namecache[$usernameLower]))
+	if(isset($name_cache[$username_lower]))
 	{
 		// . . . simply return it and save the query
 		//  restore any surrounding characters from the original match
-		return $namecache[$usernameLower] . substr($origName, strlen($usernameLower) + $shift_pad);
+		return $name_cache[$username_lower] . substr($orig_name, strlen($username_lower) + $shift_pad);
 	}
 	else
 	{
 		// lookup the username
-		$user = mention_try_name($usernameLower);
+		$user = mention_try_name($username_lower);
 
 		// if the username exists . . .
 		if($user['uid'] != 0)
 		{
+			$cache_changed = true;
+
 			// preserve any surrounding chars
-			$left_over = substr($origName, strlen($user['username']) + $shift_pad);
+			$left_over = substr($orig_name, strlen($user['username']) + $shift_pad);
 		}
 		else
 		{
@@ -180,7 +189,7 @@ function Mention__filter(array $match)
 				if(!empty($name_parts) && $shift_pad != 3 && strlen($name_parts[0]) > 0)
 				{
 					// start with the first part . . .
-					$try_this = $usernameLower;
+					$try_this = $username_lower;
 
 					$all_good = false;
 
@@ -191,12 +200,11 @@ function Mention__filter(array $match)
 						$try_this .= ' ' . $val;
 
 						// check the cache for a match to save a query
-						if(isset($namecache[$try_this]))
+						if(isset($name_cache[$try_this]))
 						{
 							// preserve any surrounding chars from the original match
-							$left_over = substr($origName, strlen($try_this) + $shift_pad);
-
-							return $namecache[$try_this] . $left_over;
+							$left_over = substr($orig_name, strlen($try_this) + $shift_pad);
+							return $name_cache[$try_this] . $left_over;
 						}
 
 						// check the db
@@ -206,13 +214,14 @@ function Mention__filter(array $match)
 						if($user['uid'] != 0)
 						{
 							// cache the username HTML
-							$usernameLower = strtolower($user['username']);
+							$username_lower = strtolower($user['username']);
 
 							// preserve any surrounding chars from the original match
-							$left_over = substr($origName, strlen($user['username']) + $shift_pad);
+							$left_over = substr($orig_name, strlen($user['username']) + $shift_pad);
 
 							// and gtfo
 							$all_good = true;
+							$cache_changed = true;
 							break;
 						}
 					}
@@ -220,19 +229,19 @@ function Mention__filter(array $match)
 					if(!$all_good)
 					{
 						// still no matches?
-						return $origName;
+						return $orig_name;
 					}
 				}
 				else
 				{
 					// nothing else to try
-					return $origName;
+					return $orig_name;
 				}
 			}
 			else
 			{
 				// advanced matching is disabled
-				return $origName;
+				return $orig_name;
 			}
 		}
 
@@ -244,10 +253,20 @@ function Mention__filter(array $match)
 		$username = format_name($username, $usergroup, $displaygroup);
 		$link = get_profile_link($user['uid']);
 
-		// and return the mention
+		// build the mention
 		// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
-		$namecache[$usernameLower] = "@<a id=\"mention_$uid\" href=\"{$link}\">{$username}</a>";
-		return $namecache[$usernameLower] . $left_over;
+		$name_cache[$username_lower] = "@<a id=\"mention_{$uid}\" href=\"{$link}\">{$username}</a>";
+
+		// if we had to query for this user's info then update the cache
+		if($cache_changed)
+		{
+			$wildcard_plugins = $cache->read('wildcard_plugins');
+			$wildcard_plugins['mentionme']['namecache'] = $name_cache;
+			$cache->update('wildcard_plugins', $wildcard_plugins);
+		}
+
+		// and return the mention
+		return $name_cache[$username_lower] . $left_over;
 	}
 }
 
@@ -266,7 +285,12 @@ function mention_try_name($username = '')
 	global $db;
 
 	// create another name cache here to save queries if names with spaces are used more than once in the same post.
-	static $name_list = array();
+	static $name_list;
+
+	if(!is_array($name_list))
+	{
+		$name_list = array();
+	}
 
 	$username = strtolower($username);
 

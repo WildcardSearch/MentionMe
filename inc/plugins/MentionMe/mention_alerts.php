@@ -1,6 +1,8 @@
 <?php
 /**
- * This file is part of MentionMe and provide MyAlerts routines for mention.php
+ * MentionMe
+ *
+ * This script provides MyAlerts routines for mention.php
  *
  * Copyright © 2013 Wildcard
  * http://www.rantcentralforums.com
@@ -16,7 +18,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses
  */
- 
+
 // Disallow direct access to this file for security reasons.
 if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
 {
@@ -39,7 +41,7 @@ $plugins->add_hook("datahandler_post_update", "myalerts_alert_mentioned_editpost
 function myalerts_alert_mentioned_editpost($this_post)
 {
 	global $db, $mybb, $Alerts;
-	
+
 	// Is the alerts class present?
 	require_once MYALERTS_PLUGIN_PATH . 'Alerts.class.php';
 	try
@@ -50,7 +52,7 @@ function myalerts_alert_mentioned_editpost($this_post)
 	{
 		die($e->getMessage());
 	}
-	
+
 	// grab the post data
 	$message = $this_post->data['message'];
 	$tid = (int) $this_post->data['tid'];
@@ -61,16 +63,16 @@ function myalerts_alert_mentioned_editpost($this_post)
 	// get all mentions
 	$match = array();
 	mention_find_in_post($message, $match);
-	
+
 	// no results, no alerts
 	if(!is_array($match))
 	{
 		return;
 	}
-	
+
 	// avoid duplicate mention alerts
 	$mentioned_already = array();
-	
+
 	// loop through all matches (if any)
 	foreach($match as $val)
 	{
@@ -78,14 +80,14 @@ function myalerts_alert_mentioned_editpost($this_post)
 		if($val[0])
 		{
 			$uid = (int) $val[1];
-			
+
 			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
-			if (!$mentioned_already[$uid] && $edit_uid != $uid )
+			if(!$mentioned_already[$uid] && $edit_uid != $uid )
 			{
 				// make sure if the user was already alerted for being mentioned in this post that a duplicate mention isn't created
 				$mentioned_already[$uid] = true;
 				$already_alerted = false;
-				
+
 				// check that we haven't already sent an alert for this mention
 				$query = $db->simple_select('alerts', '*', "uid='$uid' AND from_id='$edit_uid' AND tid='$tid' AND alert_type='mention'");
 				if($db->num_rows($query) > 0)
@@ -95,7 +97,7 @@ function myalerts_alert_mentioned_editpost($this_post)
 						if($this_alert['content'])
 						{
 							$this_alert['content'] = json_decode($this_alert['content'], true);
-						 
+
 							// if an alert exists for this specific post then we have already alerted the user
 							if($this_alert['content']['pid'] == $pid)
 							{
@@ -105,7 +107,7 @@ function myalerts_alert_mentioned_editpost($this_post)
 						}
 					}
 				}
-				
+
 				// no duplicates
 				if(!$already_alerted)
 				{
@@ -135,7 +137,7 @@ function myalerts_alert_mentioned()
 	}
 	// otherwise the message comes from $post['message'] and the $tid comes from $thread['tid']
 	else
-	{	
+	{
 		$message = $post['message'];
 		$tid = (int) $thread['tid'];
 		$subject = $thread['subject'];
@@ -144,16 +146,16 @@ function myalerts_alert_mentioned()
 	// get all mentions
 	$match = array();
 	mention_find_in_post($message, $match);
-	
+
 	// no matches, no alerts
 	if(!is_array($match))
 	{
 		return;
 	}
-	
+
 	// avoid duplicate mention alerts
 	$mentioned_already = array();
-	
+
 	// loop through all matches (if any)
 	foreach($match as $val)
 	{
@@ -161,15 +163,15 @@ function myalerts_alert_mentioned()
 		if($val[0])
 		{
 			$uid = (int) $val[1];
-			
+
 			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
 			if ($mybb->user['uid'] != $uid && !$mentioned_already[$uid])
 			{
 				$mentioned_already[$uid] = true;
-				$Alerts->addAlert((int) $uid, 'mention', $tid, (int) $mybb->user['uid'], array('pid' => (int) $pid, 'subject' => $subject)); 
+				$Alerts->addAlert((int) $uid, 'mention', $tid, (int) $mybb->user['uid'], array('pid' => (int) $pid, 'subject' => $subject));
 			}
 		}
-	}	
+	}
 }
 
 $plugins->add_hook('myalerts_alerts_output_start', 'mention_alerts_output');
@@ -184,12 +186,12 @@ function mention_alerts_output(&$alert)
 {
 	global $mybb, $lang;
 
-	if (!$lang->mention)
+	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
-	
-	// If this is a mention alert and the user allows this type of alert then process and display it
+
+	// if this is a mention alert and the user allows this type of alert then process and display it
 	if ($alert['alert_type'] == 'mention' AND $mybb->user['myalerts_settings']['mention'])
 	{
 		// If this is a reply then a pid will be present,
@@ -204,7 +206,7 @@ function mention_alerts_output(&$alert)
 			$alert['threadLink'] = get_thread_link($alert['tid']);
 			$alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['threadLink'], htmlspecialchars_uni($alert['content']['subject']), $alert['dateline']);
 		}
-		
+
 		$alert['rowType'] = 'mentionAlert';
 	}
 }
@@ -218,7 +220,7 @@ $plugins->add_hook('myalerts_load_lang', 'mention_alerts_language');
 function mention_alerts_language()
 {
 	global $lang;
-	
+
 	if(!$lang->mention)
 	{
 		$lang->load('mention');
@@ -235,18 +237,18 @@ function mention_myalerts_helpdoc()
 {
 	global $helpdoc, $lang, $mybb;
 
-	if (!$lang->myalerts)
+	if(!$lang->myalerts)
 	{
 		$lang->load('myalerts');
 	}
-	if (!$lang->mention)
+	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
 
-	if ($helpdoc['name'] == $lang->myalerts_help_alert_types)
+	if($helpdoc['name'] == $lang->myalerts_help_alert_types)
 	{
-		if ($mybb->settings['myalerts_alert_mention']) 
+		if($mybb->settings['myalerts_alert_mention'])
 		{
 			$helpdoc['document'] .= $lang->myalerts_help_alert_types_mentioned;
 		}
@@ -263,7 +265,7 @@ function mention_strip_quotes($message)
 {
 	global $lang, $templates, $theme, $mybb;
 
-	// Assign pattern and replace values.
+	// kill BB code quoted portions of the message
 	$pattern = array(
 		"#\[quote=([\"']|&quot;|)(.*?)(?:\\1)(.*?)(?:[\"']|&quot;)?\](.*?)\[/quote\](\r\n?|\n?)#esi",
 		"#\[quote\](.*?)\[\/quote\](\r\n?|\n?)#si"
@@ -280,11 +282,13 @@ function mention_strip_quotes($message)
 		$message = preg_replace($pattern, $replace, $message, -1, $count);
 	} while($count);
 
+	// if we have deleted too much, back up a step
 	if(!$message)
 	{
 		$message = $previous_message;
 	}
 
+	// kill HTML blockquoted portions of the message
 	$find = array(
 		"#(\r\n*|\n*)<\/cite>(\r\n*|\n*)#",
 		"#(\r\n*|\n*)<\/blockquote>#"
@@ -294,9 +298,7 @@ function mention_strip_quotes($message)
 		"",
 		""
 	);
-	$message = preg_replace($find, $replace, $message);
-	
-	return $message;
+	return preg_replace($find, $replace, $message);
 }
 
 /* mention_find_in_post()
@@ -309,13 +311,14 @@ function mention_strip_quotes($message)
 function mention_find_in_post($message, &$match)
 {
 	global $mybb;
-	
-	// Do the replacement in the message
-	$message = mention_strip_quotes($message);
-	
-	$message =  preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
 
-	// Then match all the mentions in this post
+	// dno alerts for mentions inside quotes so strip the quoted portions prior to detection
+	$message = mention_strip_quotes($message);
+
+	// do the replacement in the message
+	$message =  mention_run($message);
+
+	// match all the mentions in this post
 	$pattern = '#@<a id="mention_(.*?)"#is';
 	preg_match_all($pattern, $message, $match, PREG_SET_ORDER);
 }

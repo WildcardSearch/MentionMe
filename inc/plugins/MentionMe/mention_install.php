@@ -1,5 +1,7 @@
 <?php
 /**
+ * MentionMe
+ *
  * This file is part of MentionMe and provides install routines for mention.php
  *
  * Copyright © 2013 Wildcard
@@ -43,7 +45,7 @@ function mention_info()
 	if($db->table_exists('alerts') && mention_is_installed())
 	{
 		// check to see that we have created our setting
-		if(mention_get_alert_setting())
+		if(mention_get_myalerts_status())
 		{
 			// if so give them a success message
 			$mention_description = "<ul><li style=\"list-style-image: url(../images/valid.gif)\">{$lang->mention_myalerts_working}</li><a href=\"../inc/plugins/MentionMe/enable_all_alerts.php\">Enable Mention Alerts For All Users</a></ul>";
@@ -55,16 +57,32 @@ function mention_info()
 		}
 	}
 
+	$mention_description = <<<EOF
+<table style="width: 100%;">
+	<tr>
+		<td style="width: 50%;">{$lang->mention_description}{$mention_description}</td>
+		<td style="width: 50%; text-align: center;">
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+				<input type="hidden" name="cmd" value="_s-xclick">
+				<input type="hidden" name="hosted_button_id" value="VA5RFLBUC4XM4">
+				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+				<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
+		</td>
+	</tr>
+</table>
+EOF;
+
 	$name = "<span style=\"font-familiy: arial; font-size: 1.5em; color: #258329; text-shadow: 2px 2px 2px #006A00;\">MentionMe</span>";
 	$author = "</a></small></i><a href=\"http://www.rantcentralforums.com\" title=\"Rant Central\"><span style=\"font-family: Courier New; font-weight: bold; font-size: 1.2em; color: #117eec;\">Wildcard</span></a><i><small><a>";
 
     // return the info
 	return array(
         'name'				=> $name,
-        'description'	=> $lang->mention_description . $mention_description,
+        'description'		=> $mention_description,
         'website'			=> 'https://github.com/WildcardSearch/MentionMe',
-        'version'			=> '1.6.1',
-        'author'			=> $author,
+        'version'			=> '2.0',
+        'author'				=> $author,
         'authorsite'		=> 'http://www.rantcentralforums.com/',
         'guid'				=> '273104cdd4918caf9554d1567954d2ef',
 		'compatibility'	=> '16*'
@@ -98,7 +116,7 @@ function mention_install()
 
 	if($db->table_exists('alerts'))
 	{
-		build_myalerts_settings();
+		mention_myalerts_integrate();
 	}
 }
 
@@ -107,18 +125,88 @@ function mention_install()
  *
  * checks upgrade status by checking cached version info
  *
- * Derived from the work of pavemen in MyBB Publisher
+ * derived from the work of pavemen in MyBB Publisher
  */
 function mention_activate()
 {
+	global $plugins, $db, $cache, $lang;
+
+	if(!$lang->mention)
+	{
+		$lang->load('mention');
+	}
+
+	// store the current cached version number (if it exists)
 	$old_version = mention_get_cache_version() ;
 
+	// if the upgrade script is in tact
 	if(file_exists(MYBB_ROOT . '/inc/plugins/MentionMe/mention_upgrade.php'))
 	{
+		// require it (and it will do its thing auto
 		require_once MYBB_ROOT . '/inc/plugins/MentionMe/mention_upgrade.php';
     }
 
+	// now update the version (so we don't try to upgrade next round)
 	mention_set_cache_version();
+
+	// have we already added our name cacheing task?
+	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
+    if($db->num_rows($query) == 0)
+	{
+        // if not then do so
+		require_once MYBB_ROOT.'/inc/functions_task.php';
+
+        $this_task = array(
+            "title"				=> $lang->mention_task_name,
+            "file"					=> 'mentiome_namecache',
+            "description"		=> $lang->mention_task_description,
+            "minute"			=> 0,
+            "hour"				=> 0,
+            "day"				=> '*',
+            "weekday"		=> '*',
+            "month"			=> '*',
+            "nextrun"			=> TIME_NOW + 3600,
+            "lastrun"			=> 0,
+            "enabled"			=> 1,
+            "logging"			=> 1,
+            "locked"			=> 0,
+        );
+
+        $task_id = (int) $db->insert_query('tasks', $this_task);
+        $theTask = $db->fetch_array($db->simple_select('tasks', '*', 'tid = '.(int) $task_id, 1));
+        $nextrun = fetch_next_run($this_task);
+        $db->update_query('tasks', "nextrun='{$nextrun}', tid='{$task_id}'");
+
+        $plugins->run_hooks('admin_tools_tasks_add_commit');
+
+        // update the task and go ahead and run it right now so we have some data to work with immediately
+		$cache->update_tasks();
+		run_task($task_id);
+    }
+	else
+	{
+        // we've already made the task, just get the id
+		$tid = (int) $db->fetch_field($query, 'tid');
+
+		// update the nextrun and then run the task
+		require_once MYBB_ROOT.'/inc/functions_task.php';
+        $db->update_query('tasks', array('enabled' => 1, 'nextrun' => TIME_NOW + 3600), "file='mentiome_namecache'");
+        $cache->update_tasks();
+		run_task($tid);
+    }
+}
+
+/*
+ * mention_deactivate()
+ *
+ * stops the task from running if the plugin is inactive
+ */
+function mention_deactivate()
+{
+	global $db;
+
+	// remove the task
+	$db->update_query('tasks', array('enabled' => 0), 'file = \'mentiome_namecache\'');
 }
 
 /* mention_uninstall()
@@ -140,58 +228,32 @@ function mention_uninstall()
 		// delete setting
 		$db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='myalerts_alert_mention'");
 
-		$myalerts_version = mention_get_myalerts_version();
-
-		if(version_compare($myalerts_version, '1.0.4', '<'))
-		{
-			// Remove myalerts_settings['mention'] from all users
-			$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
-
-			while($settings = $db->fetch_array($query))
-			{
-				// decode existing alerts with corresponding key values.
-				$my_settings = (array) json_decode($settings['myalerts_settings']);
-
-				// delete the mention index
-				unset($my_settings['mention']);
-
-				// and update the table cell
-				$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
-			}
-		}
-		else
-		{
-			$db->query("DELETE FROM ".TABLE_PREFIX."alert_settings WHERE code='mention'");
-		}
+		$db->query("DELETE FROM ".TABLE_PREFIX."alert_settings WHERE code='mention'");
 	}
+
+	$db->delete_query('tasks', "file='mentiome_namecache'");
 
 	mention_unset_cache_version();
 }
 
-/* mention_get_alert_setting()
+/* mention_get_myalerts_status()
  *
  * used by _info to verify the mention myalerts setting
  */
-function mention_get_alert_setting()
+function mention_get_myalerts_status()
 {
 	global $db;
 
-	$query = $db->simple_select("settings", "sid", "name='myalerts_alert_mention'");
-	return $db->fetch_field($query, 'sid');
-}
-
-function mention_get_myalerts_version()
-{
-	global $cache;
-
-	//get currently installed version, if there is one
-	$euantorPlugins = $cache->read('euantor_plugins');
-
-	if(is_array($euantorPlugins))
+	if($db->table_exists('alert_settings') && $db->table_exists('alert_setting_values'))
 	{
-        return $euantorPlugins['myalerts']['version'];
+		$query = $db->simple_select('alert_settings', "*", "code='mention'");
+
+		if($db->num_rows($query) == 1)
+		{
+			return true;
+		}
 	}
-    return 0;
+	return false;
 }
 
 /*
@@ -253,7 +315,7 @@ function mention_unset_cache_version()
 	global $cache;
 
 	$wildcard_plugins = $cache->read('wildcard_plugins');
-	unset($wildcard_plugins['mentionme']['version']);
+	unset($wildcard_plugins['mentionme']);
 	$cache->update('wildcard_plugins', $wildcard_plugins);
 
     return true;
@@ -273,11 +335,11 @@ function mention_build_settings()
 		$lang->load('mention');
 	}
 
+	// if our group isn't already made
 	$query = $db->simple_select('settinggroups', "gid", "name='mention_settings'");
-
 	if($db->num_rows($query) == 0)
 	{
-		// settings group and settings
+		// make it
 		$mention_group = array(
 			"gid" 				=> "NULL",
 			"name" 			=> "mention_settings",
@@ -291,11 +353,14 @@ function mention_build_settings()
 	}
 	else
 	{
+		// otherwise just store the GID
 		$gid = $db->fetch_field($query, 'gid');
 	}
 
+	// if we have a good GID
 	if($gid)
 	{
+		// build the settings and insert/update them
 		$mention_setting_1 = array(
 			"sid"					=> "NULL",
 			"name"				=> "mention_advanced_matching",
@@ -306,7 +371,6 @@ function mention_build_settings()
 			"disporder"			=> '1',
 			"gid"					=> intval($gid)
 		);
-
 		$query = $db->simple_select('settings', "sid", "name='mention_advanced_matching'");
 
 		if($db->num_rows($query) == 1)
@@ -318,15 +382,37 @@ function mention_build_settings()
 		{
 			$db->insert_query("settings", $mention_setting_1);
 		}
+
+		$mention_setting_2 = array(
+			"sid"					=> "NULL",
+			"name"				=> "mention_cache_time",
+			"title"				=> 'How far back to cache names?',
+			"description"		=> 'The task caches usernames based on when they were last active. In days, specify how far back to go. (Large forums should stick with low numbers to reduce the size of the namecache)',
+			"optionscode"	=> "text",
+			"value"				=> '7',
+			"disporder"		=> '2',
+			"gid"					=> intval($gid)
+		);
+		$query = $db->simple_select('settings', "sid", "name='mention_cache_time'");
+
+		if($db->num_rows($query) == 1)
+		{
+			unset($mention_setting_2['sid']);
+			$db->update_query("settings", $mention_setting_2, "name='mention_cache_time'");
+		}
+		else
+		{
+			$db->insert_query("settings", $mention_setting_2);
+		}
 	}
 }
 
 /*
- * build_myalerts_settings()
+ * mention_myalerts_integrate()
  *
  * build the single ACP setting and add it to the myalerts group
  */
-function build_myalerts_settings()
+function mention_myalerts_integrate()
 {
 	global $db, $lang;
 
@@ -339,8 +425,10 @@ function build_myalerts_settings()
 	$query = $db->simple_select("settinggroups", "gid", "name='myalerts'");
 	$gid = (int) $db->fetch_field($query, "gid");
 
+	// MyAlerts installed?
 	if($gid)
 	{
+		// if so add a setting to Euan's group (he hates it when I do that :P )
 		$mention_setting_1 = array
 		(
 			"sid"					=> "NULL",
@@ -352,7 +440,6 @@ function build_myalerts_settings()
 			"disporder"			=> '100',
 			"gid"					=> $gid,
 		);
-
 		$query = $db->simple_select('settings', "sid", "name='myalerts_alert_mention'");
 
 		if($db->num_rows($query) == 1)
@@ -366,39 +453,14 @@ function build_myalerts_settings()
 		}
 		rebuild_settings();
 
-		$myalerts_version = mention_get_myalerts_version();
-
-		if(version_compare($myalerts_version, '1.0.4', '<'))
+		// now add our mention type
+		if($db->table_exists('alert_settings') && $db->table_exists('alert_setting_values'))
 		{
-			// mention alerts on by default
-			$possible_settings = array(
-					'mention' => "on",
-					);
+			$query = $db->simple_select('alert_settings', "*", "code='mention'");
 
-			$query = $db->simple_select('users', 'uid, myalerts_settings', '', array());
-
-			while($settings = $db->fetch_array($query))
+			if($db->num_rows($query) == 0)
 			{
-				// decode existing alerts with corresponding key values
-				$alert_settings = json_decode($settings['myalerts_settings']);
-
-				// merge our settings with existing ones...
-				$my_settings = array_merge($possible_settings, (array) $alert_settings);
-
-				// and update the table cell
-				$db->update_query('users', array('myalerts_settings' => $db->escape_string(json_encode($my_settings))), 'uid='.(int) $settings['uid']);
-			}
-		}
-		else
-		{
-			if($db->table_exists('alert_settings') && $db->table_exists('alert_setting_values'))
-			{
-				$query = $db->simple_select('alert_settings', "*", "code='mention'");
-
-				if($db->num_rows($query) == 0)
-				{
-					$db->insert_query('alert_settings', array('code' => 'mention'));
-				}
+				$db->insert_query('alert_settings', array('code' => 'mention'));
 			}
 		}
 	}
