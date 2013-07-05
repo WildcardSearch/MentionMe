@@ -40,7 +40,7 @@ $plugins->add_hook("datahandler_post_update", "myalerts_alert_mentioned_editpost
  */
 function myalerts_alert_mentioned_editpost($this_post)
 {
-	global $db, $mybb, $Alerts;
+	global $db, $mybb, $Alerts, $post;
 
 	// Is the alerts class present?
 	require_once MYALERTS_PLUGIN_PATH . 'Alerts.class.php';
@@ -58,7 +58,7 @@ function myalerts_alert_mentioned_editpost($this_post)
 	$tid = (int) $this_post->data['tid'];
 	$pid = (int) $this_post->data['pid'];
 	$edit_uid = (int) $mybb->user['uid'];
-	$subject = $db->escape_string($post['subject']);
+	$subject = $post['subject'];
 
 	// get all mentions
 	$match = array();
@@ -165,7 +165,7 @@ function myalerts_alert_mentioned()
 			$uid = (int) $val[1];
 
 			// create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
-			if ($mybb->user['uid'] != $uid && !$mentioned_already[$uid])
+			if($mybb->user['uid'] != $uid && !$mentioned_already[$uid])
 			{
 				$mentioned_already[$uid] = true;
 				$Alerts->addAlert((int) $uid, 'mention', $tid, (int) $mybb->user['uid'], array('pid' => (int) $pid, 'subject' => $subject));
@@ -192,7 +192,7 @@ function mention_alerts_output(&$alert)
 	}
 
 	// if this is a mention alert and the user allows this type of alert then process and display it
-	if ($alert['alert_type'] == 'mention' AND $mybb->user['myalerts_settings']['mention'])
+	if($alert['alert_type'] == 'mention' && $mybb->user['myalerts_settings']['mention'])
 	{
 		// If this is a reply then a pid will be present,
 		if($alert['content']['pid'])
