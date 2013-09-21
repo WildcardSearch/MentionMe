@@ -84,8 +84,8 @@ function mention_filter_callback($match)
 	// if the array was shifted then no quotes were used
 	if($shift_count)
 	{
-		// padding is only needed for the @
-		$shift_pad = 1;
+		// no padding necessary
+		$shift_pad = 0;
 
 		// split the string into an array of words
 		$name_parts = explode(' ', $match[0]);
