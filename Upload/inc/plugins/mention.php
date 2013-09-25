@@ -46,7 +46,7 @@ function mention_run($message)
  */
 function mention_filter_callback($match)
 {
-	global $db, $mybb;
+	global $db, $mybb, $cache;
 	static $name_cache;
 	$name_parts = array();
 	$shift_count = 0;
@@ -56,7 +56,6 @@ function mention_filter_callback($match)
 	// cache names to reduce queries
 	if(!isset($name_cache) || empty($name_cache))
 	{
-		global $cache;
 		$wildcard_plugins = $cache->read('wildcard_plugins');
 		$name_cache = $wildcard_plugins['mentionme']['namecache'];
 	}
