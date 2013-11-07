@@ -1,7 +1,7 @@
 <?php
 /**
  * MentionMe
- * Copyright © 2013 Wildcard
+ * Copyright ï¿½ 2013 Wildcard
  * http://www.rantcentralforums.com
  *
  * This program is free software: you can redistribute it and/or modify
@@ -55,7 +55,7 @@ function mention_run($message)
 	global $mybb;
 
 	// use function Mention__filter to repeatedly process mentions in the current post
-	return preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
+	return preg_replace_callback('/@"([^<]+?)"|@\'([^<]+?)\'|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "Mention__filter", $message);
 }
 
 /*
