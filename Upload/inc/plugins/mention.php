@@ -32,7 +32,7 @@ function mention_run($message)
 	global $mybb;
 
 	// use function mention_filter_callback to repeatedly process mentions in the current post
-	return preg_replace_callback('/@"([^<]+?)"|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "mention_filter_callback", $message);
+	return preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "mention_filter_callback", $message);
 }
 
 /*
