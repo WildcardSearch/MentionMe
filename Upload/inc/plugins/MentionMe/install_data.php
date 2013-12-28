@@ -50,6 +50,16 @@ $settings = array
 				"optionscode"		=> 'yesno',
 				"value"					=> '1',
 				"disporder"			=> '30'
+			),
+			"mention_add_postbit_button" => array
+			(
+				"sid"						=> "NULL",
+				"name"					=> "mention_add_postbit_button",
+				"title"						=> $lang->mention_mention_add_postbit_button_title,
+				"description"			=> $lang->mention_mention_add_postbit_button_description,
+				"optionscode"		=> 'yesno',
+				"value"					=> '0',
+				"disporder"			=> '40'
 			)
 		)
 	)

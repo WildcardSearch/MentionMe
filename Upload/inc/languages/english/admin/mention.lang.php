@@ -32,6 +32,9 @@ $l['mention_cache_time_description'] = 'The task caches usernames based on when 
 $l['mention_add_codebutton_title'] = 'Add A Code Button?';
 $l['mention_add_codebutton_description'] = 'YES (default) to add a button to the editor';
 
+$l['mention_mention_add_postbit_button_title'] = 'Add a Postbit Button?';
+$l['mention_mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';
+
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
 $l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! You must uninstall and reinstall the plugin to receive mention alerts.';

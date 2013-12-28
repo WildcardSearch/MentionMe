@@ -8,6 +8,45 @@
  */
 
 /*
+ * mention_generate_postbit_buttons()
+ *
+ * @param - $hard - (bool) true to overwrite any existing images
+ */
+function mention_generate_postbit_buttons($hard = false)
+{
+	global $mybb;
+
+	$all_dirs = array();
+	$query = $db->simple_select('themes', 'pid, properties');
+	while($theme = $db->fetch_array($query))
+	{
+		$properties = unserialize($theme['properties']);
+		if($theme['pid'] == 0)
+		{
+			$master_dir = $properties['imgdir'];
+		}
+		$all_dirs[] = $properties['imgdir'];
+	}
+
+	require_once MYBB_ROOT . 'inc/plugins/MentionMe/button_images.php';
+	foreach($all_dirs as $dir)
+	{
+		$path = MYBB_ROOT . $dir . "/{$mybb->settings['bblanguage']}";
+		if(is_dir($path))
+		{
+			foreach(array("postbit_button" => 'postbit_multi_mention.gif', "postbit_button_on" => 'postbit_multi_mention_on.gif') as $key => $filename)
+			{
+				$full_path = "{$path}/{$filename}";
+				if(!file_exists($full_path) || $hard)
+				{
+					file_put_contents($full_path, $$key);
+				}
+			}
+		}
+	}
+}
+
+/*
  * versioning
  */
 
