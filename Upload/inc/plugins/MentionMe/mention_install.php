@@ -160,7 +160,7 @@ function mention_activate()
 	if(version_compare($old_version, $info['version'], '<') && $old_version != '' && $old_version != 0)
 	{
 		// check everything and upgrade if necessary
-		mention_install()
+		mention_install();
     }
 
 	// update the version (so we don't try to upgrade next round)
