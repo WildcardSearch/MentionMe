@@ -32,8 +32,11 @@ $l['mention_cache_time_description'] = 'The task caches usernames based on when 
 $l['mention_add_codebutton_title'] = 'Add A Code Button?';
 $l['mention_add_codebutton_description'] = 'YES (default) to add a button to the editor';
 
-$l['mention_mention_add_postbit_button_title'] = 'Add a Postbit Button?';
-$l['mention_mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';
+$l['mention_add_postbit_button_title'] = 'Add a Postbit Button?';
+$l['mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';
+
+$l['mention_multiple_title'] = 'Multiple Mentions?';
+$l['mention_multiple_description'] = 'YES (default) to mimic the multi-quote feature or NO to instantly insert the mention on click<br /><br /><strong>The above setting must be set to YES for this setting to take affect</strong>';
 
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';

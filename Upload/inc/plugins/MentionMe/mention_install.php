@@ -172,7 +172,7 @@ function mention_activate()
 	find_replace_templatesets('showthread', "#" . preg_quote('</head>') . "#i", '{$mention_script}</head>');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<div class="editor_control_bar"') . "#i", '{$mention_quickreply}<div class="editor_control_bar"');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<input type="hidden" name="lastpid"') . "#i", '{$mentioned_ids}<input type="hidden" name="lastpid"');
-	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_multi_mention\']}');
+	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 
 	// have we already added our name caching task?
 	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
@@ -239,7 +239,7 @@ function mention_deactivate()
 	find_replace_templatesets('showthread', "#" . preg_quote('{$mention_script}') . "#i", '');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('{$mention_quickreply}') . "#i", '');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('{$mentioned_ids}') . "#i", '');
-	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multi_mention\']}') . "#i", '');
+	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
 }
 
 /* mention_uninstall()

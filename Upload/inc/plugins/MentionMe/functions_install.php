@@ -14,7 +14,7 @@
  */
 function mention_generate_postbit_buttons($hard = false)
 {
-	global $mybb;
+	global $mybb, $db;
 
 	$all_dirs = array();
 	$query = $db->simple_select('themes', 'pid, properties');

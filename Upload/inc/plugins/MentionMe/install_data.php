@@ -55,11 +55,21 @@ $settings = array
 			(
 				"sid"						=> "NULL",
 				"name"					=> "mention_add_postbit_button",
-				"title"						=> $lang->mention_mention_add_postbit_button_title,
-				"description"			=> $lang->mention_mention_add_postbit_button_description,
+				"title"						=> $lang->mention_add_postbit_button_title,
+				"description"			=> $lang->mention_add_postbit_button_description,
 				"optionscode"		=> 'yesno',
 				"value"					=> '0',
 				"disporder"			=> '40'
+			),
+			"mention_multiple" => array
+			(
+				"sid"						=> "NULL",
+				"name"					=> "mention_multiple",
+				"title"						=> $lang->mention_multiple_title,
+				"description"			=> $lang->mention_multiple_description,
+				"optionscode"		=> 'yesno',
+				"value"					=> '0',
+				"disporder"			=> '50'
 			)
 		)
 	)

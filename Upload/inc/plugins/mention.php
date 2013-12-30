@@ -471,16 +471,23 @@ function mentionme_initialize()
  */
 function mention_postbit(&$post)
 {
-	global $theme, $lang;
+	global $mybb, $theme, $lang;
 
 	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
 
-	// the multi-mention button
-	$post['button_multi_mention'] = <<<EOF
-<a href="javascript:MultiMention.multiMention({$post['pid']});" style="display: none;" id="multi_mention_link_{$post['pid']}"><img src="{$theme['imglangdir']}/postbit_multi_mention.gif" alt="{$lang->mention_title}" title="{$lang->mention_title}" id="multi_mention_{$post['pid']}" /></a>
+	// tailor JS to postbit setting
+	$js = "javascript:MentionMe.Insert({$post['pid']}, '{$post['username']}');";
+	if($mybb->settings['mention_multiple'])
+	{
+		$js = "javascript:MentionMe.multiMention({$post['pid']});";
+	}
+
+	// the mention button
+	$post['button_mention'] = <<<EOF
+<a href="{$js}" style="display: none;" id="multi_mention_link_{$post['pid']}"><img src="{$theme['imglangdir']}/postbit_multi_mention.gif" alt="{$lang->mention_title}" title="{$lang->mention_title}" id="multi_mention_{$post['pid']}" /></a>
 <script type="text/javascript">
 //<!--
 	$('multi_mention_link_{$post['pid']}').style.display = '';
@@ -576,29 +583,34 @@ EOF;
  */
 function mention_showthread_start()
 {
-	global $mention_script, $mention_quickreply, $mentioned_ids, $lang, $tid;
+	global $mybb, $mention_script, $mention_quickreply, $mentioned_ids, $lang, $tid;
 
 	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
 
-	$mention_script = <<<EOF
-<script type="text/javascript" src="jscripts/mention_thread.js"></script>
-
-EOF;
-
-	$mention_quickreply = <<<EOF
+	// we only need the extra JS and Quick Reply additions if we are allowing multiple mentions
+	if($mybb->settings['mention_multiple'])
+	{
+		$multi = '_multi';
+		$mention_quickreply = <<<EOF
 					<div class="editor_control_bar" style="width: 95%; padding: 4px; margin-top: 3px; display: none;" id="quickreply_multi_mention">
 						<span class="smalltext">
-							{$lang->mention_posts_selected} <a href="./newreply.php?tid={$tid}&amp;load_all_mentions=1" onclick="return MultiMention.loadMultiMentioned();">{$lang->mention_users_now}</a> {$lang->or} <a href="javascript:MultiMention.clearMultiMentioned();">{$lang->quickreply_multiquote_deselect}</a>.
+							{$lang->mention_posts_selected} <a href="./newreply.php?tid={$tid}&amp;load_all_mentions=1" onclick="return MentionMe.loadMultiMentioned();">{$lang->mention_users_now}</a> {$lang->or} <a href="javascript:MentionMe.clearMultiMentioned();">{$lang->quickreply_multiquote_deselect}</a>.
 						</span>
 					</div>
 EOF;
 
-	$mentioned_ids = <<<EOF
+		$mentioned_ids = <<<EOF
 
 	<input type="hidden" name="mentioned_ids" value="" id="mentioned_ids" />
+EOF;
+	}
+
+	$mention_script = <<<EOF
+<script type="text/javascript" src="jscripts/mention_thread{$multi}.js"></script>
+
 EOF;
 }
 
