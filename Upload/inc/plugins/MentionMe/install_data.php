@@ -13,63 +13,63 @@ $settings = array
 	(
 		"group" => array
 		(
-			"name" 				=> "mention_settings",
-			"title" 					=> $lang->mention_plugin_settings_title,
-			"description" 		=> $lang->mention_settingsgroup_description,
-			"disporder" 			=> "120",
-			"isdefault" 			=> "no"
+			"name" => "mention_settings",
+			"title"  => $lang->mention_plugin_settings_title,
+			"description" => $lang->mention_settingsgroup_description,
+			"disporder"  => "120",
+			"isdefault"  => 0
 		),
 		"settings" => array
 		(
 			"mention_advanced_matching" => array
 			(
-				"sid"						=> "NULL",
-				"name"					=> "mention_advanced_matching",
-				"title"					=> $lang->mention_advanced_matching,
-				"description"			=> $lang->mention_advanced_matching_desc,
-				"optionscode"		=> "yesno",
-				"value"					=> '0',
-				"disporder"			=> '10'
+				"sid" => "NULL",
+				"name" => "mention_advanced_matching",
+				"title" => $lang->mention_advanced_matching,
+				"description" => $lang->mention_advanced_matching_desc,
+				"optionscode" => "yesno",
+				"value" => '0',
+				"disporder" => '10'
 			),
 			"mention_cache_time" => array
 			(
-				"sid"						=> "NULL",
-				"name"					=> "mention_cache_time",
-				"title"					=> $lang->mention_cache_time_title,
-				"description"			=> $lang->mention_cache_time_description,
-				"optionscode"		=> "text",
-				"value"					=> '7',
-				"disporder"			=> '20'
+				"sid" => "NULL",
+				"name" => "mention_cache_time",
+				"title" => $lang->mention_cache_time_title,
+				"description" => $lang->mention_cache_time_description,
+				"optionscode" => "text",
+				"value" => '7',
+				"disporder" => '20'
 			),
 			"mention_add_codebutton" => array
 			(
-				"sid"						=> "NULL",
-				"name"					=> "mention_add_codebutton",
-				"title"					=> $lang->mention_add_codebutton_title,
-				"description"			=> $lang->mention_add_codebutton_description,
-				"optionscode"		=> 'yesno',
-				"value"					=> '1',
-				"disporder"			=> '30'
+				"sid" => "NULL",
+				"name" => "mention_add_codebutton",
+				"title" => $lang->mention_add_codebutton_title,
+				"description" => $lang->mention_add_codebutton_description,
+				"optionscode" => 'yesno',
+				"value" => '1',
+				"disporder" => '30'
 			),
 			"mention_add_postbit_button" => array
 			(
-				"sid"						=> "NULL",
-				"name"					=> "mention_add_postbit_button",
-				"title"						=> $lang->mention_add_postbit_button_title,
-				"description"			=> $lang->mention_add_postbit_button_description,
-				"optionscode"		=> 'yesno',
-				"value"					=> '0',
-				"disporder"			=> '40'
+				"sid" => "NULL",
+				"name" => "mention_add_postbit_button",
+				"title" => $lang->mention_add_postbit_button_title,
+				"description" => $lang->mention_add_postbit_button_description,
+				"optionscode" => 'yesno',
+				"value" => '0',
+				"disporder" => '40'
 			),
 			"mention_multiple" => array
 			(
-				"sid"						=> "NULL",
-				"name"					=> "mention_multiple",
-				"title"						=> $lang->mention_multiple_title,
-				"description"			=> $lang->mention_multiple_description,
-				"optionscode"		=> 'yesno',
-				"value"					=> '0',
-				"disporder"			=> '50'
+				"sid" => "NULL",
+				"name" => "mention_multiple",
+				"title" => $lang->mention_multiple_title,
+				"description" => $lang->mention_multiple_description,
+				"optionscode" => 'yesno',
+				"value" => '0',
+				"disporder" => '50'
 			)
 		)
 	)
