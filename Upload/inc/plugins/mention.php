@@ -449,6 +449,169 @@ function mentionme_initialize()
 	{
 		$plugins->add_hook("misc_start", "mention_misc_start");
 	}
+	// only add the showthread hook if we are there and we are adding a postbit multi-mention button
+	elseif(THIS_SCRIPT == 'showthread.php' && $mybb->settings['mention_add_postbit_button'])
+	{
+		$plugins->add_hook("showthread_start", "mention_showthread_start");
+		$plugins->add_hook("postbit", "mention_postbit");
+	}
+	// only add the xmlhttp hook if required and we are adding a postbit multi-mention button
+	elseif(THIS_SCRIPT == 'xmlhttp.php' && $mybb->settings['mention_add_postbit_button'])
+	{
+		$plugins->add_hook("xmlhttp", "mention_xmlhttp");
+	}
+}
+
+/*
+ * mention_postbit()
+ *
+ * build the multi-mention postbit button
+ *
+ * @param - $post - (array) passed from pluginSystem::run_hooks, an array of the post data
+ */
+function mention_postbit(&$post)
+{
+	global $mybb, $theme, $lang;
+
+	if(!$lang->mention)
+	{
+		$lang->load('mention');
+	}
+
+	// tailor JS to postbit setting
+	$js = "javascript:MentionMe.Insert({$post['pid']}, '{$post['username']}');";
+	if($mybb->settings['mention_multiple'])
+	{
+		$js = "javascript:MentionMe.multiMention({$post['pid']});";
+	}
+
+	// the mention button
+	$post['button_mention'] = <<<EOF
+<a href="{$js}" style="display: none;" id="multi_mention_link_{$post['pid']}"><img src="{$theme['imglangdir']}/postbit_multi_mention.gif" alt="{$lang->mention_title}" title="{$lang->mention_title}" id="multi_mention_{$post['pid']}" /></a>
+<script type="text/javascript">
+//<!--
+	$('multi_mention_link_{$post['pid']}').style.display = '';
+// -->
+</script>
+EOF;
+}
+
+/*
+ * mention_xmlhttp()
+ *
+ * handles AJAX for MentionMe, currently only the multi-mention functionality
+ */
+function mention_xmlhttp()
+{
+	global $mybb, $db;
+
+	if($mybb->input['action'] != 'get_multi_mentioned')
+	{
+		return;
+	}
+
+	// If the cookie does not exist, exit
+	if(!array_key_exists("multi_mention", $mybb->cookies))
+	{
+		exit;
+	}
+	// Divide up the cookie using our delimiter
+	$multi_mentioned = explode("|", $mybb->cookies['multi_mention']);
+
+	// No values - exit
+	if(!is_array($multi_mentioned))
+	{
+		exit;
+	}
+
+	// Loop through each post ID and sanitize it before querying
+	foreach($multi_mentioned as $post)
+	{
+		$mentioned_posts[$post] = intval($post);
+	}
+
+	// Join the post IDs back together
+	$mentioned_posts = implode(",", $mentioned_posts);
+
+	// Fetch unviewable forums
+	$unviewable_forums = get_unviewable_forums();
+	if($unviewable_forums)
+	{
+		$unviewable_forums = "AND t.fid NOT IN ({$unviewable_forums})";
+	}
+	$message = '';
+
+	// Are we loading all mentioned posts or only those not in the current thread?
+	if(!$mybb->input['load_all'])
+	{
+		$from_tid = "p.tid != '".intval($mybb->input['tid'])."' AND ";
+	}
+	else
+	{
+		$from_tid = '';
+	}
+
+	// Query for any posts in the list which are not within the specified thread
+	$mentioned = array();
+	$query = $db->simple_select('posts', 'username', "{$from_tid}pid IN ({$mentioned_posts}) {$unviewable_forums}", array("order_by" => 'dateline'));
+	while($mentioned_post = $db->fetch_array($query))
+	{
+		if(!is_moderator($mentioned_post['fid']) && $mentioned_post['visible'] == 0)
+		{
+			continue;
+		}
+
+		if($mentioned[$mentioned_post['username']] != true)
+		{
+			$message .= <<<EOF
+@"{$mentioned_post['username']}" 
+EOF;
+			$mentioned[$mentioned_post['username']] = true;
+		}
+	}
+
+	// Send our headers.
+	header("Content-type: text/plain; charset={$charset}");
+	echo $message;
+	exit;
+}
+
+/*
+ * mention_showthread_start()
+ *
+ * add the script, the Quick Reply notification <div> and the hidden input
+ */
+function mention_showthread_start()
+{
+	global $mybb, $mention_script, $mention_quickreply, $mentioned_ids, $lang, $tid;
+
+	if(!$lang->mention)
+	{
+		$lang->load('mention');
+	}
+
+	// we only need the extra JS and Quick Reply additions if we are allowing multiple mentions
+	if($mybb->settings['mention_multiple'])
+	{
+		$multi = '_multi';
+		$mention_quickreply = <<<EOF
+					<div class="editor_control_bar" style="width: 95%; padding: 4px; margin-top: 3px; display: none;" id="quickreply_multi_mention">
+						<span class="smalltext">
+							{$lang->mention_posts_selected} <a href="./newreply.php?tid={$tid}&amp;load_all_mentions=1" onclick="return MentionMe.loadMultiMentioned();">{$lang->mention_users_now}</a> {$lang->or} <a href="javascript:MentionMe.clearMultiMentioned();">{$lang->quickreply_multiquote_deselect}</a>.
+						</span>
+					</div>
+EOF;
+
+		$mentioned_ids = <<<EOF
+
+	<input type="hidden" name="mentioned_ids" value="" id="mentioned_ids" />
+EOF;
+	}
+
+	$mention_script = <<<EOF
+<script type="text/javascript" src="jscripts/mention_thread{$multi}.js"></script>
+
+EOF;
 }
 
 ?>

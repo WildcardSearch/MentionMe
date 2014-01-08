@@ -27,4 +27,9 @@ $l['myalerts_help_alert_types_mentioned'] = '<strong>Mentioned in a post</strong
 	This alert type is received whenever another member of the site mentions you within a post anywhere on the site using <a href="http://mods.mybb.com/view/mentionme"><span style="color: #32CD32;"><strong>MentionMe</strong></span></a> Twitter-style mention tags.
 </p>';
 
+// multi-mention on post bit
+$l['mention_posts_selected'] = 'You have selected one or more users to mention.';
+$l['mention_users_now'] = 'Mention these users now';
+$l['mention_title'] = 'Mention';
+
 ?>
