@@ -284,7 +284,7 @@ function mention_try_name($username = '')
 		global $db;
 
 		// query the db
-		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='" . $db->escape_string($username) . "'", array('limit' => 1));
+		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup, additionalgroups", "LOWER(username)='" . $db->escape_string($username) . "'", array('limit' => 1));
 
 		// result?
 		if($db->num_rows($user_query) === 1)

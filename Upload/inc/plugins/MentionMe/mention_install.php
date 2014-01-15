@@ -98,7 +98,7 @@ EOF;
         'name'				=> $name,
         'description'		=> $mention_description,
         'website'			=> 'https://github.com/WildcardSearch/MentionMe',
-        'version'			=> '2.2',
+        'version'			=> '2.2.1',
         'author'				=> $author,
         'authorsite'		=> 'http://www.rantcentralforums.com/',
         'guid'				=> '273104cdd4918caf9554d1567954d2ef',
@@ -127,7 +127,10 @@ function mention_install()
 
 	// do it all :D
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/functions_install.php';
-	require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/installer.php';
+	if(!class_exists('WildcardPluginInstaller'))
+	{
+		require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/installer.php';
+	}
 	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->install();
 
