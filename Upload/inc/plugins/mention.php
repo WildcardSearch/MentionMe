@@ -26,13 +26,24 @@ mentionme_initialize();
  *
  * @param - $message is the contents of the post
  */
-$plugins->add_hook("parse_message", "mention_run");
+$plugins->add_hook('parse_message', 'mention_run');
 function mention_run($message)
 {
 	global $mybb;
 
+	// emails addresses cause issues, strip them before matching
+	preg_match_all("#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i", $message, $emails, PREG_SET_ORDER);
+	$message = preg_replace("#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i", "<mybb-email>\n", $message);
+
 	// use function mention_filter_callback to repeatedly process mentions in the current post
-	return preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "mention_filter_callback", $message);
+	$message = preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "mention_filter_callback", $message);
+
+	// now restore the email addresses
+	foreach($emails as $email)
+	{
+		$message = preg_replace("#\<mybb-email>\n?#", $email[0], $message, 1);
+	}
+	return $message;
 }
 
 /*
@@ -284,7 +295,7 @@ function mention_try_name($username = '')
 		global $db;
 
 		// query the db
-		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "LOWER(username)='" . $db->escape_string($username) . "'", array('limit' => 1));
+		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup, additionalgroups", "LOWER(username)='" . $db->escape_string($username) . "'", array('limit' => 1));
 
 		// result?
 		if($db->num_rows($user_query) === 1)
