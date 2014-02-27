@@ -1,8 +1,8 @@
 <?php
 /*
  * Plugin Name: MentionMe for MyBB 1.6.x
- * Copyright 2013 WildcardSearch
- * http://www.wildcardsworld.com
+ * Copyright 2014 WildcardSearch
+ * http://www.rantcentralforums.com
  *
  * this is the main plugin file
  */
@@ -363,9 +363,7 @@ function mention_misc_start()
 		if(trim($mybb->input['username']))
 		{
 			// just insert it with the 'safe' syntax, close the window and get out
-			die
-			(
-<<<EOF
+			die(<<<EOF
 <script type="text/javascript">
 <!--
 	opener.clickableEditor.performInsert('@"{$mybb->input['username']}"');
@@ -482,7 +480,7 @@ function mentionme_initialize()
  */
 function mention_postbit(&$post)
 {
-	global $mybb, $theme, $lang;
+	global $mybb, $theme, $lang, $templates;
 
 	if(!$lang->mention)
 	{
@@ -497,14 +495,7 @@ function mention_postbit(&$post)
 	}
 
 	// the mention button
-	$post['button_mention'] = <<<EOF
-<a href="{$js}" style="display: none;" id="multi_mention_link_{$post['pid']}"><img src="{$theme['imglangdir']}/postbit_multi_mention.gif" alt="{$lang->mention_title}" title="{$lang->mention_title}" id="multi_mention_{$post['pid']}" /></a>
-<script type="text/javascript">
-//<!--
-	$('multi_mention_link_{$post['pid']}').style.display = '';
-// -->
-</script>
-EOF;
+	eval("\$post['button_mention'] = \"" . $templates->get('mentionme_postbit_button') . "\";");
 }
 
 /*

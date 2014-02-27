@@ -1,8 +1,8 @@
 <?php
 /*
  * Plugin Name: MentionMe for MyBB 1.6.x
- * Copyright 2013 WildcardSearch
- * http://www.wildcardsworld.com
+ * Copyright 2014 WildcardSearch
+ * http://www.rantcentralforums.com
  *
  * this file contains data used by classes/installer.php
  */
@@ -75,9 +75,14 @@ $settings = array
 	)
 );
 
-$templates = array
-(
-	"mentionme_popup" => <<<EOF
+$templates = array(
+	"mentionme" => array(
+		"group" => array(
+			"prefix" => 'mentionme',
+			"title" => $lang->mentionme,
+		),
+		"templates" => array(
+			"mentionme_popup" => <<<EOF
 <html>
 <head>
 <title>{\$mybb->settings['bbname']} - {\$lang->mentionme_popup_title}</title>
@@ -118,6 +123,17 @@ $templates = array
 </body>
 </html>
 EOF
+			,
+			"mentionme_postbit_button" => <<<EOF
+<a href="{\$js}" style="display: none;" id="multi_mention_link_{\$post['pid']}"><img src="{\$theme['imglangdir']}/postbit_multi_mention.gif" alt="{\$lang->mention_title}" title="{\$lang->mention_title}" id="multi_mention_{\$post['pid']}" /></a>
+<script type="text/javascript">
+//<!--
+	$('multi_mention_link_{\$post['pid']}').style.display = '';
+// -->
+</script>
+EOF
+		),
+	),
 );
 
 ?>

@@ -1,7 +1,7 @@
 /*
  * Plugin Name: MentionMe for MyBB 1.6.x
- * Copyright 2013 WildcardSearch
- * http://www.wildcardsworld.com
+ * Copyright 2014 WildcardSearch
+ * http://www.rantcentralforums.com
  *
  * this file contains an extended class for the MyBB messageEditor,
  * adding a code button to the editor for mentions

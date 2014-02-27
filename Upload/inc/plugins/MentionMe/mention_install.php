@@ -1,8 +1,8 @@
 <?php
 /*
  * Plugin Name: MentionMe for MyBB 1.6.x
- * Copyright 2013 WildcardSearch
- * http://www.wildcardsworld.com
+ * Copyright 2014 WildcardSearch
+ * http://www.rantcentralforums.com
  *
  * this file provides install routines for mention.php
  */
@@ -95,14 +95,14 @@ EOF;
 
     // return the info
 	return array(
-        'name'				=> $name,
-        'description'		=> $mention_description,
-        'website'			=> 'https://github.com/WildcardSearch/MentionMe',
-        'version'			=> '2.2.1',
-        'author'				=> $author,
-        'authorsite'		=> 'http://www.rantcentralforums.com/',
-        'guid'				=> '273104cdd4918caf9554d1567954d2ef',
-		'compatibility'	=> '16*'
+        'name' => $name,
+        'description' => $mention_description,
+        'website' => 'https://github.com/WildcardSearch/MentionMe',
+        'version' => '2.2.2',
+        'author' => $author,
+        'authorsite' => 'http://www.rantcentralforums.com/',
+        'guid' => '273104cdd4918caf9554d1567954d2ef',
+		'compatibility' => '16*'
     );
 }
 
@@ -123,7 +123,12 @@ function mention_is_installed()
  */
 function mention_install()
 {
-	global $db;
+	global $db, $lang;
+
+	if(!$lang->mention)
+	{
+		$lang->load('mention');
+	}
 
 	// do it all :D
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/functions_install.php';
@@ -185,19 +190,19 @@ function mention_activate()
 		require_once MYBB_ROOT.'/inc/functions_task.php';
 
         $this_task = array(
-            "title"				=> $lang->mention_task_name,
-            "file"					=> 'mentiome_namecache',
-            "description"		=> $lang->mention_task_description,
-            "minute"			=> 0,
-            "hour"				=> 0,
-            "day"				=> '*',
-            "weekday"		=> '*',
-            "month"			=> '*',
-            "nextrun"			=> TIME_NOW + 3600,
-            "lastrun"			=> 0,
-            "enabled"			=> 1,
-            "logging"			=> 1,
-            "locked"			=> 0,
+            "title" => $lang->mention_task_name,
+            "file" => 'mentiome_namecache',
+            "description" => $lang->mention_task_description,
+            "minute" => 0,
+            "hour" => 0,
+            "day" => '*',
+            "weekday" => '*',
+            "month" => '*',
+            "nextrun" => TIME_NOW + 3600,
+            "lastrun" => 0,
+            "enabled" => 1,
+            "logging" => 1,
+            "locked" => 0,
         );
 
         $task_id = (int) $db->insert_query('tasks', $this_task);
@@ -339,11 +344,10 @@ function mention_mass_enable_alerts()
 	$settings = array();
 	while($uid = $db->fetch_field($query, 'uid'))
 	{
-		$settings[] = array
-		(
-			"user_id"			=>	$uid,
-			"setting_id"		=>	$mention_id,
-			"value"				=>	1
+		$settings[] = array(
+			"user_id" => $uid,
+			"setting_id" => $mention_id,
+			"value" => 1
 		);
 	}
 	$db->insert_query_multiple('alert_setting_values', $settings);
