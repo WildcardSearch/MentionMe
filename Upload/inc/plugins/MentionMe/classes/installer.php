@@ -9,6 +9,8 @@
 
 class WildcardPluginInstaller
 {
+	private $db;
+
 	protected $tables = array();
 	protected $table_names = array();
 
@@ -23,45 +25,78 @@ class WildcardPluginInstaller
 	protected $templates = array();
 	protected $template_names = array();
 
+	protected $templategroups = array();
+	protected $templategroup_names = array();
+
+	/*
+	 * __construct()
+	 *
+	 * load the installation data and prepare for anything
+	 *
+	 * @param - $path - (string) path to the install data
+	 * @return: n/a
+	 */
 	public function __construct($path)
 	{
-		if(trim($path) && file_exists($path))
+		if(!trim($path) || !file_exists($path))
 		{
-			global $lang, $db;
-			require_once $path;
-			foreach(array('tables', 'columns', 'settings', 'templates') as $key)
-			{
-				if(is_array($$key) && !empty($$key))
-				{
-					$this->$key = $$key;
-					switch($key)
-					{
-						case 'settings':
-							$this->settinggroup_names = array_keys($settings);
-							foreach($settings as $group => $info)
-							{
-								foreach($info['settings'] as $name => $setting)
-								{
-									$this->setting_names[] = $name;
-								}
-							}
-							break;
-						case 'columns':
-							$this->columns = $columns;
-							break;
-						default:
-							$singular = substr($key, 0, strlen($key) - 1);
-							$property = "{$singular}_names";
-							$this->$property = array_keys($$key);
-							break;
-					}
-				}
-			}
-			return true;
+			return;
 		}
-		return false;
+
+		global $lang, $db;
+		require_once $path;
+		foreach(array('tables', 'columns', 'settings', 'templates') as $key)
+		{
+			if(!is_array($$key) || empty($$key))
+			{
+				continue;
+			}
+
+			$this->$key = $$key;
+			switch($key)
+			{
+				case 'settings':
+					$this->settinggroup_names = array_keys($settings);
+					foreach($settings as $group => $info)
+					{
+						foreach($info['settings'] as $name => $setting)
+						{
+							$this->setting_names[] = $name;
+						}
+					}
+					break;
+				case 'templates':
+					$this->templategroup_names = array_keys($templates);
+					foreach($templates as $group => $info)
+					{
+						foreach($info['templates'] as $name => $template)
+						{
+							$this->template_names[] = $name;
+						}
+					}
+					break;
+				case 'columns':
+					$this->columns = $columns;
+					break;
+				default:
+					$singular = substr($key, 0, strlen($key) - 1);
+					$property = "{$singular}_names";
+					$this->$property = array_keys($$key);
+					break;
+			}
+		}
+
+		// snag a copy of the db object
+		$this->db = $db;
 	}
 
+	/*
+	 * install()
+	 *
+	 * install all the elements stored in the installation data file
+	 *
+	 * @return: n/a
+	 */
 	public function install()
 	{
 		$this->add_tables();
@@ -70,12 +105,20 @@ class WildcardPluginInstaller
 		$this->add_templates();
 	}
 
+	/*
+	 * uninstall()
+	 *
+	 * uninstall all elements as provided in the install data
+	 *
+	 * @return: n/a
+	 */
 	public function uninstall()
 	{
 		$this->remove_tables();
 		$this->remove_columns();
 		$this->remove_('settinggroups', 'name', $this->settinggroup_names);
 		$this->remove_('settings', 'name', $this->setting_names);
+		$this->remove_('templategroups', 'prefix', $this->templategroup_names);
 		$this->remove_('templates', 'title', $this->template_names);
 		rebuild_settings();
 	}
@@ -87,15 +130,15 @@ class WildcardPluginInstaller
 	 *
 	 * @param - $table - (string) table name without prefix
 	 * @param - $columns - (array) an associative array of columns
+	 * @return: n/a
 	 */
 	private function add_table($table, $columns)
 	{
-		global $db;
 		static $collation;
 		if(!isset($collation) || strlen($collation) == 0)
 		{
 			// only build collation for the first table
-			$collation = $db->build_create_table_collation();
+			$collation = $this->db->build_create_table_collation();
 		}
 
 		// build the column list
@@ -107,10 +150,10 @@ class WildcardPluginInstaller
 		}
 
 		// create the table if it doesn't already exist
-		if(!$db->table_exists($table))
+		if(!$this->table_exists($table))
 		{
 			$table =  TABLE_PREFIX . $table;
-			$db->write_query("CREATE TABLE {$table} ({$column_list}) ENGINE={$db->table_type}{$collation};");
+			$this->db->write_query("CREATE TABLE {$table} ({$column_list}) ENGINE={$this->db->table_type}{$collation};");
 		}
 	}
 
@@ -120,6 +163,7 @@ class WildcardPluginInstaller
 	 * create multiple tables from stored info
 	 *
 	 * @param - $tables - (array) an associative array of database tables and their columns
+	 * @return: n/a
 	 */
 	public function add_tables()
 	{
@@ -128,10 +172,9 @@ class WildcardPluginInstaller
 			return false;
 		}
 
-		global $db;
 		foreach($this->tables as $table => $columns)
 		{
-			if($db->table_exists($table))
+			if($this->table_exists($table))
 			{
 				// if it already exists, just check that all the columns are present (and add them if not)
 				$this->add_columns(array($table => $columns));
@@ -147,6 +190,8 @@ class WildcardPluginInstaller
 	 * remove_tables()
 	 *
 	 * drop multiple database tables
+	 *
+	 * @return: n/a
 	 */
 	public function remove_tables()
 	{
@@ -155,9 +200,8 @@ class WildcardPluginInstaller
 			return;
 		}
 
-		global $db;
 		$drop_list = implode(', ' . TABLE_PREFIX, $this->table_names);
-		$db->drop_table($drop_list);
+		$this->db->drop_table($drop_list);
 	}
 
 	/*
@@ -166,6 +210,7 @@ class WildcardPluginInstaller
 	 * add columns in the list to a table (if they do not already exist)
 	 *
 	 * @param - $column_list - (array) an associative array of tables and columns
+	 * @return: n/a
 	 */
 	public function add_columns()
 	{
@@ -174,13 +219,12 @@ class WildcardPluginInstaller
 			return false;
 		}
 
-		global $db;
 		foreach($this->columns as $table => $columns)
 		{
 			$sep = $added_columns = '';
 			foreach($columns as $title => $definition)
 			{
-				if(!$db->field_exists($title, $table))
+				if(!$this->field_exists($table, $title))
 				{
 					$added_columns .= "{$sep}{$title} {$definition}";
 					$sep = ', ADD ';
@@ -189,7 +233,7 @@ class WildcardPluginInstaller
 			if(strlen($added_columns) > 0)
 			{
 				// trickery, again
-				$db->add_column($table, $added_columns, '');
+				$this->db->add_column($table, $added_columns, '');
 			}
 		}
 	}
@@ -200,6 +244,7 @@ class WildcardPluginInstaller
 	 * drop multiple listed columns
 	 *
 	 * @param - $column_list - (array) an associative array of tables and columns
+	 * @return: n/a
 	 */
 	public function remove_columns()
 	{
@@ -208,13 +253,12 @@ class WildcardPluginInstaller
 			return;
 		}
 
-		global $db;
 		foreach($this->columns as $table => $columns)
 		{
 			$sep = $dropped_columns = '';
 			foreach($columns as $title => $definition)
 			{
-				if($db->field_exists($title, $table))
+				if($this->field_exists($table, $title))
 				{
 					$dropped_columns .= "{$sep}{$title}";
 					$sep = ', DROP ';
@@ -223,7 +267,7 @@ class WildcardPluginInstaller
 			if(strlen($dropped_columns) > 0)
 			{
 				// tricky, tricky xD
-				$result = $db->drop_column($table, $dropped_columns);
+				$result = $this->db->drop_column($table, $dropped_columns);
 			}
 		}
 	}
@@ -234,8 +278,7 @@ class WildcardPluginInstaller
 	 * create multiple setting groups
 	 *
 	 * @param - $groups - (array) an associative array of setting groups
-	 *
-	 * return: an associative array of setting groups and gids
+	 * @return: an associative array of setting groups and gids
 	 */
 	private function add_settinggroups($groups)
 	{
@@ -244,20 +287,19 @@ class WildcardPluginInstaller
 			return false;
 		}
 
-		global $db;
 		$insert_array = $gids = array();
 		foreach($groups as $name => $group)
 		{
-			$query = $db->simple_select('settinggroups', 'gid', "name='{$name}'");
-			if($db->num_rows($query) > 0)
+			$query = $this->db->simple_select('settinggroups', 'gid', "name='{$name}'");
+			if($this->db->num_rows($query) > 0)
 			{
-				$group['gid'] = (int) $db->fetch_field($query, 'gid');
+				$group['gid'] = (int) $this->db->fetch_field($query, 'gid');
 				$gids[$name] = $group['gid'];
-				$db->update_query('settinggroups', $group, "name='{$name}'");
+				$this->db->update_query('settinggroups', $group, "name='{$name}'");
 			}
 			else
 			{
-				$gid = $db->insert_query('settinggroups', $group);
+				$gid = $this->db->insert_query('settinggroups', $group);
 				$gids[$name] = $gid;
 			}
 		}
@@ -270,6 +312,7 @@ class WildcardPluginInstaller
 	 * create settings from an array
 	 *
 	 * @param - $settings - (array) an associative array of groups and settings
+	 * @return: n/a
 	 */
 	public function add_settings()
 	{
@@ -278,7 +321,6 @@ class WildcardPluginInstaller
 			return;
 		}
 
-		global $db;
 		foreach($this->settings as $group => $data)
 		{
 			$gids = $this->add_settinggroups(array($group => $data['group']));
@@ -289,14 +331,14 @@ class WildcardPluginInstaller
 			{
 				$setting['gid'] = $gid;
 				// does the setting already exist?
-				$query = $db->simple_select('settings', 'sid', "name='{$name}'");
-				if($db->num_rows($query) > 0)
+				$query = $this->db->simple_select('settings', 'sid', "name='{$name}'");
+				if($this->db->num_rows($query) > 0)
 				{
-					$setting['sid'] = (int) $db->fetch_field($query, 'sid');
+					$setting['sid'] = (int) $this->db->fetch_field($query, 'sid');
 
 					// if so update the info (but leave the value alone)
 					unset($setting['value']);
-					$db->update_query('settings', $setting, "name='{$name}'");
+					$this->db->update_query('settings', $setting, "name='{$name}'");
 				}
 				else
 				{
@@ -305,10 +347,46 @@ class WildcardPluginInstaller
 			}
 			if(!empty($insert_array))
 			{
-				$db->insert_query_multiple('settings', $insert_array);
+				$this->db->insert_query_multiple('settings', $insert_array);
 			}
 		}
 		rebuild_settings();
+	}
+
+	/*
+	 * add_template_groups()
+	 *
+	 * create or update the template groups stored in the object
+	 *
+	 * @return: n/a
+	 */
+	public function add_template_groups()
+	{
+		if(!is_array($this->templates) || empty($this->templates))
+		{
+			return;
+		}
+
+		$insert_array = $update_array = array();
+
+		foreach($this->templates as $prefix => $data)
+		{
+			$query = $this->db->simple_select('templategroups', 'gid', "prefix='{$prefix}'");
+			if($this->db->num_rows($query) > 0)
+			{
+				$gid = (int) $this->db->fetch_field($query, 'gid');
+				$this->db->update_query('templategroups', $data['group'], "gid='{$gid}'");
+			}
+			else
+			{
+				$insert_array[] = $data['group'];
+			}
+		}
+
+		if(!empty($insert_array))
+		{
+			$this->db->insert_query_multiple('templategroups', $insert_array);
+		}
 	}
 
 	/*
@@ -317,44 +395,48 @@ class WildcardPluginInstaller
 	 * create multiple templates from stored info
 	 *
 	 * @param - $templates - (array) an associative array of template data
+	 * @return: n/a
 	 */
 	public function add_templates()
 	{
 		if(!is_array($this->templates) || empty($this->templates))
 		{
-			return false;
+			return;
 		}
 
-		global $db;
-		$insert_arrays = array();
-		foreach($this->templates as $title => $template)
+		$this->add_template_groups();
+
+		$insert_array = array();
+		foreach($this->templates as $group => $data)
 		{
-			$title = $db->escape_string($title);
-			$template = $db->escape_string($template);
-			$query = $db->simple_select('templates', 'tid', "title='{$title}'");
-			if($db->num_rows($query) > 0)
+			foreach($data['templates'] as $title => $template)
 			{
-				$tid = (int) $db->fetch_field($query, 'tid');
-				$update_array = array
-				(
-					"title" => $title,
-					"template" => $template
-				);
-				$db->update_query('templates', $update_array, "tid='{$tid}'");
-			}
-			else
-			{
-				$insert_arrays[] = array
-				(
+				$title = $this->db->escape_string($title);
+				$template = $this->db->escape_string($template);
+				$template_array = array(
 					"title" => $title,
 					"template" => $template,
-					"sid" => -1
+					"sid" => -2,
+					"version" => 1,
+					"dateline" => TIME_NOW,
 				);
+
+				$query = $this->db->simple_select('templates', 'tid', "title='{$title}' AND sid IN('-2', '-1')");
+				if($this->db->num_rows($query) > 0)
+				{
+					$tid = (int) $this->db->fetch_field($query, 'tid');
+					$this->db->update_query('templates', $template_array, "tid='{$tid}'");
+				}
+				else
+				{
+					$insert_array[] = $template_array;
+				}
 			}
 		}
-		if(!empty($insert_arrays))
+
+		if(!empty($insert_array))
 		{
-			$db->insert_query_multiple('templates', $insert_arrays);
+			$this->db->insert_query_multiple('templates', $insert_array);
 		}
 	}
 
@@ -367,6 +449,7 @@ class WildcardPluginInstaller
 	 * @param - $table - (string) table name without prefix
 	 * @param - $field - (string) field name
 	 * @param - $list - (array) an unindexed array of string values
+	 * @return: n/a
 	 */
 	private function remove_($table, $field, $list)
 	{
@@ -380,12 +463,92 @@ class WildcardPluginInstaller
 			return;
 		}
 
-		global $db;
-		if($db->table_exists($table) && $db->field_exists($field, $table))
+		if($this->table_exists($table) && $this->field_exists($table, $field))
 		{
 			$delete_list = "'" . implode("','", $list) . "'";
-			$db->delete_query($table, "{$field} IN ({$delete_list})");
+			$this->db->delete_query($table, "{$field} IN ({$delete_list})");
 		}
+	}
+
+	/*
+	 * table_exists()
+	 *
+	 * verify the existence of named table
+	 *
+	 * @param - $table - (string) table name without prefix
+	 * @returns: (bool) true if it exists/false if not
+	 */
+	public function table_exists($table)
+	{
+		static $table_list;
+
+		if(!isset($table_list))
+		{
+			$table_list = $this->build_table_list();
+		}
+		return isset($table_list[$this->db->table_prefix . $table]);
+	}
+
+	/*
+	 * build_table_list()
+	 *
+	 * build an array of all the tables in the current database
+	 * @returns: (array) an array with keys for the table names and 1 for the values
+	 */
+	private function build_table_list()
+	{
+		global $config;
+
+		$query = $this->db->write_query("
+			SHOW TABLES
+			FROM {$config['database']['database']}
+		");
+
+		$table_list = array();
+		while ($row = $this->db->fetch_array($query)) {
+			$table_list[array_pop($row)] = 1;
+		}
+		return $table_list;
+	}
+
+	/*
+	 * field_exists()
+	 *
+	 * verify the existence of the named column of the named table
+	 *
+	 * @param - $table - (string) table name without prefix
+	 * @param - $field - (string) field name
+	 * @returns: (bool) true if it exists/false if not
+	 */
+	public function field_exists($table, $field)
+	{
+		static $field_list;
+
+		if(!isset($field_list[$table]))
+		{
+			$field_list[$table] = $this->build_field_list($table);
+		}
+		return isset($field_list[$table][$field]);
+	}
+
+	/*
+	 * build_field_list()
+	 *
+	 * build an array of all the columns of the named table
+	 *
+	 * @param - $table - (string) table name without prefix
+	 * @returns: (array) an array with keys for the field names and 1 for the values
+	 */
+	private function build_field_list($table)
+	{
+		$field_list = array();
+
+		$field_info = $this->db->show_fields_from($table);
+		foreach($field_info as $info)
+		{
+			$field_list[$info['Field']] = 1;
+		}
+		return $field_list;
 	}
 }
 

@@ -1,8 +1,8 @@
 <?php
 /*
  * Plugin Name: MentionMe for MyBB 1.6.x
- * Copyright 2013 WildcardSearch
- * http://www.wildcardsworld.com
+ * Copyright 2014 WildcardSearch
+ * http://www.rantcentralforums.com
  *
  * this script provides MyAlerts routines for mention.php
  */
@@ -330,7 +330,7 @@ function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_in
 /*
  * mention_can_view()
  *
- * determine whether a sure can view a forum and ultimately whether they can receive
+ * determine whether a user can view a forum and ultimately whether they can receive
  * an alert initiated by a mention in the given forum
  *
  * @param - $username - (string) username
@@ -345,8 +345,9 @@ function mention_can_view($username, $uid, $fid)
 
 	$cache_changed = false;
 
-    // if there are no restrictions on the forum then anyone can view it
     $forum_permissions = $cache->read('forumpermissions');
+
+    // if there are no restrictions on the forum then anyone can view it
     if(empty($forum_permissions[$fid]) || $forum_permissions[$fid] = 0)
     {
         return true;
