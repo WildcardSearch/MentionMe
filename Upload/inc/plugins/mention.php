@@ -581,7 +581,7 @@ function mention_xmlhttp()
  */
 function mention_showthread_start()
 {
-	global $mybb, $mention_script, $mention_quickreply, $mentioned_ids, $lang, $tid;
+	global $mybb, $mention_script, $mention_quickreply, $mentioned_ids, $lang, $tid, $templates;
 
 	if(!$lang->mention)
 	{
@@ -592,13 +592,7 @@ function mention_showthread_start()
 	if($mybb->settings['mention_multiple'])
 	{
 		$multi = '_multi';
-		$mention_quickreply = <<<EOF
-					<div class="editor_control_bar" style="width: 95%; padding: 4px; margin-top: 3px; display: none;" id="quickreply_multi_mention">
-						<span class="smalltext">
-							{$lang->mention_posts_selected} <a href="./newreply.php?tid={$tid}&amp;load_all_mentions=1" onclick="return MentionMe.loadMultiMentioned();">{$lang->mention_users_now}</a> {$lang->or} <a href="javascript:MentionMe.clearMultiMentioned();">{$lang->quickreply_multiquote_deselect}</a>.
-						</span>
-					</div>
-EOF;
+		eval("\$mention_quickreply = \"" . $templates->get('mentionme_quickreply_notice') . "\";");
 
 		$mentioned_ids = <<<EOF
 
