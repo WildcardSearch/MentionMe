@@ -21,26 +21,6 @@ $settings = array
 		),
 		"settings" => array
 		(
-			"mention_advanced_matching" => array
-			(
-				"sid" => "NULL",
-				"name" => "mention_advanced_matching",
-				"title" => $lang->mention_advanced_matching,
-				"description" => $lang->mention_advanced_matching_desc,
-				"optionscode" => "yesno",
-				"value" => '0',
-				"disporder" => '10'
-			),
-			"mention_cache_time" => array
-			(
-				"sid" => "NULL",
-				"name" => "mention_cache_time",
-				"title" => $lang->mention_cache_time_title,
-				"description" => $lang->mention_cache_time_description,
-				"optionscode" => "text",
-				"value" => '7',
-				"disporder" => '20'
-			),
 			"mention_add_codebutton" => array
 			(
 				"sid" => "NULL",
@@ -49,7 +29,7 @@ $settings = array
 				"description" => $lang->mention_add_codebutton_description,
 				"optionscode" => 'yesno',
 				"value" => '1',
-				"disporder" => '30'
+				"disporder" => '10'
 			),
 			"mention_add_postbit_button" => array
 			(
@@ -59,7 +39,7 @@ $settings = array
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '40'
+				"disporder" => '20'
 			),
 			"mention_multiple" => array
 			(
@@ -69,8 +49,38 @@ $settings = array
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
+				"disporder" => '30'
+			),
+			"mention_css_buttons" => array
+			(
+				"sid" => "NULL",
+				"name" => "mention_css_buttons",
+				"title" => $lang->mention_css_buttons_title,
+				"description" => $lang->mention_css_buttons_description,
+				"optionscode" => 'yesno',
+				"value" => '0',
+				"disporder" => '40'
+			),
+			"mention_cache_time" => array
+			(
+				"sid" => "NULL",
+				"name" => "mention_cache_time",
+				"title" => $lang->mention_cache_time_title,
+				"description" => $lang->mention_cache_time_description,
+				"optionscode" => "text",
+				"value" => '7',
 				"disporder" => '50'
-			)
+			),
+			"mention_advanced_matching" => array
+			(
+				"sid" => "NULL",
+				"name" => "mention_advanced_matching",
+				"title" => $lang->mention_advanced_matching,
+				"description" => $lang->mention_advanced_matching_desc,
+				"optionscode" => "yesno",
+				"value" => '0',
+				"disporder" => '60'
+			),
 		)
 	)
 );
@@ -130,6 +140,13 @@ EOF
 //<!--
 	$('multi_mention_link_{\$post['pid']}').style.display = '';
 // -->
+</script>
+EOF
+			,
+			"mentionme_postbit_button_css" => <<<EOF
+<a href="{\$js}" style="display: none;" id="multi_mention_link_{\$post['pid']}" title="{\$lang->mention_title}" class="postbit_multimention">{\$lang->mention_title}</a>
+<script type="text/javascript">
+    $('multi_mention_link_{\$post['pid']}').style.display = '';
 </script>
 EOF
 			,

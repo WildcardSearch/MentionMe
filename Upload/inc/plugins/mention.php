@@ -494,8 +494,14 @@ function mention_postbit(&$post)
 		$js = "javascript:MentionMe.multiMention({$post['pid']});";
 	}
 
-	// the mention button
-	eval("\$post['button_mention'] = \"" . $templates->get('mentionme_postbit_button') . "\";");
+	if($mybb->settings['mention_css_buttons'])
+	{
+		eval("\$post['button_mention'] = \"" . $templates->get('mentionme_postbit_button_css') . "\";");
+	}
+	else
+	{
+		eval("\$post['button_mention'] = \"" . $templates->get('mentionme_postbit_button') . "\";");
+	}
 }
 
 /*
