@@ -529,7 +529,7 @@ function mention_xmlhttp()
 	// Loop through each post ID and sanitize it before querying
 	foreach($multi_mentioned as $post)
 	{
-		$mentioned_posts[$post] = intval($post);
+		$mentioned_posts[$post] = (int) $post;
 	}
 
 	// Join the post IDs back together
@@ -539,23 +539,21 @@ function mention_xmlhttp()
 	$unviewable_forums = get_unviewable_forums();
 	if($unviewable_forums)
 	{
-		$unviewable_forums = "AND t.fid NOT IN ({$unviewable_forums})";
+		$unviewable_forums = " AND fid NOT IN ({$unviewable_forums})";
 	}
 	$message = '';
 
-	// Are we loading all mentioned posts or only those not in the current thread?
+	// are we loading all mentioned posts or only those not in the current thread?
+	$from_tid = '';
 	if(!$mybb->input['load_all'])
 	{
-		$from_tid = "p.tid != '".intval($mybb->input['tid'])."' AND ";
-	}
-	else
-	{
-		$from_tid = '';
+		$tid = (int) $mybb->input['tid'];
+		$from_tid = "tid != '{$tid}' AND ";
 	}
 
 	// Query for any posts in the list which are not within the specified thread
 	$mentioned = array();
-	$query = $db->simple_select('posts', 'username', "{$from_tid}pid IN ({$mentioned_posts}) {$unviewable_forums}", array("order_by" => 'dateline'));
+	$query = $db->simple_select('posts', 'username, fid, visible', "{$from_tid}pid IN ({$mentioned_posts}){$unviewable_forums}", array("order_by" => 'dateline'));
 	while($mentioned_post = $db->fetch_array($query))
 	{
 		if(!is_moderator($mentioned_post['fid']) && $mentioned_post['visible'] == 0)
@@ -565,9 +563,7 @@ function mention_xmlhttp()
 
 		if($mentioned[$mentioned_post['username']] != true)
 		{
-			$message .= <<<EOF
-@"{$mentioned_post['username']}" 
-EOF;
+			$message .= "@\"{$mentioned_post['username']}\" ";
 			$mentioned[$mentioned_post['username']] = true;
 		}
 	}
