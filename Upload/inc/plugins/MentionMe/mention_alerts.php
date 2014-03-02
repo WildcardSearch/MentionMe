@@ -42,8 +42,13 @@ function mention_myalerts_datahandler_post_update($this_post)
 	$fid = (int) $this_post->data['fid'];
 	$tid = (int) $this_post->data['tid'];
 	$pid = (int) $this_post->data['pid'];
+	$post_uid = (int) $post['uid'];
 	$edit_uid = (int) $mybb->user['uid'];
 	$subject = $post['subject'];
+
+	if ($edit_uid != $post_uid) {
+		return;
+	}
 
 	// get all mentions
 	$matches = array();
