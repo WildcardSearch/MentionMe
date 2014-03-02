@@ -321,7 +321,7 @@ function mention_try_name($username = '')
  *
  * add our code button's hover text language and insert our script (we don't
  * have to check settings because the hook will not be added if the setting for
- * adding a code button is set to no
+ * adding a code button is set to no)
  *
  * @param - $edit_lang - (array) an unindexed array of language variable names for the editor
  */
@@ -366,7 +366,7 @@ function mention_misc_start()
 			die(<<<EOF
 <script type="text/javascript">
 <!--
-	opener.clickableEditor.performInsert('@"{$mybb->input['username']}"');
+	opener.clickableEditor.performInsert('@"{$mybb->input['username']}" ');
 	window.close();
 // -->
 </script>
