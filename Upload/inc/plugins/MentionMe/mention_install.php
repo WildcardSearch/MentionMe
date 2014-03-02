@@ -249,6 +249,7 @@ function mention_deactivate()
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('{$mention_quickreply}') . "#i", '');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('{$mentioned_ids}') . "#i", '');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
+	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
 }
 
 /* mention_uninstall()
