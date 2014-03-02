@@ -22,7 +22,6 @@ $l['mention_plugin_settings'] = 'Plugin Settings';
 $l['mention_plugin_settings_title'] = 'MentionMe Configuration';
 $l['mention_settingsgroup_description'] = 'Enable or disable advanced matching';
 
-// advanced name matching
 $l['mention_advanced_matching'] = 'Enable Advanced Matching?';
 $l['mention_advanced_matching_desc'] = 'This option allows user names with whitespace to be processed by MentionMe without the necessity of enclosing user names in double quotes.<br /><br />This feature can greatly increase the server load and is not recommended for large forums.';
 
@@ -36,7 +35,10 @@ $l['mention_add_postbit_button_title'] = 'Add a Postbit Button?';
 $l['mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';
 
 $l['mention_multiple_title'] = 'Multiple Mentions?';
-$l['mention_multiple_description'] = 'YES (default) to mimic the multi-quote feature or NO to instantly insert the mention on click<br /><br /><strong>The above setting must be set to YES for this setting to take affect</strong>';
+$l['mention_multiple_description'] = 'YES (default) to mimic the multi-quote feature or NO to instantly insert the mention on click<br /><br /><strong>The postbit button setting must be set to YES for this setting to take effect</strong>';
+
+$l['mention_css_buttons_title'] = 'CSS Buttons?';
+$l['mention_css_buttons_description'] = 'YES if your postbit buttons are styled with CSS NO (default) if you use image buttons<br /><br /><strong>The postbit button setting must be set to YES for this setting to take effect</strong>';
 
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';

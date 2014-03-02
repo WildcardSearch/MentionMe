@@ -321,7 +321,7 @@ function mention_try_name($username = '')
  *
  * add our code button's hover text language and insert our script (we don't
  * have to check settings because the hook will not be added if the setting for
- * adding a code button is set to no
+ * adding a code button is set to no)
  *
  * @param - $edit_lang - (array) an unindexed array of language variable names for the editor
  */
@@ -366,7 +366,7 @@ function mention_misc_start()
 			die(<<<EOF
 <script type="text/javascript">
 <!--
-	opener.clickableEditor.performInsert('@"{$mybb->input['username']}"');
+	opener.clickableEditor.performInsert('@"{$mybb->input['username']}" ');
 	window.close();
 // -->
 </script>
@@ -494,8 +494,14 @@ function mention_postbit(&$post)
 		$js = "javascript:MentionMe.multiMention({$post['pid']});";
 	}
 
-	// the mention button
-	eval("\$post['button_mention'] = \"" . $templates->get('mentionme_postbit_button') . "\";");
+	if($mybb->settings['mention_css_buttons'])
+	{
+		eval("\$post['button_mention'] = \"" . $templates->get('mentionme_postbit_button_css') . "\";");
+	}
+	else
+	{
+		eval("\$post['button_mention'] = \"" . $templates->get('mentionme_postbit_button') . "\";");
+	}
 }
 
 /*
@@ -529,7 +535,7 @@ function mention_xmlhttp()
 	// Loop through each post ID and sanitize it before querying
 	foreach($multi_mentioned as $post)
 	{
-		$mentioned_posts[$post] = intval($post);
+		$mentioned_posts[$post] = (int) $post;
 	}
 
 	// Join the post IDs back together
@@ -539,23 +545,21 @@ function mention_xmlhttp()
 	$unviewable_forums = get_unviewable_forums();
 	if($unviewable_forums)
 	{
-		$unviewable_forums = "AND t.fid NOT IN ({$unviewable_forums})";
+		$unviewable_forums = " AND fid NOT IN ({$unviewable_forums})";
 	}
 	$message = '';
 
-	// Are we loading all mentioned posts or only those not in the current thread?
+	// are we loading all mentioned posts or only those not in the current thread?
+	$from_tid = '';
 	if(!$mybb->input['load_all'])
 	{
-		$from_tid = "p.tid != '".intval($mybb->input['tid'])."' AND ";
-	}
-	else
-	{
-		$from_tid = '';
+		$tid = (int) $mybb->input['tid'];
+		$from_tid = "tid != '{$tid}' AND ";
 	}
 
 	// Query for any posts in the list which are not within the specified thread
 	$mentioned = array();
-	$query = $db->simple_select('posts', 'username', "{$from_tid}pid IN ({$mentioned_posts}) {$unviewable_forums}", array("order_by" => 'dateline'));
+	$query = $db->simple_select('posts', 'username, fid, visible', "{$from_tid}pid IN ({$mentioned_posts}){$unviewable_forums}", array("order_by" => 'dateline'));
 	while($mentioned_post = $db->fetch_array($query))
 	{
 		if(!is_moderator($mentioned_post['fid']) && $mentioned_post['visible'] == 0)
@@ -565,9 +569,7 @@ function mention_xmlhttp()
 
 		if($mentioned[$mentioned_post['username']] != true)
 		{
-			$message .= <<<EOF
-@"{$mentioned_post['username']}" 
-EOF;
+			$message .= "@\"{$mentioned_post['username']}\" ";
 			$mentioned[$mentioned_post['username']] = true;
 		}
 	}
@@ -585,7 +587,7 @@ EOF;
  */
 function mention_showthread_start()
 {
-	global $mybb, $mention_script, $mention_quickreply, $mentioned_ids, $lang, $tid;
+	global $mybb, $mention_script, $mention_quickreply, $mentioned_ids, $lang, $tid, $templates;
 
 	if(!$lang->mention)
 	{
@@ -596,13 +598,7 @@ function mention_showthread_start()
 	if($mybb->settings['mention_multiple'])
 	{
 		$multi = '_multi';
-		$mention_quickreply = <<<EOF
-					<div class="editor_control_bar" style="width: 95%; padding: 4px; margin-top: 3px; display: none;" id="quickreply_multi_mention">
-						<span class="smalltext">
-							{$lang->mention_posts_selected} <a href="./newreply.php?tid={$tid}&amp;load_all_mentions=1" onclick="return MentionMe.loadMultiMentioned();">{$lang->mention_users_now}</a> {$lang->or} <a href="javascript:MentionMe.clearMultiMentioned();">{$lang->quickreply_multiquote_deselect}</a>.
-						</span>
-					</div>
-EOF;
+		eval("\$mention_quickreply = \"" . $templates->get('mentionme_quickreply_notice') . "\";");
 
 		$mentioned_ids = <<<EOF
 

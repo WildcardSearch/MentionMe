@@ -98,7 +98,7 @@ EOF;
         'name' => $name,
         'description' => $mention_description,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '2.2.2',
+        'version' => '2.2.3',
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
         'guid' => '273104cdd4918caf9554d1567954d2ef',
@@ -181,6 +181,7 @@ function mention_activate()
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<div class="editor_control_bar"') . "#i", '{$mention_quickreply}<div class="editor_control_bar"');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<input type="hidden" name="lastpid"') . "#i", '{$mentioned_ids}<input type="hidden" name="lastpid"');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
+	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 
 	// have we already added our name caching task?
 	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
