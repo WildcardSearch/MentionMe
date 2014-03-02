@@ -480,7 +480,13 @@ function mentionme_initialize()
  */
 function mention_postbit(&$post)
 {
-	global $mybb, $theme, $lang, $templates;
+	global $mybb, $theme, $lang, $templates, $forumpermissions,
+	$post_type, $thread, $forum;
+
+	if($mybb->user['uid'] == $post['uid'] || $forumpermissions['canpostreplys'] == 0 || ($thread['closed'] == 1 && !is_moderator($fid)) || $forum['open'] == 0 || $post_type)
+	{
+		return;
+	}
 
 	if(!$lang->mention)
 	{
