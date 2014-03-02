@@ -321,7 +321,7 @@ function mention_strip_quotes($message)
 function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_info)
 {
     // alertee has no permissions in the given forum?
-    if(!mention_can_view($username, $to_uid, $fid))
+    if(!mention_can_view($username, $to_uid, $from_uid, $fid))
     {
         // back away slowly . . .
         return;
@@ -343,22 +343,14 @@ function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_in
  * @param - $fid - (int) id of the forum in which the mention occurred
  * @returns: (bool) true to allow, false to deny
  */
-function mention_can_view($username, $uid, $fid)
+function mention_can_view($username, $uid, $from_uid, $fid)
 {
     global $cache;
 	static $name_cache;
 
 	$cache_changed = false;
 
-    $forum_permissions = $cache->read('forumpermissions');
-
-    // if there are no restrictions on the forum then anyone can view it
-    if(empty($forum_permissions[$fid]) || $forum_permissions[$fid] = 0)
-    {
-        return true;
-    }
-
-	// cache names to reduce queries
+    // cache names to reduce queries
 	if(!isset($name_cache) || empty($name_cache))
 	{
 		$wildcard_plugins = $cache->read('wildcard_plugins');
@@ -378,21 +370,29 @@ function mention_can_view($username, $uid, $fid)
     else
     {
         global $db;
-        $query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups', "uid='{$uid}'");
+        $query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "uid='{$uid}'");
         $user = $db->fetch_array($query);
         $name_cache[$username] = $user;
-        $cache_changed = true;
-    }
-
-    // if we had to query for this user's info then update the cache
-    if($cache_changed)
-    {
-        $wildcard_plugins = $cache->read('wildcard_plugins');
         $wildcard_plugins['mentionme']['namecache'] = $name_cache;
         $cache->update('wildcard_plugins', $wildcard_plugins);
     }
 
-    $users_groups = mention_compile_groups($user);
+	// don't alert if mentioning user is on mentioned users ignore list
+    $ignore_list = explode(',', $user['ignorelist']);
+	if(in_array($from_uid, $ignore_list))
+	{
+		return false;
+	}
+
+    $forum_permissions = $cache->read('forumpermissions');
+
+    // if there are no restrictions on the forum then anyone can view it
+    if(empty($forum_permissions[$fid]) || $forum_permissions[$fid] = 0)
+    {
+        return true;
+    }
+
+	$users_groups = mention_compile_groups($user);
 
     // admins can see everything
     if(in_array(4, $users_groups))
@@ -409,12 +409,12 @@ function mention_can_view($username, $uid, $fid)
             continue;
         }
 
-        // the first 'yes' we here gets us out of the loop with a valid return
+        // the first 'yes' we hear gets us out of the loop with a valid return
         if (!isset($forum_permissions[$fid][$gid]) ||
             $forum_permissions[$fid][$gid] == 0 ||
             $forum_permissions[$fid][$gid]['canview'] ||
-            $forum_permissions[$fid][$gid]['canviewthreads']
-        ) {
+            $forum_permissions[$fid][$gid]['canviewthreads'])
+		{
             return true;
         }
     }

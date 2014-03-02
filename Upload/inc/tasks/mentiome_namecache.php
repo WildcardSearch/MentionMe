@@ -4,7 +4,8 @@
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
- * this script is a task used to build a cache of user mention HTML to conserve queries during normal forum operation
+ * this script is a task used to build a cache of user mention
+ * data to conserve queries during normal forum operation
  */
 
  /*
@@ -32,7 +33,7 @@ function task_mentiome_namecache($task)
 
 	// find all users that have been active within the specified amount of days
 	$timesearch = TIME_NOW - (60 * 60 * 24 * $cache_days);
-	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups', "lastvisit > {$timesearch}");
+	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "lastvisit > {$timesearch}");
 
     $user_data = array();
 	if($db->num_rows($query) > 0)
