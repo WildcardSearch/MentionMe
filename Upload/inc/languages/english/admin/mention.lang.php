@@ -9,6 +9,7 @@
 
 $l['mention'] = 'mention';
 $l['mentionme'] = 'MentionMe';
+$l['mentionme_logo'] = 'MentionMe Logo';
 
 // task
 $l['mention_task_name'] = 'MentionMe Name Caching';

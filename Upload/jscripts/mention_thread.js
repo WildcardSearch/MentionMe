@@ -7,11 +7,17 @@
  */
 
 var MentionMe = {
-	Insert: function(pid, name)
-	{
+	/**
+	 * insert()
+	 * 
+	 * insert the mention into the Quick Reply text area
+	 * 
+	 * @param - name - (string)
+	 * @return: n/a
+	 */
+	insert: function(name) {
 		var id = 'message';
-		if(typeof clickableEditor != 'undefined')
-		{
+		if (typeof clickableEditor != 'undefined') {
 			id = clickableEditor.textarea;
 		}
 		$(id).value += '@"' + name + '" ';

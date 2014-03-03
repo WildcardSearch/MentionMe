@@ -10,6 +10,9 @@ var MentionMe = {
 	/**
 	 * init()
 	 *
+	 * 'turn on' any previously selected multi-mention buttons and if
+	 * applicable, show the mention insert notice in Quick Reply
+	 *
 	 * @return: n/a
 	 */
 	init: function() {
@@ -41,6 +44,9 @@ var MentionMe = {
 
 	/**
 	 * multiMention()
+	 * 
+	 * if this is a new mention, add it to the cookie and if applicable,
+	 * turn on the button and show the Quick Reply notice
 	 *
 	 * @param: pid (Number) the post id
 	 * @return: n/a
@@ -97,6 +103,8 @@ var MentionMe = {
 
 	/**
 	 * loadMultiMentioned()
+	 * 
+	 * fetch the mentions
 	 *
 	 * @return: (Boolean) true to use standard newreply.php functionality or
 	 * false if AJAX was used
@@ -124,6 +132,8 @@ var MentionMe = {
 
 	/**
 	 * multiMentionedLoaded()
+	 * 
+	 * insert any mentions return by AJAX
 	 *
 	 * @param - request - (XMLHTTP response)
 	 * @return: n/a
@@ -168,6 +178,8 @@ var MentionMe = {
 
 	/**
 	 * multiMentionedLoaded()
+	 * 
+	 * clear the cookie and any buttons
 	 *
 	 * @return: n/a
 	 */

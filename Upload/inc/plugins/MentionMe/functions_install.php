@@ -11,6 +11,7 @@
  * mention_generate_postbit_buttons()
  *
  * @param - $hard - (bool) true to overwrite any existing images
+ * @return: n/a
  */
 function mention_generate_postbit_buttons($hard = false)
 {
@@ -55,7 +56,9 @@ function mention_generate_postbit_buttons($hard = false)
  *
  * check cached version info
  *
- * Derived from the work of pavemen in MyBB Publisher
+ * derived from the work of pavemen in MyBB Publisher
+ *
+ * @return: (int/string) the version
  */
 function mention_get_cache_version()
 {
@@ -75,8 +78,9 @@ function mention_get_cache_version()
  *
  * set cached version info
  *
- * Derived from the work of pavemen in MyBB Publisher
+ * derived from the work of pavemen in MyBB Publisher
  *
+ * @return: (bool) true on success
  */
 function mention_set_cache_version()
 {
@@ -98,7 +102,9 @@ function mention_set_cache_version()
  *
  * remove cached version info
  *
- * Derived from the work of pavemen in MyBB Publisher
+ * derived from the work of pavemen in MyBB Publisher
+ *
+ * @return: (bool) true on success
  */
 function mention_unset_cache_version()
 {
@@ -119,6 +125,8 @@ function mention_unset_cache_version()
  * mention_myalerts_integrate()
  *
  * build the single ACP setting and add it to the MyAlerts group
+ *
+ * @return: n/a
  */
 function mention_myalerts_integrate()
 {
@@ -177,6 +185,8 @@ function mention_myalerts_integrate()
 /* mention_get_myalerts_status()
  *
  * used by _info to verify the mention MyAlerts setting
+ *
+ * @return: (bool) true if MyAlerts installed, false if not
  */
 function mention_get_myalerts_status()
 {
