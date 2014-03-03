@@ -8,11 +8,12 @@
  * data to conserve queries during normal forum operation
  */
 
- /*
-  * task_mentiome_namecache()
-  *
-  * @param - $task an integer represented the MyBB task id
-  */
+/*
+ * task_mentiome_namecache()
+ *
+ * @param - $task an integer represented the MyBB task id
+ * @return: n/a
+ */
 function task_mentiome_namecache($task)
 {
 	global $db, $cache, $mybb, $lang;

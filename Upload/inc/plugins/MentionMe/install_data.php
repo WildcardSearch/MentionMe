@@ -7,22 +7,17 @@
  * this file contains data used by classes/installer.php
  */
 
-$settings = array
-(
-	"mention_settings" => array
-	(
-		"group" => array
-		(
+$settings = array(
+	"mention_settings" => array	(
+		"group" => array(
 			"name" => "mention_settings",
 			"title"  => $lang->mention_plugin_settings_title,
 			"description" => $lang->mention_settingsgroup_description,
 			"disporder"  => "120",
 			"isdefault"  => 0
 		),
-		"settings" => array
-		(
-			"mention_add_codebutton" => array
-			(
+		"settings" => array(
+			"mention_add_codebutton" => array(
 				"sid" => "NULL",
 				"name" => "mention_add_codebutton",
 				"title" => $lang->mention_add_codebutton_title,
@@ -31,8 +26,7 @@ $settings = array
 				"value" => '1',
 				"disporder" => '10'
 			),
-			"mention_add_postbit_button" => array
-			(
+			"mention_add_postbit_button" => array(
 				"sid" => "NULL",
 				"name" => "mention_add_postbit_button",
 				"title" => $lang->mention_add_postbit_button_title,
@@ -41,8 +35,7 @@ $settings = array
 				"value" => '0',
 				"disporder" => '20'
 			),
-			"mention_multiple" => array
-			(
+			"mention_multiple" => array(
 				"sid" => "NULL",
 				"name" => "mention_multiple",
 				"title" => $lang->mention_multiple_title,
@@ -51,8 +44,7 @@ $settings = array
 				"value" => '0',
 				"disporder" => '30'
 			),
-			"mention_css_buttons" => array
-			(
+			"mention_css_buttons" => array(
 				"sid" => "NULL",
 				"name" => "mention_css_buttons",
 				"title" => $lang->mention_css_buttons_title,
@@ -61,8 +53,7 @@ $settings = array
 				"value" => '0',
 				"disporder" => '40'
 			),
-			"mention_cache_time" => array
-			(
+			"mention_cache_time" => array(
 				"sid" => "NULL",
 				"name" => "mention_cache_time",
 				"title" => $lang->mention_cache_time_title,
@@ -71,8 +62,7 @@ $settings = array
 				"value" => '7',
 				"disporder" => '50'
 			),
-			"mention_advanced_matching" => array
-			(
+			"mention_advanced_matching" => array(
 				"sid" => "NULL",
 				"name" => "mention_advanced_matching",
 				"title" => $lang->mention_advanced_matching,

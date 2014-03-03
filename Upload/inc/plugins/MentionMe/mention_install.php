@@ -16,7 +16,10 @@ if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
 /*
  * mention_info()
  *
- * Used by MyBB to provide relevant information about the plugin and also link users to updates.
+ * used by MyBB to provide relevant information about the plugin and
+ * also link users to updates
+ *
+ * @return: (array) the plugin info
  */
 function mention_info()
 {
@@ -78,7 +81,8 @@ EOF;
 {$settings_link}
 			</ul>
 		</td>
-		<td style="width: 25%; text-align: center;">
+		<td style="text-align: center;">
+			<img src="{$mybb->settings['bburl']}/inc/plugins/MentionMe/images/mention_80.png" alt="{$lang->mentionme_logo}"/><br /><br />
 			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
 				<input type="hidden" name="cmd" value="_s-xclick">
 				<input type="hidden" name="hosted_button_id" value="VA5RFLBUC4XM4">
@@ -98,7 +102,7 @@ EOF;
         'name' => $name,
         'description' => $mention_description,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '2.2.3',
+        'version' => '2.2.4',
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
         'guid' => '273104cdd4918caf9554d1567954d2ef',
@@ -109,6 +113,8 @@ EOF;
 /* mention_is_installed()
  *
  * check to see if the plugin is installed
+ *
+ * @return: (bool) true if installed, false if not
  */
 function mention_is_installed()
 {
@@ -120,6 +126,8 @@ function mention_is_installed()
  * Adds a settings group with one setting for advanced matching,
  * adds a setting to the MyAlerts setting group with on/off setting (if installed)
  * and enables mention alerts for every user by default (if MyAlerts is installed)
+ *
+ * @return: n/a
  */
 function mention_install()
 {
@@ -151,6 +159,8 @@ function mention_install()
  *
  * edit the code buttons template, add or activate the task,
  * checks upgrade status by checking cached version info
+ *
+ * @return: n/a
  */
 function mention_activate()
 {
@@ -234,6 +244,8 @@ function mention_activate()
  * mention_deactivate()
  *
  * stops the task from running if the plugin is inactive
+ *
+ * @return: n/a
  */
 function mention_deactivate()
 {
@@ -257,6 +269,8 @@ function mention_deactivate()
  * delete setting group and settings,
  * delete MyAlerts mention setting (if applicable)
  * remove mention index from user settings
+ *
+ * @return: n/a
  */
 function mention_uninstall()
 {
@@ -286,6 +300,8 @@ function mention_uninstall()
  * mention_admin_load()
  *
  * handle our one ACP 'page'
+ *
+ * @return: n/a
  */
 function mention_admin_load()
 {
@@ -302,6 +318,8 @@ function mention_admin_load()
  * mention_mass_enable_alerts()
  *
  * force all users to receive mention alerts
+ *
+ * @return: n/a
  */
 function mention_mass_enable_alerts()
 {
@@ -363,6 +381,8 @@ function mention_mass_enable_alerts()
  *
  * retrieves the plugin's settings group gid if it exists
  * attempts to cache repeat calls
+ *
+ * @return: (int) the setting group id
  */
 function mention_get_settingsgroup()
 {
@@ -391,6 +411,7 @@ function mention_get_settingsgroup()
  * builds the URL to modify plugin settings if given valid info
  *
  * @param - $gid is an integer representing a valid settings group id
+ * @return: (string) the setting group URL
  */
 function mention_build_settings_url($gid)
 {
@@ -404,6 +425,7 @@ function mention_build_settings_url($gid)
  * mention_build_settings_link()
  *
  * builds a link to modify plugin settings if it exists
+ * @return: the setting group link HTML
  */
 function mention_build_settings_link()
 {

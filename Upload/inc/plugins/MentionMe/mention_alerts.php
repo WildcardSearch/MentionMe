@@ -7,7 +7,7 @@
  * this script provides MyAlerts routines for mention.php
  */
 
-// Disallow direct access to this file for security reasons.
+// disallow direct access to this file for security reasons.
 if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
 {
     die('Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.');
@@ -23,21 +23,14 @@ if(!defined('MYALERTS_PLUGIN_PATH'))
  * create alerts when users edit a post and add a new mention. try to avoid sending any duplicate alerts.
  *
  * @param - $this_post is an object containing post info
+ * @return: n/a
  */
 $plugins->add_hook("datahandler_post_update", "mention_myalerts_datahandler_post_update");
 function mention_myalerts_datahandler_post_update($this_post)
 {
-	global $db, $mybb, $Alerts, $post;
+	global $db, $mybb, $post;
 
-	// is the MyAlerts class present?
-	require_once MYALERTS_PLUGIN_PATH . 'Alerts.class.php';
-	try {
-		$Alerts = new Alerts($mybb, $db);
-	} catch(Exception $e) {
-		die($e->getMessage());
-	}
-
-    // grab the post data
+	// grab the post data
 	$message = $this_post->data['message'];
 	$fid = (int) $this_post->data['fid'];
 	$tid = (int) $this_post->data['tid'];
@@ -46,6 +39,7 @@ function mention_myalerts_datahandler_post_update($this_post)
 	$edit_uid = (int) $mybb->user['uid'];
 	$subject = $post['subject'];
 
+	// if another user is editing (mod) don't do alerts
 	if ($edit_uid != $post_uid) {
 		return;
 	}
@@ -120,12 +114,14 @@ function mention_myalerts_datahandler_post_update($this_post)
 /* mention_myalerts_do_newreply_end()
  *
  * check posts for mentions when they are initially created and create alerts accordingly
+ *
+ * @return: n/a
  */
 $plugins->add_hook('newreply_do_newreply_end', 'mention_myalerts_do_newreply_end');
 $plugins->add_hook('newthread_do_newthread_end', 'mention_myalerts_do_newreply_end');
 function mention_myalerts_do_newreply_end()
 {
-	global $mybb, $Alerts, $pid, $tid, $post, $thread, $fid;
+	global $mybb, $pid, $tid, $post, $thread, $fid;
 
 	// if creating a new thread the message comes from $_POST
 	if($mybb->input['action'] == "do_newthread" && $mybb->request_method == "post")
@@ -183,6 +179,7 @@ function mention_myalerts_do_newreply_end()
  * hook into MyAlerts to display alerts in the drop-down and in User CP
  *
  * @param - $alert by value is a valid Alert class object
+ * @return: n/a
  */
 $plugins->add_hook('myalerts_alerts_output_start', 'mention_myalerts_output_start');
 function mention_myalerts_output_start(&$alert)
@@ -219,6 +216,8 @@ function mention_myalerts_output_start(&$alert)
 /* mention_myalerts_load_lang()
  *
  * loads custom language for alert settings
+ *
+ * @return: n/a
  */
 $plugins->add_hook('myalerts_load_lang', 'mention_myalerts_load_lang');
 function mention_myalerts_load_lang()
@@ -234,6 +233,8 @@ function mention_myalerts_load_lang()
 /* mention_myalerts_helpdoc_start()
  *
  * adds documentation for mention alerts
+ *
+ * @return: n/a
  */
 $plugins->add_hook('misc_help_helpdoc_start', 'mention_myalerts_helpdoc_start');
 function mention_myalerts_helpdoc_start()
@@ -260,8 +261,9 @@ function mention_myalerts_helpdoc_start()
  *
  * find all mentions in the current post that are not within quote tags
  *
- * @param - $message
- * @param - &$matches
+ * @param - $message - (string)
+ * @param - &$matches - (array) a reference to an array to store matches in
+ * @return: n/a
  */
 function mention_find_in_post($message, &$matches)
 {
@@ -283,6 +285,7 @@ function mention_find_in_post($message, &$matches)
  * strips all quotes and their content from the post
  *
  * @param - $message is the content of the post
+ * @return: (string) the altered message
  */
 function mention_strip_quotes($message)
 {
@@ -290,7 +293,7 @@ function mention_strip_quotes($message)
 
 	// kill BB code quoted portions of the message
 	$pattern = array(
-		"#\[quote=([\"']|&quot;|)(.*?)(?:\\1)(.*?)(?:[\"']|&quot;)?\](.*?)\[/quote\](\r\n?|\n?)#esi",
+		"#\[quote=([\"']|&quot;|)(.*?)(?:\\1)(.*?)(?:[\"']|&quot;)?\](.*?)\[/quote\](\r\n?|\n?)#si",
 		"#\[quote\](.*?)\[\/quote\](\r\n?|\n?)#si"
 	);
 
@@ -298,7 +301,7 @@ function mention_strip_quotes($message)
 		$message = preg_replace($pattern, '', $message, -1, $count);
 	} while($count);
 
-	// kill HTML blockquoted portions of the message
+	// kill HTML block quoted portions of the message
 	$find = array(
 		"#(\r\n*|\n*)<\/cite>(\r\n*|\n*)#",
 		"#(\r\n*|\n*)<\/blockquote>#"
@@ -311,12 +314,13 @@ function mention_strip_quotes($message)
  *
  * check forum permissions and send alert if valid
  *
- * @param - $username - (string) username of user for user by user :p
+ * @param - $username - (string) user name of user for user by user :p
  * @param - $fid - (int) id of the forum in which the mention occurred
  * @param - $to_uid - (int) the user receiving the alert (potentially)
  * @param - $tid - (int) the id of the thread in which the mention occurred
  * @param - $from_uid - (int) the id of the user initiating the alert (potentially)
  * @param - $alert_info - (array) an indexed array of alert content info
+ * @return: n/a
  */
 function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_info)
 {
@@ -328,7 +332,15 @@ function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_in
     }
 
     // otherwise send the alert
-    global $Alerts;
+    global $Alerts, $mybb, $db;
+	if ($Alerts instanceof Alerts) {
+		require_once MYALERTS_PLUGIN_PATH . 'Alerts.class.php';
+		try {
+			$Alerts = new Alerts($mybb, $db);
+		} catch(Exception $e) {
+			die($e->getMessage());
+		}
+	}
     $Alerts->addAlert((int) $to_uid, 'mention', (int) $tid, (int) $from_uid, $alert_info);
 }
 
@@ -340,8 +352,9 @@ function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_in
  *
  * @param - $username - (string) username
  * @param - $uid - (int) uid of the user receiving the alert (potentially)
+ * @param - $from_uid - (int) uid of the user sending the alert (potentially)
  * @param - $fid - (int) id of the forum in which the mention occurred
- * @returns: (bool) true to allow, false to deny
+ * @return: (bool) true to allow, false to deny
  */
 function mention_can_view($username, $uid, $from_uid, $fid)
 {
@@ -359,7 +372,7 @@ function mention_can_view($username, $uid, $from_uid, $fid)
 
     $username = strtolower($username);
 
-    /* if the username is in the cache (same one we use for mention
+    /* if the user name is in the cache (same one we use for mention
      * display in showthread.php) . . .
      */
     if(isset($name_cache[$username]))
@@ -424,10 +437,10 @@ function mention_can_view($username, $uid, $from_uid, $fid)
 /*
  * mention_compile_groups()
  *
- * indescriminately dump the user array's three group-related fields into a single array
+ * indiscriminately dump the user array's three group-related fields into a single array
  *
  * @param - $user - (array) an array of the user's info
- * @return: an uncleaned array of all the users associated group ids
+ * @return: an unclean array of all the users associated group ids
  */
 function mention_compile_groups($user)
 {
