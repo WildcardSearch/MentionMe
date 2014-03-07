@@ -496,11 +496,16 @@ function mentionme_initialize()
  */
 function mention_postbit(&$post)
 {
-	global $mybb, $theme, $lang, $templates, $forumpermissions,
+	global $mybb, $theme, $lang, $templates, $forumpermissions, $fid,
 	$post_type, $thread, $forum;
 
-	if($mybb->user['uid'] == $post['uid'] || $forumpermissions['canpostreplys'] == 0 || ($thread['closed'] == 1 && !is_moderator($fid)) || $forum['open'] == 0 || $post_type)
-	{
+	if($mybb->settings['quickreply'] == 0 ||
+	   $mybb->user['suspendposting'] == 1 ||
+	   $forumpermissions['canpostreplys'] == 0 ||
+	   ($thread['closed'] == 1 && !is_moderator($fid)) ||
+	   $forum['open'] == 0 ||
+	   $post_type ||
+	   $mybb->user['uid'] == $post['uid']) {
 		return;
 	}
 
