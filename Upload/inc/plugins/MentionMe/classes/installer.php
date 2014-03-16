@@ -9,26 +9,45 @@
 
 class WildcardPluginInstaller
 {
+	const VERSION = 1.1;
+
+	// a local copy of the MyBB db object
 	private $db;
 
+	// a copy of the install data tables
 	protected $tables = array();
+
+	// storage for the list of table names
 	protected $table_names = array();
 
+	// a copy of the install data columns
 	protected $columns = array();
 
+	// a copy of the install data settings
 	protected $settings = array();
+
+	// storage for the list of setting names
 	protected $setting_names = array();
 
+	// a copy of the install data setting groups
 	protected $settinggroups = array();
+
+	// storage for the list of setting group names
 	protected $settinggroup_names = array();
 
+	// a copy of the install data templates
 	protected $templates = array();
+
+	// storage for the list of template names
 	protected $template_names = array();
 
+	// a copy of the install data template groups
 	protected $templategroups = array();
+
+	// storage for the list of template group names
 	protected $templategroup_names = array();
 
-	/*
+	/**
 	 * __construct()
 	 *
 	 * load the installation data and prepare for anything
@@ -44,43 +63,49 @@ class WildcardPluginInstaller
 		}
 
 		global $lang, $db;
+
+		// get all the install data
 		require_once $path;
-		foreach(array('tables', 'columns', 'settings', 'templates') as $key)
+
+		// now loop through the known values and extract the info in a way we can use
+		foreach(array('tables', 'columns', 'settings', 'templates', 'style_sheets') as $key)
 		{
 			if(!is_array($$key) || empty($$key))
 			{
 				continue;
 			}
 
+			// assing the main values as-is
 			$this->$key = $$key;
+
+			// now produce the x_names and xgroup_names placeholders
+			$singular = substr($key, 0, strlen($key) - 1);
+			$property = "{$singular}_names";
+			$poperty_group = "{$singular}group_names";
+
 			switch($key)
 			{
-				case 'settings':
-					$this->settinggroup_names = array_keys($settings);
-					foreach($settings as $group => $info)
+				case 'style_sheets':
+					// stylesheets need the extension appended
+					foreach(array_keys($style_sheets) as $name)
 					{
-						foreach($info['settings'] as $name => $setting)
-						{
-							$this->setting_names[] = $name;
-						}
+						$this->style_sheet_names[] = $name . '.css';
 					}
 					break;
 				case 'templates':
-					$this->templategroup_names = array_keys($templates);
-					foreach($templates as $group => $info)
+				case 'settings':
+					// these items have groups and special cases for the main items
+					$this->$poperty_group = array_keys($$key);
+					foreach($$key as $group => $info)
 					{
-						foreach($info['templates'] as $name => $template)
-						{
-							$this->template_names[] = $name;
-						}
+						$this->$property = array_keys($info[$key]);
 					}
 					break;
 				case 'columns':
-					$this->columns = $columns;
+					// columns doesn't need anything else
 					break;
 				default:
-					$singular = substr($key, 0, strlen($key) - 1);
-					$property = "{$singular}_names";
+					// all the others are simple
 					$this->$property = array_keys($$key);
 					break;
 			}
@@ -103,6 +128,7 @@ class WildcardPluginInstaller
 		$this->add_columns();
 		$this->add_settings();
 		$this->add_templates();
+		$this->add_style_sheets();
 	}
 
 	/*
@@ -120,6 +146,7 @@ class WildcardPluginInstaller
 		$this->remove_('settings', 'name', $this->setting_names);
 		$this->remove_('templategroups', 'prefix', $this->templategroup_names);
 		$this->remove_('templates', 'title', $this->template_names);
+		$this->remove_style_sheets();
 		rebuild_settings();
 	}
 
@@ -438,6 +465,123 @@ class WildcardPluginInstaller
 		{
 			$this->db->insert_query_multiple('templates', $insert_array);
 		}
+	}
+
+	/*
+	 * add_style_sheets()
+	 *
+	 * add any listed style sheets
+	 *
+	 * @return: n/a
+	 */
+	public function add_style_sheets()
+	{
+		if(!is_array($this->style_sheets) || empty($this->style_sheets))
+		{
+			return;
+		}
+
+		global $config;
+		foreach($this->style_sheets as $name => $data)
+		{
+			$attachedto = $data['attachedto'];
+			if(is_array($data['attachedto']))
+			{
+				$attachedto = array();
+				foreach($data['attachedto'] as $file => $actions)
+				{
+					if(is_array($actions))
+					{
+						$actions = implode(",", $actions);
+					}
+
+					if($actions)
+					{
+						$file = "{$file}?{$actions}";
+					}
+					$attachedto[] = $file;
+				}
+				$attachedto = implode("|", $attachedto);
+			}
+
+			$name = $this->db->escape_string($name) . '.css';
+			$stylesheet = array(
+				'name' => $name,
+				'tid' => 1,
+				'attachedto' => $this->db->escape_string($attachedto),
+				'stylesheet' => $this->db->escape_string($data['stylesheet']),
+				'cachefile' => $name,
+				'lastmodified' => TIME_NOW,
+            );
+
+			// update any children
+			$this->db->update_query('themestylesheets', array(
+				"attachedto" => $stylesheet['attachedto']
+			), "name='{$name}'");
+
+			// now update/insert the master stylesheet
+			$query = $this->db->simple_select('themestylesheets', 'sid', "tid='1' AND cachefile='{$name}'");
+			$sid = (int) $this->db->fetch_field($query, 'sid');
+
+			if($sid)
+			{
+				$this->db->update_query('themestylesheets', $stylesheet, "sid='{$sid}'");
+			}
+			else
+			{
+				$sid = $this->db->insert_query('themestylesheets', $stylesheet);
+				$stylesheet['sid'] = (int) $sid;
+			}
+
+			// now cache the actual files
+			require_once MYBB_ROOT . "{$config['admin_dir']}/inc/functions_themes.php";
+			cache_stylesheet(1, $data['cachefile'], $data['stylesheet']);
+
+			// and update the list
+			update_theme_stylesheet_list(1);
+		}
+	}
+
+	/*
+	 * remove_style_sheets()
+	 *
+	 * completely remove any style sheets in install_data.php
+	 *
+	 * @return: n/a
+	 */
+	public function remove_style_sheets()
+	{
+		if(empty($this->style_sheet_names) || !is_array($this->style_sheet_names))
+		{
+			return;
+		}
+
+		global $config;
+
+		// get a list and form the WHERE clause
+		$ss_list = "'" . implode("','", $this->style_sheet_names) . "'";
+		$where = "name={$ss_list}";
+		if(count($this->style_sheet_names) > 1)
+		{
+			$where = "name IN({$ss_list})";
+		}
+
+		// find the master and any children
+		$query = $this->db->simple_select('themestylesheets', 'tid,name', $where);
+
+		// delete them all from the server
+		while($stylesheet = $this->db->fetch_array($query))
+		{
+			@unlink(MYBB_ROOT."cache/themes/{$stylesheet['tid']}_{$stylesheet['name']}");
+			@unlink(MYBB_ROOT."cache/themes/theme{$stylesheet['tid']}/{$stylesheet['name']}");
+		}
+
+		// then delete them from the database
+		$this->db->delete_query('themestylesheets', $where);
+
+		// now remove them from the list
+		require_once MYBB_ROOT . "{$config['admin_dir']}/inc/functions_themes.php";
+		update_theme_stylesheet_list(1);
 	}
 
 	/*

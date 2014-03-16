@@ -6,16 +6,18 @@
  * this file contains a class for the multi-mention functionality in mention.php
  */
 
-var MentionMe = {
+var MentionMe = (function(m) {
+	var spinner;
+
 	/**
 	 * init()
 	 *
 	 * 'turn on' any previously selected multi-mention buttons and if
 	 * applicable, show the mention insert notice in Quick Reply
 	 *
-	 * @return: n/a
+	 * @return  void
 	 */
-	init: function() {
+	function init() {
 		var post_ids, mentioned = Cookie.get("multi_mention");
 
 		if (mentioned) {
@@ -40,18 +42,18 @@ var MentionMe = {
 			}
 		}
 		return true;
-	},
+	}
 
 	/**
-	 * multiMention()
-	 * 
+	 * mention()
+	 *
 	 * if this is a new mention, add it to the cookie and if applicable,
 	 * turn on the button and show the Quick Reply notice
 	 *
 	 * @param: pid (Number) the post id
-	 * @return: n/a
+	 * @return  void
 	 */
-	multiMention: function(pid) {
+	function mention(pid) {
 		var new_post_ids = new Array(),
 		mentioned = Cookie.get("multi_mention"),
 		is_new = true, post_ids;
@@ -99,60 +101,59 @@ var MentionMe = {
 			}
 		}
 		Cookie.set("multi_mention", new_post_ids.join("|"));
-	},
+	}
 
 	/**
-	 * loadMultiMentioned()
-	 * 
+	 * load()
+	 *
 	 * fetch the mentions
 	 *
 	 * @return: (Boolean) true to use standard newreply.php functionality or
 	 * false if AJAX was used
 	 */
-	loadMultiMentioned: function() {
+	function load() {
 		if (use_xmlhttprequest == 1) {
-			this.spinner = new ActivityIndicator("body", {
+			spinner = new ActivityIndicator("body", {
 				image: imagepath + "/spinner_big.gif"
 			});
 
 			new Ajax.Request('xmlhttp.php', {
 				method: 'get',
 				parameters: {
-					action: 'get_multi_mentioned',
+					action: 'mentionme',
+					mode: 'get_multi_mentioned',
 					load_all: 1
 				},
-				onComplete: function(request) {
-					MentionMe.multiMentionedLoaded(request);
-				}
+				onComplete: insert
 			});
 			return false;
 		}
 		return true;
-	},
+	}
 
 	/**
-	 * multiMentionedLoaded()
-	 * 
+	 * insert()
+	 *
 	 * insert any mentions return by AJAX
 	 *
-	 * @param - request - (XMLHTTP response)
+	 * @param - transport - (XMLHTTP response)
 	 * @return: n/a
 	 */
-	multiMentionedLoaded: function(request) {
+	function insert(transport) {
 		var id, message;
 
-		if (request.responseText.match(/<error>(.*)<\/error>/)) {
-			message = request.responseText.match(/<error>(.*)<\/error>/);
+		if (transport.responseText.match(/<error>(.*)<\/error>/)) {
+			message = transport.responseText.match(/<error>(.*)<\/error>/);
 			if (!message[1]) {
 				message[1] = "An unknown error occurred.";
 			}
 
-			if (this.spinner) {
-				this.spinner.destroy();
-				this.spinner = '';
+			if (spinner) {
+				spinner.destroy();
+				spinner = '';
 			}
 			alert('There was an error fetching the posts.\n\n'+message[1]);
-		} else if (request.responseText) {
+		} else if (transport.responseText) {
 			id = 'message';
 
 			if (typeof clickableEditor != 'undefined') {
@@ -162,28 +163,28 @@ var MentionMe = {
 			if ($(id).value) {
 				$(id).value += "\n";
 			}
-			$(id).value += request.responseText;
+			$(id).value += transport.responseText;
 		}
 
-		MentionMe.clearMultiMentioned();
+		clear();
 		$('quickreply_multi_mention').hide();
 		$('mentioned_ids').value = 'all';
 
-		if (this.spinner) {
-			this.spinner.destroy();
-			this.spinner = '';
+		if (spinner) {
+			spinner.destroy();
+			spinner = '';
 		}
 		$(id).focus();
-	},
+	}
 
 	/**
-	 * multiMentionedLoaded()
-	 * 
+	 * clear()
+	 *
 	 * clear the cookie and any buttons
 	 *
 	 * @return: n/a
 	 */
-	clearMultiMentioned: function() {
+	function clear() {
 		var post_ids, mentioned = Cookie.get("multi_mention");
 
 		$('quickreply_multi_mention').hide();
@@ -205,5 +206,15 @@ var MentionMe = {
 		}
 		Cookie.unset('multi_mention');
 	}
-};
-Event.observe(document, 'dom:loaded', MentionMe.init);
+
+	// the public methods
+	m.multi = {
+		init: init,
+		load: load,
+		clear: clear,
+		mention: mention,
+	};
+
+	return m;
+})(MentionMe || {});
+Event.observe(document, 'dom:loaded', MentionMe.multi.init);

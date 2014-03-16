@@ -1,4 +1,4 @@
-##MentionMe 2.2.5
+##MentionMe 2.3 FEATURE
 
 A plugin for MyBB 1.6.x that allows Twitter-style tagging and integration with [MyAlerts](https://github.com/euantorano/MyAlerts)
 

@@ -14,7 +14,7 @@ if(!defined('IN_MYBB'))
 }
 
 // checked by other plugin files
-define("IN_MENTIONME", true);
+define('IN_MENTIONME', true);
 
 // add hooks
 mentionme_initialize();
@@ -23,8 +23,8 @@ mentionme_initialize();
  * mention_run()
  *
  * use a regex to either match a double-quoted mention (@"user name")
- * or just grab the @ symbol and everything after it that is qualifies as a
- * word and is within name length
+ * or just grab the @ symbol and everything after it that qualifies as a
+ * word and is within the name length range
  *
  * @param - $message is the contents of the post
  * @return: (string) the message
@@ -35,11 +35,12 @@ function mention_run($message)
 	global $mybb;
 
 	// emails addresses cause issues, strip them before matching
-	preg_match_all("#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i", $message, $emails, PREG_SET_ORDER);
-	$message = preg_replace("#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i", "<mybb-email>\n", $message);
+	$email_regex = "#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i";
+	preg_match_all($email_regex, $message, $emails, PREG_SET_ORDER);
+	$message = preg_replace($email_regex, "<mybb-email>\n", $message);
 
 	// use function mention_filter_callback to repeatedly process mentions in the current post
-	$message = preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', "mention_filter_callback", $message);
+	$message = preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', 'mention_filter_callback', $message);
 
 	// now restore the email addresses
 	foreach($emails as $email)
@@ -52,7 +53,7 @@ function mention_run($message)
 /*
  * mention_filter_callback()
  *
- * matches any mentions of existing user in the post
+ * matches any mentions of existing users in the post
  *
  * advanced search routines rely on
  * $mybb->settings['mention_advanced_matching'], if set to true
@@ -64,18 +65,22 @@ function mention_run($message)
  */
 function mention_filter_callback($match)
 {
-	global $db, $mybb, $cache;
-	static $name_cache;
+	global $db, $mybb;
+	static $name_cache, $mycache;
 	$name_parts = array();
 	$shift_count = 0;
 
 	$cache_changed = false;
 
 	// cache names to reduce queries
-	if(!isset($name_cache) || empty($name_cache))
+	if($mycache instanceof MentionMeCache == false)
 	{
-		$wildcard_plugins = $cache->read('wildcard_plugins');
-		$name_cache = $wildcard_plugins['mentionme']['namecache'];
+		$mycache = MentionMeCache::get_instance();
+	}
+
+	if(!isset($name_cache))
+	{
+		$name_cache = $mycache->read('namecache');
 	}
 
 	// if the user entered the mention in quotes then it will be returned in $match[1],
@@ -146,101 +151,94 @@ function mention_filter_callback($match)
 		//  restore any surrounding characters from the original match
 		return mention_build($name_cache[$username_lower]) . substr($orig_name, strlen($username_lower) + $shift_pad);
 	}
+
+	// lookup the user name
+	$user = mention_try_name($username_lower);
+
+	// if the user name exists . . .
+	if($user['uid'] != 0)
+	{
+		$cache_changed = true;
+
+		// preserve any surrounding chars
+		$left_over = substr($orig_name, strlen($user['username']) + $shift_pad);
+	}
+	// if no match and advanced matching is enabled . . .
+	elseif($mybb->settings['mention_advanced_matching'])
+	{
+		// we've already checked the first part, discard it
+		array_shift($name_parts);
+
+		// if there are more parts and quotes weren't used
+		if(empty($name_parts) || $shift_pad == 3 || strlen($name_parts[0]) <= 0)
+		{
+			// nothing else to try
+			return "@{$orig_name}";
+		}
+
+		// start with the first part . . .
+		$try_this = $username_lower;
+
+		$all_good = false;
+
+		// . . . loop through each part and try them in serial
+		foreach($name_parts as $val)
+		{
+			// add the next part
+			$try_this .= ' ' . $val;
+
+			// check the cache for a match to save a query
+			if(isset($name_cache[$try_this]))
+			{
+				// preserve any surrounding chars from the original match
+				$left_over = substr($orig_name, strlen($try_this) + $shift_pad);
+				return mention_build($name_cache[$try_this]) . $left_over;
+			}
+
+			// check the db
+			$user = mention_try_name($try_this);
+
+			// if there is a match . . .
+			if((int) $user['uid'] == 0)
+			{
+				continue;
+			}
+
+			// cache the user name HTML
+			$username_lower = strtolower($user['username']);
+
+			// preserve any surrounding chars from the original match
+			$left_over = substr($orig_name, strlen($user['username']) + $shift_pad);
+
+			// and gtfo
+			$all_good = true;
+			$cache_changed = true;
+			break;
+		}
+
+		if(!$all_good)
+		{
+			// still no matches?
+			return "@{$orig_name}";
+		}
+	}
 	else
 	{
-		// lookup the user name
-		$user = mention_try_name($username_lower);
-
-		// if the user name exists . . .
-		if($user['uid'] != 0)
-		{
-			$cache_changed = true;
-
-			// preserve any surrounding chars
-			$left_over = substr($orig_name, strlen($user['username']) + $shift_pad);
-		}
-		else
-		{
-			// if no match and advanced matching is enabled . . .
-			if($mybb->settings['mention_advanced_matching'])
-			{
-				// we've already checked the first part, discard it
-				array_shift($name_parts);
-
-				// if there are more parts and quotes weren't used
-				if(!empty($name_parts) && $shift_pad != 3 && strlen($name_parts[0]) > 0)
-				{
-					// start with the first part . . .
-					$try_this = $username_lower;
-
-					$all_good = false;
-
-					// . . . loop through each part and try them in serial
-					foreach($name_parts as $val)
-					{
-						// add the next part
-						$try_this .= ' ' . $val;
-
-						// check the cache for a match to save a query
-						if(isset($name_cache[$try_this]))
-						{
-							// preserve any surrounding chars from the original match
-							$left_over = substr($orig_name, strlen($try_this) + $shift_pad);
-							return mention_build($name_cache[$try_this]) . $left_over;
-						}
-
-						// check the db
-						$user = mention_try_name($try_this);
-
-						// if there is a match . . .
-						if((int) $user['uid'] > 0)
-						{
-							// cache the user name HTML
-							$username_lower = strtolower($user['username']);
-
-							// preserve any surrounding chars from the original match
-							$left_over = substr($orig_name, strlen($user['username']) + $shift_pad);
-
-							// and gtfo
-							$all_good = true;
-							$cache_changed = true;
-							break;
-						}
-					}
-
-					if(!$all_good)
-					{
-						// still no matches?
-						return "@{$orig_name}";
-					}
-				}
-				else
-				{
-					// nothing else to try
-					return "@{$orig_name}";
-				}
-			}
-			else
-			{
-				// no match found and advanced matching is disabled
-				return "@{$orig_name}";
-			}
-		}
-
-		// store the mention
-		$name_cache[$username_lower] = $user;
-
-		// if we had to query for this user's info then update the cache
-		if($cache_changed)
-		{
-			$wildcard_plugins = $cache->read('wildcard_plugins');
-			$wildcard_plugins['mentionme']['namecache'] = $name_cache;
-			$cache->update('wildcard_plugins', $wildcard_plugins);
-		}
-
-		// and return the mention
-		return mention_build($user) . $left_over;
+		// no match found and advanced matching is disabled
+		return "@{$orig_name}";
 	}
+
+	// store the mention
+	$name_cache[$username_lower] = $user;
+
+	// if we had to query for this user's info then update the cache
+	if($cache_changed)
+	{
+		$mycache->update('namecache', $name_cache);
+	}
+
+	// and return the mention
+	return mention_build($user) . $left_over;
 }
 
 /*
@@ -281,7 +279,10 @@ EOF;
  */
 function mention_try_name($username = '')
 {
-	// create another name cache here to save queries if names with spaces are used more than once in the same post.
+	/**
+	 * create another name cache here to save queries if names
+	 * with spaces are used more than once in the same post
+	 */
 	static $name_list;
 
 	if(!is_array($name_list))
@@ -291,37 +292,36 @@ function mention_try_name($username = '')
 
 	$username = strtolower($username);
 
-	if($username)
-	{
-		// if the name is in this cache (has been searched for before)
-		if($name_list[$username])
-		{
-			// . . . just return the data and save the query
-			return $name_list[$username];
-		}
-
-		global $db;
-
-		// query the db
-		$user_query = $db->simple_select("users", "uid, username, usergroup, displaygroup, additionalgroups", "LOWER(username)='" . $db->escape_string($username) . "'", array('limit' => 1));
-
-		// result?
-		if($db->num_rows($user_query) === 1)
-		{
-			// cache the name
-			$name_list[$username] = $db->fetch_array($user_query);
-
-			// and return it
-			return $name_list[$username];
-		}
-		else
-		{
-			// no matches
-			return false;
-		}
-	}
 	// no user name supplied
-	return false;
+	if(!$username)
+	{
+		return false;
+	}
+
+	// if the name is in this cache (has been searched for before)
+	if($name_list[$username])
+	{
+		// . . . just return the data and save the query
+		return $name_list[$username];
+	}
+
+	global $db;
+
+	// query the db
+	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups', "LOWER(username)='{$db->escape_string($username)}'", array('limit' => 1));
+
+	// result?
+	if($db->num_rows($query) !== 1)
+	{
+		// no matches
+		return false;
+	}
+
+	// cache the name
+	$name_list[$username] = $db->fetch_array($query);
+
+	// and return it
+	return $name_list[$username];
 }
 
 /*
@@ -337,14 +337,14 @@ function mention_try_name($username = '')
  */
 function mention_mycode_add_codebuttons($edit_lang)
 {
-	global $lang;
+	global $lang, $mybb;
 
-	if(!$lang->mention)
+	if($mybb->settings['mention_minify_js'])
 	{
-		$lang->load('mention');
+		$min = '.min';
 	}
 	$lang->mentionme_codebutton = <<<EOF
-<script type="text/javascript" src="jscripts/mention_codebutton.js"></script>
+<script type="text/javascript" src="jscripts/MentionMe/mention_codebutton{$min}.js"></script>
 
 EOF;
 
@@ -388,10 +388,6 @@ EOF
 
 		// show the popup
 		global $templates, $lang, $headerinclude;
-		if(!$lang->mention)
-		{
-			$lang->load('mention');
-		}
 		eval("\$page = \"" . $templates->get('mentionme_popup') . "\";");
 		output_page($page);
 		exit;
@@ -407,19 +403,29 @@ EOF
  */
 function mentionme_initialize()
 {
-	global $mybb, $plugins;
+	global $mybb, $plugins, $lang;
+
+	if(!class_exists('MentionMeCache'))
+	{
+		require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/MentionMeCache.php';
+	}
 
 	// load install routines and force enable script only if in ACP
-	if(defined("IN_ADMINCP"))
+	if(defined('IN_ADMINCP'))
 	{
 		switch($mybb->input['module'])
 		{
 			case 'config-plugins':
-				require_once MYBB_ROOT . "inc/plugins/MentionMe/mention_install.php";
-				$plugins->add_hook("admin_load", "mention_admin_load");
+				require_once MYBB_ROOT . 'inc/plugins/MentionMe/mention_install.php';
+				$plugins->add_hook('admin_load', 'mention_admin_load');
 				break;
 		}
 		return;
+	}
+
+	if(!$lang->mention)
+	{
+		$lang->load('mention');
 	}
 
 	// load the alerts functions only if MyAlerts and mention alerts are enabled
@@ -431,57 +437,101 @@ function mentionme_initialize()
 	// only add the code button if the setting is on and we are viewing a page that use an editor
 	if($mybb->settings['mention_add_codebutton'] && in_array(THIS_SCRIPT, array('newthread.php', 'newreply.php', 'editpost.php', 'private.php', 'usercp.php', 'modcp.php', 'calendar.php')))
 	{
-		switch(THIS_SCRIPT)
-		{
-			case 'usercp.php':
-				switch($mybb->input['action'])
-				{
-					case 'editsig':
-						break 2;
-					default: return;
-				}
-			case 'private.php':
-				switch($mybb->input['action'])
-				{
-					case 'send':
-						break 2;
-					default: return;
-				}
-			case 'modcp.php':
-				switch($mybb->input['action'])
-				{
-					case 'edit_announcement':
-					case 'new_announcement':
-					case 'editprofile':
-						break 2;
-					default: return;
-				}
-			case 'calendar.php':
-				switch($mybb->input['action'])
-				{
-					case 'addevent':
-					case 'editevent':
-						break 2;
-					default: return;
-				}
+		$add_hook = true;
+		switch(THIS_SCRIPT) {
+		case 'usercp.php':
+			$add_hook = ($mybb->input['action'] == 'editsig');
+			break;
+		case 'private.php':
+			$add_hook = ($mybb->input['action'] == 'send');
+			break;
+		case 'modcp.php':
+			$add_hook = (in_array($mybb->input['action'], array('edit_announcement', 'new_announcement', 'editprofile')));
+			break;
+		case 'calendar.php':
+			$add_hook = (in_array($mybb->input['action'], array('addevent', 'editevent')));
+			break;
 		}
-		$plugins->add_hook("mycode_add_codebuttons", "mention_mycode_add_codebuttons");
+
+		if($add_hook)
+		{
+			$plugins->add_hook('mycode_add_codebuttons', 'mention_mycode_add_codebuttons');
+		}
 	}
-	// only add the misc hook if we are viewing the popup (or posting)
-	elseif(THIS_SCRIPT == 'misc.php' && $mybb->input['action'] == 'mentionme')
+
+	if($mybb->settings['mention_auto_complete'] && in_array(THIS_SCRIPT, array('newthread.php', 'newreply.php', 'editpost.php', 'private.php', 'usercp.php', 'modcp.php', 'calendar.php', 'showthread.php')))
 	{
-		$plugins->add_hook("misc_start", "mention_misc_start");
+		$add_js = true;
+		switch(THIS_SCRIPT) {
+		case 'usercp.php':
+			$add_js = ($mybb->input['action'] == 'editsig');
+			break;
+		case 'private.php':
+			$add_js = ($mybb->input['action'] == 'send');
+			break;
+		case 'modcp.php':
+			$add_js = (in_array($mybb->input['action'], array('edit_announcement', 'new_announcement', 'editprofile')));
+			break;
+		case 'calendar.php':
+			$add_js = (in_array($mybb->input['action'], array('addevent', 'editevent')));
+			break;
+		}
+
+		if($mybb->settings['mention_minify_js'])
+		{
+			$min = '.min';
+		}
+
+		if(file_exists(MYBB_ROOT . 'jscripts/MentionMe/mention_autocomplete.debug.js'))
+		{
+			$debug_script = <<<EOF
+
+<script type="text/javascript" src="jscripts/MentionMe/mention_autocomplete.debug.js"></script>
+EOF;
+		}
+
+		if($add_js)
+		{
+			global $mention_autocomplete;
+			$mention_autocomplete = <<<EOF
+<!-- MentionMe Autocomplete Scripts -->
+<script type="text/javascript" src="jscripts/js_cursor_position/selection_range.js"></script>
+<script type="text/javascript" src="jscripts/js_cursor_position/string_splitter.js"></script>
+<script type="text/javascript" src="jscripts/js_cursor_position/cursor_position.js"></script>
+<script type="text/javascript" src="jscripts/MentionMe/mention_autocomplete{$min}.js"></script>{$debug_script}
+<script type="text/javascript">
+<!--
+	MentionMe.autoComplete.setup({
+		lang: {
+			loading: '{$lang->mention_autocomplete_loading}',
+			instructions: '{$lang->mention_autocomplete_instructions}',
+		},
+		minLength: {$mybb->settings['minnamelength']},
+		maxLength: {$mybb->settings['maxnamelength']},
+	});
+// -->
+</script>
+EOF;
+		}
 	}
+
+	// only add the misc hook if we are viewing the popup (or POSTing)
+	if(THIS_SCRIPT == 'misc.php' && $mybb->input['action'] == 'mentionme')
+	{
+		$plugins->add_hook('misc_start', 'mention_misc_start');
+	}
+
 	// only add the showthread hook if we are there and we are adding a postbit multi-mention button
-	elseif(THIS_SCRIPT == 'showthread.php' && $mybb->settings['mention_add_postbit_button'])
+	if(THIS_SCRIPT == 'showthread.php' && $mybb->settings['mention_add_postbit_button'])
 	{
-		$plugins->add_hook("showthread_start", "mention_showthread_start");
-		$plugins->add_hook("postbit", "mention_postbit");
+		$plugins->add_hook('showthread_start', 'mention_showthread_start');
+		$plugins->add_hook('postbit', 'mention_postbit');
 	}
-	// only add the xmlhttp hook if required and we are adding a postbit multi-mention button
-	elseif(THIS_SCRIPT == 'xmlhttp.php' && $mybb->settings['mention_add_postbit_button'])
+
+	// only add the xmlhttp hook if required and we are adding a postbit multi-mention button or autocomplete is on
+	if(THIS_SCRIPT == 'xmlhttp.php' && ($mybb->settings['mention_add_postbit_button'] || $mybb->settings['mention_auto_complete']))
 	{
-		$plugins->add_hook("xmlhttp", "mention_xmlhttp");
+		$plugins->add_hook('xmlhttp', 'mention_xmlhttp');
 	}
 }
 
@@ -496,8 +546,8 @@ function mentionme_initialize()
  */
 function mention_postbit(&$post)
 {
-	global $mybb, $theme, $lang, $templates, $forumpermissions, $fid,
-	$post_type, $thread, $forum;
+	global $mybb, $theme, $lang, $templates, $forumpermissions,
+	$fid, $post_type, $thread, $forum;
 
 	if($mybb->settings['quickreply'] == 0 ||
 	   $mybb->user['suspendposting'] == 1 ||
@@ -509,16 +559,11 @@ function mention_postbit(&$post)
 		return;
 	}
 
-	if(!$lang->mention)
-	{
-		$lang->load('mention');
-	}
-
 	// tailor JS to postbit setting
 	$js = "javascript:MentionMe.insert('{$post['username']}');";
 	if($mybb->settings['mention_multiple'])
 	{
-		$js = "javascript:MentionMe.multiMention({$post['pid']});";
+		$js = "javascript:MentionMe.multi.mention({$post['pid']});";
 	}
 
 	if($mybb->settings['mention_css_buttons'])
@@ -534,26 +579,103 @@ function mention_postbit(&$post)
 /*
  * mention_xmlhttp()
  *
- * handles AJAX for MentionMe, currently only the multi-mention functionality
+ * handles AJAX for MentionMe
  *
  * @return: n/a
  */
 function mention_xmlhttp()
 {
-	global $mybb, $db;
+	global $mybb;
 
-	if($mybb->input['action'] != 'get_multi_mentioned')
+	$ajax_function = "mention_xmlhttp_{$mybb->input['mode']}";
+	if($mybb->input['action'] != 'mentionme' || !function_exists($ajax_function))
 	{
 		return;
 	}
 
+	$ajax_function();
+	return;
+}
+
+/*
+ * mention_xmlhttp_name_search()
+ *
+ * search for usernames beginning with search text and echo JSON
+ *
+ * @return: n/a
+ */
+function mention_xmlhttp_name_search()
+{
+	global $mybb, $db, $cache;
+
+	if(!$mybb->input['search'])
+	{
+		exit;
+	}
+
+	$name = $db->escape_string(trim($mybb->input['search']));
+	$name = strtr($name, array('%' => '=%', '=' => '==', '_' => '=_'));
+	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "username LIKE '{$name}%' ESCAPE '='", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
+
+	if($db->num_rows($query) == 0)
+	{
+		exit;
+	}
+
+	$json = array();
+	while($user = $db->fetch_array($query))
+	{
+		$json[strtolower($user['username'])] = $user['username'];
+		$name_cache[strtolower($user['username'])] = $user;
+	}
+
+	// send our headers.
+	header('Content-type: application/json');
+	echo(json_encode($json));
+	exit;
+}
+
+/*
+ * mention_xmlhttp_get_name_cache()
+ *
+ * retrieve the name cache and echo JSON
+ *
+ * @return: n/a
+ */
+function mention_xmlhttp_get_name_cache()
+{
+	$name_cache = MentionMeCache::get_instance()->read('namecache');
+
+	$json = array();
+	foreach($name_cache as $key => $data)
+	{
+		$json[$key] = $data['username'];
+	}
+
+	// send our headers.
+	header('Content-type: application/json');
+	echo(json_encode($json));
+	exit;
+}
+
+/*
+ * mention_xmlhttp_get_multi_mentioned()
+ *
+ * retrieve the mentioned user names and echo HTML
+ *
+ * @return: n/a
+ */
+function mention_xmlhttp_get_multi_mentioned()
+{
+	global $mybb, $db, $charset;
+
 	// if the cookie does not exist, exit
-	if(!array_key_exists("multi_mention", $mybb->cookies))
+	if(!array_key_exists('multi_mention', $mybb->cookies))
 	{
 		exit;
 	}
 	// divide up the cookie using our delimiter
-	$multi_mentioned = explode("|", $mybb->cookies['multi_mention']);
+	$multi_mentioned = explode('|', $mybb->cookies['multi_mention']);
 
 	// no values - exit
 	if(!is_array($multi_mentioned))
@@ -568,7 +690,7 @@ function mention_xmlhttp()
 	}
 
 	// join the post IDs back together
-	$mentioned_posts = implode(",", $mentioned_posts);
+	$mentioned_posts = implode(',', $mentioned_posts);
 
 	// fetch unviewable forums
 	$unviewable_forums = get_unviewable_forums();
@@ -621,11 +743,6 @@ function mention_showthread_start()
 	global $mybb, $mention_script, $mention_quickreply,
 	$mentioned_ids, $lang, $tid, $templates;
 
-	if(!$lang->mention)
-	{
-		$lang->load('mention');
-	}
-
 	// we only need the extra JS and Quick Reply additions if we are allowing multiple mentions
 	if($mybb->settings['mention_multiple'])
 	{
@@ -638,8 +755,13 @@ function mention_showthread_start()
 EOF;
 	}
 
+	if($mybb->settings['mention_minify_js'])
+	{
+		$min = '.min';
+	}
+
 	$mention_script = <<<EOF
-<script type="text/javascript" src="jscripts/mention_thread{$multi}.js"></script>
+<script type="text/javascript" src="jscripts/MentionMe/mention_thread{$multi}{$min}.js"></script>
 
 EOF;
 }

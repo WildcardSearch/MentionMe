@@ -102,7 +102,7 @@ EOF;
         'name' => $name,
         'description' => $mention_description,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '2.2.5',
+        'version' => '2.3',
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
         'guid' => '273104cdd4918caf9554d1567954d2ef',
@@ -172,11 +172,28 @@ function mention_activate()
 	}
 
 	// version check
+	require_once MYBB_ROOT . '/inc/adminfunctions_templates.php';
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/functions_install.php';
 	$info = mention_info();
 	$old_version = mention_get_cache_version();
 	if(version_compare($old_version, $info['version'], '<') && $old_version != '' && $old_version != 0)
 	{
+		if(version_compare($old_version, '2.3', '<'))
+		{
+			foreach(array(
+				"MentionMe.loadMultiMentioned" => 'MentionMe.multi.load',
+				"MentionMe.clearMultiMentioned" => 'MentionMe.multi.clear',
+			) as $old => $new)
+			{
+				find_replace_templatesets('mentionme_quickreply_notice', "#" . preg_quote($old) . "#i", $new);
+			}
+			foreach(array(
+				'mention_thread', 'mention_thread_multi', 'mention_codebutton',
+			) as $filename)
+			{
+				unlink(MYBB_ROOT . 'jscripts/' . $filename . '.js');
+			}
+		}
 		// check everything and upgrade if necessary
 		mention_install();
     }
@@ -184,14 +201,14 @@ function mention_activate()
 	// update the version (so we don't try to upgrade next round)
 	mention_set_cache_version();
 
-	// add the code button template variable
-	require_once MYBB_ROOT . '/inc/adminfunctions_templates.php';
+	// edit the templates
 	find_replace_templatesets('codebuttons', "#" . preg_quote('<script type="text/javascript">') . "#i", '{$lang->mentionme_codebutton}<script type="text/javascript">');
 	find_replace_templatesets('showthread', "#" . preg_quote('</head>') . "#i", '{$mention_script}</head>');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<div class="editor_control_bar"') . "#i", '{$mention_quickreply}<div class="editor_control_bar"');
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<input type="hidden" name="lastpid"') . "#i", '{$mentioned_ids}<input type="hidden" name="lastpid"');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
+	find_replace_templatesets('headerinclude', "#" . preg_quote('{$newpmmsg}') . "#i", '{$newpmmsg}{$mention_autocomplete}');
 
 	// have we already added our name caching task?
 	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
@@ -262,6 +279,7 @@ function mention_deactivate()
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('{$mentioned_ids}') . "#i", '');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
+	find_replace_templatesets('headerinclude', "#" . preg_quote('{$mention_autocomplete}') . "#i", '');
 }
 
 /* mention_uninstall()

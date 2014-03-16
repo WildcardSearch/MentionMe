@@ -8,7 +8,7 @@
  */
 
 $settings = array(
-	"mention_settings" => array	(
+	"mention_settings" => array(
 		"group" => array(
 			"name" => "mention_settings",
 			"title"  => $lang->mention_plugin_settings_title,
@@ -17,6 +17,15 @@ $settings = array(
 			"isdefault"  => 0
 		),
 		"settings" => array(
+			"mention_auto_complete" => array(
+				"sid" => "NULL",
+				"name" => "mention_auto_complete",
+				"title" => $lang->mention_auto_complete_title,
+				"description" => $lang->mention_auto_complete_description,
+				"optionscode" => 'yesno',
+				"value" => '1',
+				"disporder" => '10'
+			),
 			"mention_add_codebutton" => array(
 				"sid" => "NULL",
 				"name" => "mention_add_codebutton",
@@ -24,7 +33,7 @@ $settings = array(
 				"description" => $lang->mention_add_codebutton_description,
 				"optionscode" => 'yesno',
 				"value" => '1',
-				"disporder" => '10'
+				"disporder" => '20'
 			),
 			"mention_add_postbit_button" => array(
 				"sid" => "NULL",
@@ -33,7 +42,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '20'
+				"disporder" => '30'
 			),
 			"mention_multiple" => array(
 				"sid" => "NULL",
@@ -42,7 +51,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '30'
+				"disporder" => '40'
 			),
 			"mention_css_buttons" => array(
 				"sid" => "NULL",
@@ -51,7 +60,7 @@ $settings = array(
 				"description" => $lang->mention_css_buttons_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '40'
+				"disporder" => '50'
 			),
 			"mention_cache_time" => array(
 				"sid" => "NULL",
@@ -60,7 +69,16 @@ $settings = array(
 				"description" => $lang->mention_cache_time_description,
 				"optionscode" => "text",
 				"value" => '7',
-				"disporder" => '50'
+				"disporder" => '60'
+			),
+			"mention_minify_js" => array(
+				"sid" => "NULL",
+				"name" => "mention_minify_js",
+				"title" => $lang->mention_minify_js_title,
+				"description" => $lang->mention_minify_js_desc,
+				"optionscode" => "yesno",
+				"value" => '1',
+				"disporder" => '70'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => "NULL",
@@ -69,7 +87,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '60'
+				"disporder" => '80'
 			),
 		)
 	)
@@ -108,14 +126,9 @@ $templates = array(
 			</form>
 <script type="text/javascript" src="jscripts/autocomplete.js?ver=140"></script>
 <script type="text/javascript">
-	new autoComplete
-	(
-		"username",
-		"xmlhttp.php?action=get_users",
-		{
-			valueSpan: "username"
-		}
-	);
+	new autoComplete("username", "xmlhttp.php?action=get_users", {
+		valueSpan: "username"
+	});
 </script>
 		</td>
 	</tr>
@@ -143,11 +156,47 @@ EOF
 			"mentionme_quickreply_notice" => <<<EOF
 					<div class="editor_control_bar" style="width: 95%; padding: 4px; margin-top: 3px; display: none;" id="quickreply_multi_mention">
 						<span class="smalltext">
-							{\$lang->mention_posts_selected} <a href="./newreply.php?tid={\$tid}&amp;load_all_mentions=1" onclick="return MentionMe.loadMultiMentioned();">{\$lang->mention_users_now}</a> {\$lang->or} <a href="javascript:MentionMe.clearMultiMentioned();">{\$lang->quickreply_multiquote_deselect}</a>.
+							{\$lang->mention_posts_selected} <a href="./newreply.php?tid={\$tid}&amp;load_all_mentions=1" onclick="return MentionMe.multi.load();">{\$lang->mention_users_now}</a> {\$lang->or} <a href="javascript:MentionMe.multi.clear();">{\$lang->quickreply_multiquote_deselect}</a>.
 						</span>
 					</div>
 EOF
 		),
+	),
+);
+
+$style_sheets = array(
+	"mentionme" => array(
+		"attachedto" => '',
+		"stylesheet" => <<<EOF
+div.mentionme_popup {
+	position: absolute;
+	background: #F5F5F5;
+	color: #3D3D3D;
+	border: 2px outset #3D3D3D;
+	box-shadow: 5px 5px 5px #515151;
+}
+
+div.mentionme_popup_item {
+	padding: 1px 3px 1px 3px;
+}
+
+div.mentionme_popup_item_on {
+	background: #3D3D3D;
+	color: #F5F5F5;
+}
+
+div.mentionme_spinner {
+	font-weight: bold;
+	font-style: italic;
+	color: #3D3D3D;
+	padding-left: 5px;
+}
+
+div.mentionme_spinner img {
+	float: right;
+	padding-right: 5px;
+}
+EOF
 	),
 );
 
