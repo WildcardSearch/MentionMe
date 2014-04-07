@@ -373,7 +373,7 @@ var MentionMe = (function(m) {
 		}
 
 		/**
-		 * getText()
+		 * getOffset()
 		 *
 		 * getter for offset
 		 *

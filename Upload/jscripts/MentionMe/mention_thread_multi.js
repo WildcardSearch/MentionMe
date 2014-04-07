@@ -18,7 +18,7 @@ var MentionMe = (function(m) {
 	 * @return  void
 	 */
 	function init() {
-		var post_ids, mentioned = Cookie.get("multi_mention");
+		var element, post_ids, mentioned = Cookie.get("multi_mention");
 
 		if (mentioned) {
 			post_ids = mentioned.split("|");
@@ -54,7 +54,7 @@ var MentionMe = (function(m) {
 	 * @return  void
 	 */
 	function mention(pid) {
-		var new_post_ids = new Array(),
+		var element, new_post_ids = new Array(),
 		mentioned = Cookie.get("multi_mention"),
 		is_new = true, post_ids;
 
@@ -185,7 +185,7 @@ var MentionMe = (function(m) {
 	 * @return: n/a
 	 */
 	function clear() {
-		var post_ids, mentioned = Cookie.get("multi_mention");
+		var element, post_ids, mentioned = Cookie.get("multi_mention");
 
 		$('quickreply_multi_mention').hide();
 		if (mentioned) {
