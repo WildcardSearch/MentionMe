@@ -62,13 +62,11 @@ function mention_generate_postbit_buttons($hard = false)
  */
 function mention_get_cache_version()
 {
-	global $cache;
-
-	//get currently installed version, if there is one
-	$wildcard_plugins = $cache->read('wildcard_plugins');
-	if(trim($wildcard_plugins['mentionme']['version']))
+	// get currently installed version, if there is one
+	$version = MentionMeCache::get_instance()->read('version');
+	if(trim($version))
 	{
-        return $wildcard_plugins['mentionme']['version'];
+        return trim($version);
 	}
     return 0;
 }
@@ -84,16 +82,11 @@ function mention_get_cache_version()
  */
 function mention_set_cache_version()
 {
-	global $cache;
-
-	//get version from this plugin file
+	// get version from this plugin file
 	$info = mention_info();
 
-	//update version cache to latest
-	$wildcard_plugins = $cache->read('wildcard_plugins');
-	$wildcard_plugins['mentionme']['version'] = $info['version'];
-	$cache->update('wildcard_plugins', $wildcard_plugins);
-
+	// update version cache to latest
+	MentionMeCache::get_instance()->update('version', $info['version']);
     return true;
 }
 
@@ -108,12 +101,7 @@ function mention_set_cache_version()
  */
 function mention_unset_cache_version()
 {
-	global $cache;
-
-	$wildcard_plugins = $cache->read('wildcard_plugins');
-	$wildcard_plugins['mentionme'] = null;
-	$cache->update('wildcard_plugins', $wildcard_plugins);
-
+	MentionMeCache::get_instance()->clear();
     return true;
 }
 

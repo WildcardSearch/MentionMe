@@ -53,7 +53,7 @@ messageEditor = Class.create(messageEditor,	{
 	 * @return: n/a
 	 */
 	insertMyCode: function($super, code, extra) {
-		// if it our turn,
+		// if its our turn,
 		if (code == 'mention') {
 			// run our handler
 			this.insertMention();

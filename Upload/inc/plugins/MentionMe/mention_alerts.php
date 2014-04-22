@@ -113,7 +113,8 @@ function mention_myalerts_datahandler_post_update($this_post)
 
 /* mention_myalerts_do_newreply_end()
  *
- * check posts for mentions when they are initially created and create alerts accordingly
+ * check posts for mentions when they are initially created and
+ * create alerts if appropriate
  *
  * @return: n/a
  */
@@ -359,15 +360,19 @@ function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_in
 function mention_can_view($username, $uid, $from_uid, $fid)
 {
     global $cache;
-	static $name_cache;
+	static $name_cache, $mycache;
 
 	$cache_changed = false;
 
-    // cache names to reduce queries
-	if(!isset($name_cache) || empty($name_cache))
+	// cache names to reduce queries
+	if($mycache instanceof MentionMeCache == false)
 	{
-		$wildcard_plugins = $cache->read('wildcard_plugins');
-		$name_cache = $wildcard_plugins['mentionme']['namecache'];
+		$mycache = MentionMeCache::get_instance();
+	}
+
+	if(!isset($name_cache))
+	{
+		$name_cache = $mycache->read('namecache');
 	}
 
     $username = strtolower($username);
@@ -386,8 +391,7 @@ function mention_can_view($username, $uid, $from_uid, $fid)
         $query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "uid='{$uid}'");
         $user = $db->fetch_array($query);
         $name_cache[$username] = $user;
-        $wildcard_plugins['mentionme']['namecache'] = $name_cache;
-        $cache->update('wildcard_plugins', $wildcard_plugins);
+        $mycache->update('namecache', $name_cache);
     }
 
 	// don't alert if mentioning user is on mentioned users ignore list

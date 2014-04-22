@@ -3,10 +3,10 @@
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
- * this file contains a class for the single mention functionality in mention.php
+ * this file contains a module for the single mention functionality in mention.php
  */
 
-var MentionMe = {
+var MentionMe = (function(m) {
 	/**
 	 * insert()
 	 * 
@@ -15,7 +15,7 @@ var MentionMe = {
 	 * @param - name - (string)
 	 * @return: n/a
 	 */
-	insert: function(name) {
+	function insert(name) {
 		var id = 'message';
 		if (typeof clickableEditor != 'undefined') {
 			id = clickableEditor.textarea;
@@ -23,4 +23,8 @@ var MentionMe = {
 		$(id).value += '@"' + name + '" ';
 		$(id).focus();
 	}
-};
+
+	m.insert = insert;
+
+	return m;
+})(MentionMe || {});

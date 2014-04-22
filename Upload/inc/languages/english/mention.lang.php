@@ -14,7 +14,7 @@ $l['mention_task_success'] = 'The MentionMe name cache task ran successfully. Go
 $l['mention_task_fail'] = 'MentionMe found no users to cache information for.';
 
 // code button and popup
-$l['mention_popup_submit'] = $l['editor_mention'] = 'Mention';
+$l['mention_title'] = $l['mention_popup_submit'] = $l['editor_mention'] = 'Mention';
 $l['mentionme_popup_title'] = 'Mention A User';
 $l['mentionme_popup_description'] = 'enter a user to mention by name';
 $l['mentionme_popup_close'] = 'Close Window';
@@ -30,6 +30,9 @@ $l['myalerts_help_alert_types_mentioned'] = '<strong>Mentioned in a post</strong
 // multi-mention on post bit
 $l['mention_posts_selected'] = 'You have selected one or more users to mention.';
 $l['mention_users_now'] = 'Mention these users now';
-$l['mention_title'] = 'Mention';
+
+// mention autocomplete
+$l['mention_autocomplete_loading'] = 'loading . . .';
+$l['mention_autocomplete_instructions'] = 'type a user name';
 
 ?>

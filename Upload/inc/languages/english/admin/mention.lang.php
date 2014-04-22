@@ -23,14 +23,14 @@ $l['mention_plugin_settings'] = 'Plugin Settings';
 $l['mention_plugin_settings_title'] = 'MentionMe Configuration';
 $l['mention_settingsgroup_description'] = 'Enable or disable advanced matching';
 
-$l['mention_advanced_matching'] = 'Enable Advanced Matching?';
-$l['mention_advanced_matching_desc'] = 'This option allows user names with whitespace to be processed by MentionMe without the necessity of enclosing user names in double quotes.<br /><br />This feature can greatly increase the server load and is not recommended for large forums.';
-
 $l['mention_cache_time_title'] = 'Cache Cut-off Time';
 $l['mention_cache_time_description'] = 'The task caches usernames based on when they were last active. In days, specify how far back to go. (Large forums should stick with low numbers to reduce the size of the namecache)';
 
+$l['mention_auto_complete_title'] = 'Auto-Complete Mentions?';
+$l['mention_auto_complete_description'] = 'YES (default) to autocomplete mentions as they are typed on showthread in Quick Reply and full post/edit pages';
+
 $l['mention_add_codebutton_title'] = 'Add A Code Button?';
-$l['mention_add_codebutton_description'] = 'YES (default) to add a button to the editor';
+$l['mention_add_codebutton_description'] = 'YES (default) to add a code button to the full editor';
 
 $l['mention_add_postbit_button_title'] = 'Add a Postbit Button?';
 $l['mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';
@@ -40,6 +40,12 @@ $l['mention_multiple_description'] = 'YES (default) to mimic the multi-quote fea
 
 $l['mention_css_buttons_title'] = 'CSS Buttons?';
 $l['mention_css_buttons_description'] = 'YES if your postbit buttons are styled with CSS NO (default) if you use image buttons<br /><br /><strong>The postbit button setting must be set to YES for this setting to take effect</strong>';
+
+$l['mention_advanced_matching'] = 'Enable Advanced Matching?';
+$l['mention_advanced_matching_desc'] = 'This option allows user names with whitespace to be processed by MentionMe without the necessity of enclosing user names in double quotes.<br /><br />This feature can greatly increase the server load and is not recommended for large forums.';
+
+$l['mention_minify_js_title'] = 'Minify JavaScript?';
+$l['mention_minify_js_desc'] = 'YES (default) to serve client-side scripts minified to increase performance, NO to serve beautiful, commented code ;)';
 
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
