@@ -197,7 +197,9 @@ var MentionMe = (function(m) {
 		offset = keyCache.getOffset(), mention, prevChar;
 
 		if (!name) {
-			popup.hide();
+			if (!popup.spinnerIsVisible()) {
+				popup.hide();
+			}
 			return;
 		}
 
