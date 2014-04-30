@@ -529,7 +529,7 @@ EOF;
 	}
 
 	// only add the xmlhttp hook if required and we are adding a postbit multi-mention button or autocomplete is on
-	if(THIS_SCRIPT == 'xmlhttp.php' && ($mybb->settings['mention_add_postbit_button'] || $mybb->settings['mention_auto_complete']))
+	if(THIS_SCRIPT == 'xmlhttp.php' && $mybb->input['action'] == 'mentionme')
 	{
 		$plugins->add_hook('xmlhttp', 'mention_xmlhttp');
 	}
