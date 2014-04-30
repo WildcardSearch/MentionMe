@@ -40,7 +40,7 @@ function mention_run($message)
 	$message = preg_replace($email_regex, "<mybb-email>\n", $message);
 
 	// use function mention_filter_callback to repeatedly process mentions in the current post
-	$message = preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', 'mention_filter_callback', $message);
+	$message = preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/u', 'mention_filter_callback', $message);
 
 	// now restore the email addresses
 	foreach($emails as $email)
