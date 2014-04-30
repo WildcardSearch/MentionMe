@@ -615,7 +615,7 @@ function mention_xmlhttp_name_search()
 
 	$name = $db->escape_string(trim($mybb->input['search']));
 	$name = strtr($name, array('%' => '=%', '=' => '==', '_' => '=_'));
-	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "username LIKE '{$name}%' ESCAPE '='", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
+	$query = $db->simple_select('users', 'username', "username LIKE '{$name}%' ESCAPE '='");
 
 	if($db->num_rows($query) == 0)
 	{
@@ -623,10 +623,9 @@ function mention_xmlhttp_name_search()
 	}
 
 	$json = array();
-	while($user = $db->fetch_array($query))
+	while($username = $db->fetch_field($query, 'username'))
 	{
-		$json[strtolower($user['username'])] = $user['username'];
-		$name_cache[strtolower($user['username'])] = $user;
+		$json[strtolower($username)] = $username;
 	}
 
 	// send our headers.
