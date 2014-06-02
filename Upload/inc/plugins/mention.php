@@ -261,8 +261,14 @@ function mention_build($user)
 		return false;
 	}
 
-	// set up the user name link so that it displays correctly for the display group of the user
-	$username = format_name(htmlspecialchars_uni($user['username']), $user['usergroup'], $user['displaygroup']);
+	global $mybb;
+
+	$username = htmlspecialchars_uni($user['username']);
+	if($mybb->settings['mention_format_names'])
+	{
+		// set up the user name link so that it displays correctly for the display group of the user
+		$username = format_name($username, $user['usergroup'], $user['displaygroup']);
+	}
 	$url = get_profile_link($user['uid']);
 
 	// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)

@@ -102,7 +102,7 @@ EOF;
         'name' => $name,
         'description' => $mention_description,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '2.3',
+        'version' => '2.3.1',
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
         'guid' => '273104cdd4918caf9554d1567954d2ef',
