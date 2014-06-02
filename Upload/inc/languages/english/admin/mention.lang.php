@@ -60,6 +60,6 @@ $l['mention_myalerts_force_enable_alerts'] = 'Force Enable Mention Alerts For Al
 $l['mention_myalerts_force_enable_fail_myalerts'] = 'MyAlerts components missing. MyAlerts is either not installed or installed improperly!';
 $l['mention_myalerts_force_enable_fail_not_installed'] = 'MentionMe not installed!';
 $l['mention_myalerts_force_enable_fail_no_users'] = 'There were no users to enable alerts for!';
-$l['mention_myalerts_force_enable_success'] = 'Alerts enabled for all users';
+$l['mention_myalerts_force_enable_success'] = 'Mention alerts are enabled for all users';
 
 ?>
