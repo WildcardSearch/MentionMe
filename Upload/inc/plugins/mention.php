@@ -724,7 +724,25 @@ function mention_xmlhttp_get_multi_mentioned()
 
 		if($mentioned[$mentioned_post['username']] != true)
 		{
-			$message .= "@\"{$mentioned_post['username']}\" ";
+			$mentioned_post['username'] = html_entity_decode($mentioned_post['username']);
+
+			// find an appropriate quote character based on whether or not the
+			// mentioned name includes that character
+			$quote = '';
+			if(strpos($mentioned_post['username'], '"') === false)
+			{
+				$quote = '"';
+			}
+			elseif(strpos($mentioned_post['username'], "'") === false)
+			{
+				$quote = "'";
+			}
+			elseif(strpos($mentioned_post['username'], "`") === false)
+			{
+				$quote = "`";
+			}
+
+			$message .= "@{$quote}{$mentioned_post['username']}{$quote} ";
 			$mentioned[$mentioned_post['username']] = true;
 		}
 	}

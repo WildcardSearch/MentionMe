@@ -9,18 +9,30 @@
 var MentionMe = (function(m) {
 	/**
 	 * insert()
-	 * 
+	 *
 	 * insert the mention into the Quick Reply text area
-	 * 
+	 *
 	 * @param - name - (string)
 	 * @return: n/a
 	 */
 	function insert(name) {
-		var id = 'message';
+		var id = 'message', quote = '';
+
 		if (typeof clickableEditor != 'undefined') {
 			id = clickableEditor.textarea;
 		}
-		$(id).value += '@"' + name + '" ';
+
+		// find an appropriate quote character based on whether or not the
+		// mentioned name includes that character
+		if (name.indexOf('"') == -1) {
+			quote = '"';
+		} else if (name.indexOf("'") == -1) {
+			quote = "'";
+		} else if (name.indexOf("`") == -1) {
+			quote = "`";
+		}
+
+		$(id).value += '@' + quote + name + quote + ' ';
 		$(id).focus();
 	}
 
