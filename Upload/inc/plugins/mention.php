@@ -40,7 +40,7 @@ function mention_run($message)
 	$message = preg_replace($email_regex, "<mybb-email>\n", $message);
 
 	// use function mention_filter_callback to repeatedly process mentions in the current post
-	$message = preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/', 'mention_filter_callback', $message);
+	$message = preg_replace_callback('/@([\'|"|`])([^<]+?)\1|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/u', 'mention_filter_callback', $message);
 
 	// now restore the email addresses
 	foreach($emails as $email)
@@ -83,18 +83,23 @@ function mention_filter_callback($match)
 		$name_cache = $mycache->read('namecache');
 	}
 
-	// if the user entered the mention in quotes then it will be returned in $match[1],
-	// if not it will be returned in $match[2]
-	array_shift($match);
-	while(strlen(trim($match[0])) == 0 && !empty($match))
+	// if the user entered the mention in quotes then it will be returned in
+	// $match[2], if not it will be returned in $match[3]
+	if(strlen(trim($match[2])) >= $mybb->settings['minnamelength'])
 	{
-		array_shift($match);
-		++$shift_count;
+		$orig_name = html_entity_decode($match[2]);
+		$shift_count = 1;
+	}
+	elseif(strlen(trim($match[3])) >= $mybb->settings['minnamelength'])
+	{
+		$orig_name = html_entity_decode($match[3]);
+	}
+	else
+	{
+		return $match[0];
 	}
 
-	// save the original name
-	$orig_name = $match[0];
-	$match[0] = trim(strtolower($match[0]));
+	$match[0] = trim(strtolower($orig_name));
 
 	// if the name is already in the cache . . .
 	if(isset($name_cache[$match[0]]))
@@ -256,8 +261,14 @@ function mention_build($user)
 		return false;
 	}
 
-	// set up the user name link so that it displays correctly for the display group of the user
-	$username = format_name(htmlspecialchars_uni($user['username']), $user['usergroup'], $user['displaygroup']);
+	global $mybb;
+
+	$username = htmlspecialchars_uni($user['username']);
+	if($mybb->settings['mention_format_names'])
+	{
+		// set up the user name link so that it displays correctly for the display group of the user
+		$username = format_name($username, $user['usergroup'], $user['displaygroup']);
+	}
 	$url = get_profile_link($user['uid']);
 
 	// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
@@ -529,7 +540,7 @@ EOF;
 	}
 
 	// only add the xmlhttp hook if required and we are adding a postbit multi-mention button or autocomplete is on
-	if(THIS_SCRIPT == 'xmlhttp.php' && ($mybb->settings['mention_add_postbit_button'] || $mybb->settings['mention_auto_complete']))
+	if(THIS_SCRIPT == 'xmlhttp.php' && $mybb->input['action'] == 'mentionme')
 	{
 		$plugins->add_hook('xmlhttp', 'mention_xmlhttp');
 	}
@@ -615,7 +626,7 @@ function mention_xmlhttp_name_search()
 
 	$name = $db->escape_string(trim($mybb->input['search']));
 	$name = strtr($name, array('%' => '=%', '=' => '==', '_' => '=_'));
-	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "username LIKE '{$name}%' ESCAPE '='", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
+	$query = $db->simple_select('users', 'username', "username LIKE '{$name}%' ESCAPE '='");
 
 	if($db->num_rows($query) == 0)
 	{
@@ -623,10 +634,9 @@ function mention_xmlhttp_name_search()
 	}
 
 	$json = array();
-	while($user = $db->fetch_array($query))
+	while($username = $db->fetch_field($query, 'username'))
 	{
-		$json[strtolower($user['username'])] = $user['username'];
-		$name_cache[strtolower($user['username'])] = $user;
+		$json[strtolower($username)] = $username;
 	}
 
 	// send our headers.
@@ -720,7 +730,25 @@ function mention_xmlhttp_get_multi_mentioned()
 
 		if($mentioned[$mentioned_post['username']] != true)
 		{
-			$message .= "@\"{$mentioned_post['username']}\" ";
+			$mentioned_post['username'] = html_entity_decode($mentioned_post['username']);
+
+			// find an appropriate quote character based on whether or not the
+			// mentioned name includes that character
+			$quote = '';
+			if(strpos($mentioned_post['username'], '"') === false)
+			{
+				$quote = '"';
+			}
+			elseif(strpos($mentioned_post['username'], "'") === false)
+			{
+				$quote = "'";
+			}
+			elseif(strpos($mentioned_post['username'], "`") === false)
+			{
+				$quote = "`";
+			}
+
+			$message .= "@{$quote}{$mentioned_post['username']}{$quote} ";
 			$mentioned[$mentioned_post['username']] = true;
 		}
 	}

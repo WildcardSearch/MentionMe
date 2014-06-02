@@ -47,6 +47,9 @@ $l['mention_advanced_matching_desc'] = 'This option allows user names with white
 $l['mention_minify_js_title'] = 'Minify JavaScript?';
 $l['mention_minify_js_desc'] = 'YES (default) to serve client-side scripts minified to increase performance, NO to serve beautiful, commented code ;)';
 
+$l['mention_format_names_title'] = 'Format Usernames?';
+$l['mention_format_names_desc'] = 'YES (default) to format user names according to their display group, NO to format mentions as plain links';
+
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
 $l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! You must uninstall and reinstall the plugin to receive mention alerts.';
@@ -57,6 +60,6 @@ $l['mention_myalerts_force_enable_alerts'] = 'Force Enable Mention Alerts For Al
 $l['mention_myalerts_force_enable_fail_myalerts'] = 'MyAlerts components missing. MyAlerts is either not installed or installed improperly!';
 $l['mention_myalerts_force_enable_fail_not_installed'] = 'MentionMe not installed!';
 $l['mention_myalerts_force_enable_fail_no_users'] = 'There were no users to enable alerts for!';
-$l['mention_myalerts_force_enable_success'] = 'Alerts enabled for all users';
+$l['mention_myalerts_force_enable_success'] = 'Mention alerts are enabled for all users';
 
 ?>

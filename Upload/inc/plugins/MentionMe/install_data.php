@@ -13,7 +13,7 @@ $settings = array(
 			"name" => "mention_settings",
 			"title"  => $lang->mention_plugin_settings_title,
 			"description" => $lang->mention_settingsgroup_description,
-			"disporder"  => "120",
+			"disporder"  => "102",
 			"isdefault"  => 0
 		),
 		"settings" => array(
@@ -71,6 +71,15 @@ $settings = array(
 				"value" => '7',
 				"disporder" => '60'
 			),
+			"mention_format_names" => array(
+				"sid" => "NULL",
+				"name" => "mention_format_names",
+				"title" => $lang->mention_format_names_title,
+				"description" => $lang->mention_format_names_desc,
+				"optionscode" => "yesno",
+				"value" => '1',
+				"disporder" => '70'
+			),
 			"mention_minify_js" => array(
 				"sid" => "NULL",
 				"name" => "mention_minify_js",
@@ -78,7 +87,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '70'
+				"disporder" => '80'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => "NULL",
@@ -87,7 +96,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '80'
+				"disporder" => '90'
 			),
 		)
 	)

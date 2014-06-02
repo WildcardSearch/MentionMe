@@ -194,7 +194,7 @@ var MentionMe = (function(m) {
 	 */
 	function insertMention() {
 		var lPad = ' ', rPad = ' ', name = popup.getSelectedName(),
-		offset = keyCache.getOffset(), mention, prevChar;
+		offset = keyCache.getOffset(), mention, prevChar, quote = '';
 
 		if (!name) {
 			if (!popup.spinnerIsVisible()) {
@@ -219,8 +219,18 @@ var MentionMe = (function(m) {
 
 		getCaret();
 
+		// find an appropriate quote character based on whether or not the
+		// mentioned name includes that character
+		if (name.indexOf('"') == -1) {
+			quote = '"';
+		} else if (name.indexOf("'") == -1) {
+			quote = "'";
+		} else if (name.indexOf("`") == -1) {
+			quote = "`";
+		}
+
 		// do the insertion
-		mention = lPad + '@"' + name + '"' + rPad;
+		mention = lPad + '@' + quote + name + quote + rPad;
 		textarea.value = textarea.value.slice(0, offset - 1) + mention + textarea.value.slice(offset + keyCache.getLength());
 		setCaret(offset + mention.length - 1);
 
