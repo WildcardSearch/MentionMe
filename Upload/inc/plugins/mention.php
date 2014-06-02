@@ -40,7 +40,7 @@ function mention_run($message)
 	$message = preg_replace($email_regex, "<mybb-email>\n", $message);
 
 	// use function mention_filter_callback to repeatedly process mentions in the current post
-	$message = preg_replace_callback('/@[\'|"|`]([^<]+?)[\'|"|`]|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/u', 'mention_filter_callback', $message);
+	$message = preg_replace_callback('/@([\'|"|`])([^<]+?)\1|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/u', 'mention_filter_callback', $message);
 
 	// now restore the email addresses
 	foreach($emails as $email)
@@ -83,18 +83,23 @@ function mention_filter_callback($match)
 		$name_cache = $mycache->read('namecache');
 	}
 
-	// if the user entered the mention in quotes then it will be returned in $match[1],
-	// if not it will be returned in $match[2]
-	array_shift($match);
-	while(strlen(trim($match[0])) == 0 && !empty($match))
+	// if the user entered the mention in quotes then it will be returned in
+	// $match[2], if not it will be returned in $match[3]
+	if(strlen(trim($match[2])) >= $mybb->settings['minnamelength'])
 	{
-		array_shift($match);
-		++$shift_count;
+		$orig_name = html_entity_decode($match[2]);
+		$shift_count = 1;
+	}
+	elseif(strlen(trim($match[3])) >= $mybb->settings['minnamelength'])
+	{
+		$orig_name = html_entity_decode($match[3]);
+	}
+	else
+	{
+		return $match[0];
 	}
 
-	// save the original name
-	$orig_name = $match[0];
-	$match[0] = trim(strtolower($match[0]));
+	$match[0] = trim(strtolower($orig_name));
 
 	// if the name is already in the cache . . .
 	if(isset($name_cache[$match[0]]))
