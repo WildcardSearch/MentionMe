@@ -118,9 +118,11 @@ var MentionMe = (function(m) {
 	 * @return  void
 	 */
 	function onKeyUp(event) {
+		getCaret();
+
 		// open the popup when user types an @
 		if (!popup.isVisible()) {
-			if (event.keyCode == 50 && event.shiftKey == true) {
+			if (textarea.value.slice(selection.start - 1, selection.end) == '@') {
 				popup.show();
 			}
 			return;
