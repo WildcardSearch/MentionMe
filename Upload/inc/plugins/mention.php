@@ -39,8 +39,17 @@ function mention_run($message)
 	preg_match_all($email_regex, $message, $emails, PREG_SET_ORDER);
 	$message = preg_replace($email_regex, "<mybb-email>\n", $message);
 
-	// use function mention_filter_callback to repeatedly process mentions in the current post
-	$message = preg_replace_callback('/@([\'|"|`])([^<]+?)\1|@([\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})/u', 'mention_filter_callback', $message);
+	/**
+	 * use function mention_filter_callback to repeatedly process mentions in the current post
+	 *
+	 * quoted
+	 */
+	$message = preg_replace_callback('#@([\'|"|`])(?P<quoted>[^<\n]+?)\1#u', 'mention_filter_callback', $message);
+
+	/**
+	 * unquoted
+	 */
+	$message = preg_replace_callback('#@(?P<unquoted>[^<\n]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})#u', 'mention_filter_callback', $message);
 
 	// now restore the email addresses
 	foreach($emails as $email)
@@ -68,7 +77,7 @@ function mention_filter_callback($match)
 	global $db, $mybb;
 	static $name_cache, $mycache;
 	$name_parts = array();
-	$shift_count = 0;
+	$unquoted = 0;
 
 	$cache_changed = false;
 
@@ -85,14 +94,14 @@ function mention_filter_callback($match)
 
 	// if the user entered the mention in quotes then it will be returned in
 	// $match[2], if not it will be returned in $match[3]
-	if(strlen(trim($match[2])) >= $mybb->settings['minnamelength'])
+	if(strlen(trim($match['quoted'])) >= $mybb->settings['minnamelength'])
 	{
-		$orig_name = html_entity_decode($match[2]);
-		$shift_count = 1;
+		$orig_name = html_entity_decode($match['quoted']);
 	}
-	elseif(strlen(trim($match[3])) >= $mybb->settings['minnamelength'])
+	elseif(strlen(trim($match['unquoted'])) >= $mybb->settings['minnamelength'])
 	{
-		$orig_name = html_entity_decode($match[3]);
+		$orig_name = html_entity_decode($match['unquoted']);
+		$unquoted = true;
 	}
 	else
 	{
@@ -104,12 +113,11 @@ function mention_filter_callback($match)
 	// if the name is already in the cache . . .
 	if(isset($name_cache[$match[0]]))
 	{
-		$left_over = substr($orig_name, strlen($match[0]));
-		return mention_build($name_cache[$match[0]]) . $left_over;
+		return mention_build($name_cache[$match[0]]);
 	}
 
 	// if the array was shifted then no quotes were used
-	if($shift_count)
+	if($unquoted)
 	{
 		// no padding necessary
 		$shift_pad = 0;
@@ -169,7 +177,7 @@ function mention_filter_callback($match)
 		$left_over = substr($orig_name, strlen($user['username']) + $shift_pad);
 	}
 	// if no match and advanced matching is enabled . . .
-	elseif($mybb->settings['mention_advanced_matching'])
+	elseif($mybb->settings['mention_advanced_matching'] && $unquoted)
 	{
 		// we've already checked the first part, discard it
 		array_shift($name_parts);

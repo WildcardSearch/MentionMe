@@ -645,7 +645,7 @@ class WildcardPluginInstaller
 
 		$query = $this->db->write_query("
 			SHOW TABLES
-			FROM {$config['database']['database']}
+			FROM `{$config['database']['database']}`
 		");
 
 		$table_list = array();

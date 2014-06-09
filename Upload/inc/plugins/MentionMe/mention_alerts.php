@@ -362,8 +362,6 @@ function mention_can_view($username, $uid, $from_uid, $fid)
     global $cache;
 	static $name_cache, $mycache;
 
-	$cache_changed = false;
-
 	// cache names to reduce queries
 	if($mycache instanceof MentionMeCache == false)
 	{
