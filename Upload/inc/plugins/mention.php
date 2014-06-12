@@ -49,7 +49,7 @@ function mention_run($message)
 	/**
 	 * unquoted
 	 */
-	$message = preg_replace_callback('#@(?P<unquoted>[^<\n]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})#u', 'mention_filter_callback', $message);
+	$message = preg_replace_callback('#@(?P<unquoted>[\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})#u', 'mention_filter_callback', $message);
 
 	// now restore the email addresses
 	foreach($emails as $email)
