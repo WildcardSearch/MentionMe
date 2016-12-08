@@ -789,6 +789,10 @@ var MentionMe = (function(m) {
 
 			// if we have content, clear out and get ready to build items
 			clear();
+			
+			if (items.length > maxItems) {
+				items.length = maxItems;
+			}
 
 			for (i = 0; i < items.length; i++) {
 				div.insert(new Element('div', {
