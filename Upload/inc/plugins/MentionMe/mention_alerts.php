@@ -15,8 +15,9 @@ if(!defined('IN_MYBB') || !defined('IN_MENTIONME'))
 
 if(!defined('MYALERTS_PLUGIN_PATH'))
 {
-	define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MyAlerts/');
+    define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MyAlerts/');
 }
+
 
 /* mention_myalerts_datahandler_post_update()
  *
@@ -28,41 +29,44 @@ if(!defined('MYALERTS_PLUGIN_PATH'))
 $plugins->add_hook("datahandler_post_update", "mention_myalerts_datahandler_post_update");
 function mention_myalerts_datahandler_post_update($this_post)
 {
-	global $db, $mybb, $post;
+    global $db, $mybb, $post;
 
-	// grab the post data
-	$message = $this_post->data['message'];
-	$fid = (int) $this_post->data['fid'];
-	$tid = (int) $this_post->data['tid'];
-	$pid = (int) $this_post->data['pid'];
-	$post_uid = (int) $post['uid'];
-	$edit_uid = (int) $mybb->user['uid'];
-	$subject = $post['subject'];
+    // grab the post data
+    $message = $this_post->data['message'];
+    $fid = (int) $this_post->data['fid'];
+    $tid = (int) $this_post->data['tid'];
+    $pid = (int) $this_post->data['pid'];
+    $post_uid = (int) $post['uid'];
+    $edit_uid = (int) $mybb->user['uid'];
+    $subject = $post['subject'];
 
-	// if another user is editing (mod) don't do alerts
-	if ($edit_uid != $post_uid) {
-		return;
-	}
+    // if another user is editing (mod) don't do alerts
+    if ($edit_uid != $post_uid) {
+        return;
+    }
 
-	// get all mentions
-	$matches = array();
-	mention_find_in_post($message, $matches);
+    $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
+    $alerts = array();
 
-	// no results, no alerts
-	if(!is_array($matches) || empty($matches))
-	{
-		return;
-	}
+    // get all mentions
+    $matches = array();
+    mention_find_in_post($message, $matches);
 
-	// avoid duplicate mention alerts
-	$mentioned_already = array();
+    // no results, no alerts
+    if(!is_array($matches) || empty($matches))
+    {
+        return;
+    }
 
-	// loop through all matches (if any)
-	foreach($matches as $val)
-	{
-		// skip blank entries
-		if(!$val[0])
-		{
+    // avoid duplicate mention alerts
+    $mentioned_already = array();
+
+    // loop through all matches (if any)
+    foreach($matches as $val)
+    {
+        // skip blank entries
+        if(!$val[0])
+        {
             continue;
         }
 
@@ -81,34 +85,27 @@ function mention_myalerts_datahandler_post_update($this_post)
         $mentioned_already[$uid] = true;
         $already_alerted = false;
 
-        // check that we haven't already sent an alert for this mention
-        $query = $db->simple_select('alerts', '*', "uid='{$uid}' AND from_id='{$edit_uid}' AND tid='{$tid}' AND alert_type='mention'");
-        if($db->num_rows($query) > 0)
+        //Check to see if user has permission to see this alert
+        if(!mention_can_view($username, $to_uid, $from_uid, $fid))
         {
-            while($this_alert = $db->fetch_array($query))
-            {
-                if(!$this_alert['content'])
-                {
-                    continue;
-                }
-                $this_alert['content'] = json_decode($this_alert['content'], true);
-
-                // if an alert exists for this specific post then we have already alerted the user
-                if($this_alert['content']['pid'] == $pid)
-                {
-                    $already_alerted = true;
-                    break;
-                }
-            }
+            // back away slowly . . .
+            return;
         }
 
-        // no duplicates
-        if(!$already_alerted)
-        {
-            // attempt to create the mention alert (does forum permissions check)
-            mention_send_alert($username, $fid, (int) $uid, (int) $tid, (int) $edit_uid, array('pid' => $pid, 'subject' => $subject));
-        }
-	}
+        $alert = new MybbStuff_MyAlerts_Entity_Alert((int) $post_uid, $alertType, $tid);
+        $alert->setExtraDetails(
+            array(
+                'thread_title' => $subject,
+                'pid' => $pid,
+                'tid' => $tid
+                )
+            );
+        $alerts[] = $alert;
+    }
+    
+    if (!empty($alerts)) {
+        MybbStuff_MyAlerts_AlertManager::getInstance()->addAlerts($alerts);
+    }
 }
 
 /* mention_myalerts_do_newreply_end()
@@ -122,41 +119,47 @@ $plugins->add_hook('newreply_do_newreply_end', 'mention_myalerts_do_newreply_end
 $plugins->add_hook('newthread_do_newthread_end', 'mention_myalerts_do_newreply_end');
 function mention_myalerts_do_newreply_end()
 {
-	global $mybb, $pid, $tid, $post, $thread, $fid;
+    global $mybb, $pid, $tid, $post, $thread, $fid;
 
-	// if creating a new thread the message comes from $_POST
-	if($mybb->input['action'] == "do_newthread" && $mybb->request_method == "post")
-	{
-		$message = $mybb->input['message'];
-		$subject = $mybb->input['subject'];
-	}
-	// otherwise the message comes from $post['message'] and the $tid comes from $thread['tid']
-	else
-	{
-		$message = $post['message'];
-		$tid = (int) $thread['tid'];
-		$subject = $thread['subject'];
-	}
+    $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
+    $alerts = array();
 
-	// get all mentions
-	$matches = array();
-	mention_find_in_post($message, $matches);
+    // if creating a new thread the message comes from $_POST
+    if($mybb->input['action'] == "do_newthread" && $mybb->request_method == "post")
+    {
+        $message = $mybb->input['message'];
+        $subject = $mybb->input['subject'];
+    }
+    // otherwise the message comes from $post['message'] and the $tid comes from $thread['tid']
+    else
+    {
+        $message = $post['message'];
+        $tid = (int) $thread['tid'];
+        $subject = $thread['subject'];
+    }
 
-	// no matches, no alerts
-	if(!is_array($matches) || empty($matches))
-	{
-		return;
-	}
+    $fromUser = (int) $mybb->user['uid'];
 
-	// avoid duplicate mention alerts
-	$mentioned_already = array();
+    // get all mentions
+    $matches = array();
+    mention_find_in_post($message, $matches);
 
-	// loop through all matches (if any)
-	foreach($matches as $val)
-	{
-		// if there are matches, create alerts
-		if(!$val[0])
-		{
+
+    // no matches, no alerts
+    if(!is_array($matches) || empty($matches))
+    {
+        return;
+    }
+
+    // avoid duplicate mention alerts
+    $mentioned_already = array();
+
+    // loop through all matches (if any)
+    foreach($matches as $val)
+    {
+        // if there are matches, create alerts
+        if(!$val[0])
+        {
             continue;
         }
 
@@ -170,91 +173,68 @@ function mention_myalerts_do_newreply_end()
         }
 
         // attempt to create the mention alert (does forum permissions check)
-        mention_send_alert($username, $fid, (int) $uid, $tid, (int) $mybb->user['uid'], array('pid' => (int) $pid, 'subject' => $subject));
+
+        $alert = new MybbStuff_MyAlerts_Entity_Alert((int) $uid, $alertType, $tid);
+        $alert->setExtraDetails(
+            array(
+                'thread_title' => $subject,
+                'pid' => $pid,
+                'tid' => $tid
+                )
+            );
+        $alerts[] = $alert;
+
         $mentioned_already[$uid] = true;
-	}
+    }
+
+    if (!empty($alerts)) {
+        MybbStuff_MyAlerts_AlertManager::getInstance()->addAlerts($alerts);
+    }
 }
 
-/* mention_myalerts_output_start()
- *
- * hook into MyAlerts to display alerts in the drop-down and in User CP
- *
- * @param - $alert by value is a valid Alert class object
- * @return: n/a
- */
-$plugins->add_hook('myalerts_alerts_output_start', 'mention_myalerts_output_start');
-function mention_myalerts_output_start(&$alert)
-{
-	global $mybb, $lang;
+$plugins->add_hook('global_start','mention_myalerts_display');
+function mention_myalerts_display() {
+    global $mybb, $lang;
 
-	// if this is a mention alert and the user allows this type of alert then process and display it
-	if($alert['alert_type'] != 'mention' || !$mybb->user['myalerts_settings']['mention'])
-	{
-        return;
+    if($mybb->user['uid']) {
+    
+        $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
+        $formatterManager->registerFormatter(new MybbStuff_MyAlerts_Formatter_MentionFormatter($mybb, $lang, 'mention'));
     }
-
-    if(!$lang->mention)
-	{
-		$lang->load('mention');
-	}
-
-	// If this is a reply then a pid will be present,
-    if($alert['content']['pid'])
-    {
-        $post_link = get_post_link($alert['content']['pid'], $alert['tid']);
-        $alert['postLink'] = "{$mybb->settings['bburl']}/{$post_link}#pid{$alert['content']['pid']}";
-        $alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['postLink'], htmlspecialchars_uni($alert['content']['subject']), $alert['dateline']);
-    }
-    else
-    {
-        // otherwise, just link to the new thread.
-        $alert['threadLink'] = get_thread_link($alert['tid']);
-        $alert['message'] = $lang->sprintf($lang->myalerts_mention, $alert['user'], $alert['threadLink'], htmlspecialchars_uni($alert['content']['subject']), $alert['dateline']);
-    }
-    $alert['rowType'] = 'mentionAlert';
 }
 
-/* mention_myalerts_load_lang()
- *
- * loads custom language for alert settings
- *
- * @return: n/a
- */
-$plugins->add_hook('myalerts_load_lang', 'mention_myalerts_load_lang');
-function mention_myalerts_load_lang()
+class MybbStuff_MyAlerts_Formatter_MentionFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
 {
-	global $lang;
+    public function formatAlert(MybbStuff_MyAlerts_Entity_Alert $alert, array $outputAlert)
+    {
+        $alertContent = $alert->getExtraDetails();
 
-	if(!$lang->mention)
-	{
-		$lang->load('mention');
-	}
-}
-
-/* mention_myalerts_helpdoc_start()
- *
- * adds documentation for mention alerts
- *
- * @return: n/a
- */
-$plugins->add_hook('misc_help_helpdoc_start', 'mention_myalerts_helpdoc_start');
-function mention_myalerts_helpdoc_start()
-{
-	global $helpdoc, $lang, $mybb;
-
-	if($helpdoc['name'] != $lang->myalerts_help_alert_types)
-	{
-        return;
+        return $this->lang->sprintf(
+            $this->lang->mention_alert,
+            $outputAlert['from_user'],
+            $alertContent['thread_title'],
+            $outputAlert['dateline']
+            );
     }
 
-	if(!$lang->mention)
-	{
-		$lang->load('mention');
-	}
-
-    if($mybb->settings['myalerts_alert_mention'])
+    public function init()
     {
-        $helpdoc['document'] .= $lang->myalerts_help_alert_types_mentioned;
+        if (!$this->lang->mention) {
+            $this->lang->load('mention');
+        }
+    }
+
+    public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
+    {
+        $alertContent = $alert->getExtraDetails();
+
+        $postLink = $this->mybb->settings['bburl'] . '/' . get_post_link(
+                (int) $alertContent['pid'],
+                (int) $alertContent['tid']
+            ) . '#pid' . (int) $alertContent['pid'];
+
+        return $postLink;
+
     }
 }
 
@@ -268,17 +248,18 @@ function mention_myalerts_helpdoc_start()
  */
 function mention_find_in_post($message, &$matches)
 {
-	global $mybb;
+    global $mybb;
 
-	// no alerts for mentions inside quotes so strip the quoted portions prior to detection
-	$message = mention_strip_quotes($message);
+    // no alerts for mentions inside quotes so strip the quoted portions prior to detection
+    $message = mention_strip_quotes($message);
 
-	// do the replacement in the message
-	$message =  mention_run($message);
+    // do the replacement in the message
+    $message =  mention_run($message);
 
-	// match all the mentions in this post
-	$pattern = '#@<a id="mention_(.*?)" href="(.*?)">(.*?)</a>#is';
-	preg_match_all($pattern, $message, $matches, PREG_SET_ORDER);
+    // match all the mentions in this post
+    $pattern = '#@<a id="mention_(.*?)" href="(.*?)">(.*?)</a>#is';
+    preg_match_all($pattern, $message, $matches, PREG_SET_ORDER);
+
 }
 
 /* mention_strip_quotes()
@@ -290,59 +271,24 @@ function mention_find_in_post($message, &$matches)
  */
 function mention_strip_quotes($message)
 {
-	global $lang, $templates, $theme, $mybb;
+    global $lang, $templates, $theme, $mybb;
 
-	// kill BB code quoted portions of the message
-	$pattern = array(
-		"#\[quote=([\"']|&quot;|)(.*?)(?:\\1)(.*?)(?:[\"']|&quot;)?\](.*?)\[/quote\](\r\n?|\n?)#si",
-		"#\[quote\](.*?)\[\/quote\](\r\n?|\n?)#si"
-	);
+    // kill BB code quoted portions of the message
+    $pattern = array(
+        "#\[quote=([\"']|&quot;|)(.*?)(?:\\1)(.*?)(?:[\"']|&quot;)?\](.*?)\[/quote\](\r\n?|\n?)#si",
+        "#\[quote\](.*?)\[\/quote\](\r\n?|\n?)#si"
+    );
 
-	do {
-		$message = preg_replace($pattern, '', $message, -1, $count);
-	} while($count);
+    do {
+        $message = preg_replace($pattern, '', $message, -1, $count);
+    } while($count);
 
-	// kill HTML block quoted portions of the message
-	$find = array(
-		"#(\r\n*|\n*)<\/cite>(\r\n*|\n*)#",
-		"#(\r\n*|\n*)<\/blockquote>#"
-	);
-	return preg_replace($find, '', $message);
-}
-
-/*
- * mention_send_alert()
- *
- * check forum permissions and send alert if valid
- *
- * @param - $username - (string) user name of user for user by user :p
- * @param - $fid - (int) id of the forum in which the mention occurred
- * @param - $to_uid - (int) the user receiving the alert (potentially)
- * @param - $tid - (int) the id of the thread in which the mention occurred
- * @param - $from_uid - (int) the id of the user initiating the alert (potentially)
- * @param - $alert_info - (array) an indexed array of alert content info
- * @return: n/a
- */
-function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_info)
-{
-    // alertee has no permissions in the given forum?
-    if(!mention_can_view($username, $to_uid, $from_uid, $fid))
-    {
-        // back away slowly . . .
-        return;
-    }
-
-    // otherwise send the alert
-    global $Alerts, $mybb, $db;
-	if ($Alerts instanceof Alerts) {
-		require_once MYALERTS_PLUGIN_PATH . 'Alerts.class.php';
-		try {
-			$Alerts = new Alerts($mybb, $db);
-		} catch(Exception $e) {
-			die($e->getMessage());
-		}
-	}
-    $Alerts->addAlert((int) $to_uid, 'mention', (int) $tid, (int) $from_uid, $alert_info);
+    // kill HTML block quoted portions of the message
+    $find = array(
+        "#(\r\n*|\n*)<\/cite>(\r\n*|\n*)#",
+        "#(\r\n*|\n*)<\/blockquote>#"
+    );
+    return preg_replace($find, '', $message);
 }
 
 /*
@@ -360,18 +306,18 @@ function mention_send_alert($username, $fid, $to_uid, $tid, $from_uid, $alert_in
 function mention_can_view($username, $uid, $from_uid, $fid)
 {
     global $cache;
-	static $name_cache, $mycache;
+    static $name_cache, $mycache;
 
-	// cache names to reduce queries
-	if($mycache instanceof MentionMeCache == false)
-	{
-		$mycache = MentionMeCache::get_instance();
-	}
+    // cache names to reduce queries
+    if($mycache instanceof MentionMeCache == false)
+    {
+        $mycache = MentionMeCache::get_instance();
+    }
 
-	if(!isset($name_cache))
-	{
-		$name_cache = $mycache->read('namecache');
-	}
+    if(!isset($name_cache))
+    {
+        $name_cache = $mycache->read('namecache');
+    }
 
     $username = strtolower($username);
 
@@ -392,12 +338,12 @@ function mention_can_view($username, $uid, $from_uid, $fid)
         $mycache->update('namecache', $name_cache);
     }
 
-	// don't alert if mentioning user is on mentioned users ignore list
+    // don't alert if mentioning user is on mentioned users ignore list
     $ignore_list = explode(',', $user['ignorelist']);
-	if(in_array($from_uid, $ignore_list))
-	{
-		return false;
-	}
+    if(in_array($from_uid, $ignore_list))
+    {
+        return false;
+    }
 
     $forum_permissions = $cache->read('forumpermissions');
 
@@ -407,7 +353,7 @@ function mention_can_view($username, $uid, $from_uid, $fid)
         return true;
     }
 
-	$users_groups = mention_compile_groups($user);
+    $users_groups = mention_compile_groups($user);
 
     // admins can see everything
     if(in_array(4, $users_groups))
@@ -429,7 +375,7 @@ function mention_can_view($username, $uid, $from_uid, $fid)
             $forum_permissions[$fid][$gid] == 0 ||
             $forum_permissions[$fid][$gid]['canview'] ||
             $forum_permissions[$fid][$gid]['canviewthreads'])
-		{
+        {
             return true;
         }
     }

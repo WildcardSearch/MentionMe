@@ -118,56 +118,20 @@ function mention_unset_cache_version()
  */
 function mention_myalerts_integrate()
 {
-	global $db, $lang;
+	global $db, $lang, $cache;
 
 	if(!$lang->mention)
 	{
 		$lang->load('mention');
 	}
 
-	// search for MyAlerts existing settings and add our custom ones
-	$query = $db->simple_select("settinggroups", "gid", "name='myalerts'");
-	$gid = (int) $db->fetch_field($query, "gid");
+	
+		$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
+        $alertType = new MybbStuff_MyAlerts_Entity_AlertType();
+        $alertType->setCode("mention");
+        $alertType->setEnabled(true);
+        $alertTypeManager->add($alertType);
 
-	// MyAlerts installed?
-	if($gid)
-	{
-		// if so add a setting to Euan's group (he hates it when I do that :P )
-		$mention_setting_1 = array
-		(
-			"sid"					=> "NULL",
-			"name"				=> "myalerts_alert_mention",
-			"title"					=> $lang->mention_myalerts_acpsetting_description,
-			"description"		=> "",
-			"optionscode"	=> "yesno",
-			"value"				=> '1',
-			"disporder"			=> '100',
-			"gid"					=> $gid,
-		);
-		$query = $db->simple_select('settings', "sid", "name='myalerts_alert_mention'");
-
-		if($db->num_rows($query) == 1)
-		{
-			unset($mention_setting_1['sid']);
-			$db->update_query("settings", $mention_setting_1, "name='myalerts_alert_mention'");
-		}
-		else
-		{
-			$db->insert_query("settings", $mention_setting_1);
-		}
-		rebuild_settings();
-
-		// now add our mention type
-		if($db->table_exists('alert_settings') && $db->table_exists('alert_setting_values'))
-		{
-			$query = $db->simple_select('alert_settings', "*", "code='mention'");
-
-			if($db->num_rows($query) == 0)
-			{
-				$db->insert_query('alert_settings', array('code' => 'mention'));
-			}
-		}
-	}
 }
 
 /* mention_get_myalerts_status()
@@ -180,9 +144,9 @@ function mention_get_myalerts_status()
 {
 	global $db;
 
-	if($db->table_exists('alert_settings'))
+	if($db->table_exists('alert_types'))
 	{
-		$query = $db->simple_select('alert_settings', "*", "code='mention'");
+		$query = $db->simple_select('alert_types', "*", "code='mention'");
 		return ($db->num_rows($query) == 1);
 	}
 	return false;

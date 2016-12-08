@@ -448,11 +448,7 @@ function mentionme_initialize()
 	}
 
 	// load the alerts functions only if MyAlerts and mention alerts are enabled
-	if($mybb->settings['myalerts_enabled'] && $mybb->settings['myalerts_alert_mention'])
-	{
-		require_once MYBB_ROOT . 'inc/plugins/MentionMe/mention_alerts.php';
-	}
-
+	require_once MYBB_ROOT . 'inc/plugins/MentionMe/mention_alerts.php';
 	// only add the code button if the setting is on and we are viewing a page that use an editor
 	if($mybb->settings['mention_add_codebutton'] && in_array(THIS_SCRIPT, array('newthread.php', 'newreply.php', 'editpost.php', 'private.php', 'usercp.php', 'modcp.php', 'calendar.php')))
 	{
