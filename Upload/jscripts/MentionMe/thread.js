@@ -1,26 +1,21 @@
 /*
- * Plugin Name: MentionMe for MyBB 1.6.x
+ * Plugin Name: MentionMe for MyBB 1.8.x
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
  * this file contains a module for the single mention functionality in mention.php
  */
 
-var MentionMe = (function(m) {
+var MentionMe = (function($, m) {
 	/**
-	 * insert()
-	 *
 	 * insert the mention into the Quick Reply text area
 	 *
-	 * @param - name - (string)
-	 * @return: n/a
+	 * @param  string
+	 * @return void
 	 */
 	function insert(name) {
-		var id = 'message', quote = '';
-
-		if (typeof clickableEditor != 'undefined') {
-			id = clickableEditor.textarea;
-		}
+		var $textarea = $("#message"),
+			quote = '';
 
 		// find an appropriate quote character based on whether or not the
 		// mentioned name includes that character
@@ -32,11 +27,17 @@ var MentionMe = (function(m) {
 			quote = "`";
 		}
 
-		$(id).value += '@' + quote + name + quote + ' ';
-		$(id).focus();
+		$textarea.val($textarea.val() +
+			'@' +
+			quote +
+			name +
+			quote +
+			' ');
+
+		$textarea.focus();
 	}
 
 	m.insert = insert;
 
 	return m;
-})(MentionMe || {});
+})(jQuery, MentionMe || {});
