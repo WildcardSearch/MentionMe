@@ -421,21 +421,4 @@ function mention_myalerts_integrate()
 	$alertTypeManager->add($alertType);
 }
 
-/*
- * used by _info to verify the mention MyAlerts setting
- *
- * @return bool true if MyAlerts installed,
- * false if not
- */
-function mention_get_myalerts_status()
-{
-	global $db;
-
-	if ($db->table_exists('alert_types')) {
-		$query = $db->simple_select('alert_types', "*", "code='mention'");
-		return ($db->num_rows($query) == 1);
-	}
-	return false;
-}
-
 ?>

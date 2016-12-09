@@ -29,4 +29,27 @@ if (defined('IN_ADMINCP')) {
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/forum.php';
 }
 
+/*
+ * used by _info to verify the mention MyAlerts setting
+ *
+ * @return bool true if MyAlerts installed,
+ * false if not
+ */
+function mention_get_myalerts_status()
+{
+	static $status = false, $checked = false;
+
+	if ($checked) {
+		return $status;
+	}
+
+	global $db;
+	$checked = true;
+	if ($db->table_exists('alert_types')) {
+		$query = $db->simple_select('alert_types', "*", "code='mention'");
+		return $status = ($db->num_rows($query) == 1);
+	}
+	return false;
+}
+
 ?>

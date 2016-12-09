@@ -317,7 +317,9 @@ function mentionme_initialize()
 		$lang->load('mention');
 	}
 
-	require_once MYBB_ROOT . 'inc/plugins/MentionMe/alerts.php';
+	if (mention_get_myalerts_status()) {
+		require_once MYBB_ROOT . 'inc/plugins/MentionMe/alerts.php';
+	}
 
 	if ($mybb->settings['mention_auto_complete']) {
 		if ($mybb->settings['mention_minify_js']) {
