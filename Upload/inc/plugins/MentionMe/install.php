@@ -260,6 +260,9 @@ function mention_uninstall()
 	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->uninstall();
 
+	// remove the task entry
+	$db->delete_query('tasks', "file='mentiome_namecache'");
+
 	// undo changes to MyAlerts if installed
 	if ($db->table_exists('alerts')) {
 		$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
