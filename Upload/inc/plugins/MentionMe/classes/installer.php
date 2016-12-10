@@ -504,10 +504,14 @@ class WildcardPluginInstaller
 
 			// now cache the actual files
 			require_once MYBB_ROOT . "{$config['admin_dir']}/inc/functions_themes.php";
-			cache_stylesheet(1, $data['cachefile'], $data['stylesheet']);
 
-			// and update the list
-			update_theme_stylesheet_list(1);
+			if(!cache_stylesheet(1, $data['cachefile'], $data['stylesheet']))
+			{
+				$this->db->update_query("themestylesheets", array('cachefile' => "css.php?stylesheet={$sid}"), "sid='{$sid}'", 1);
+			}
+
+			// and update the CSS file list
+			update_theme_stylesheet_list(1, false, true);
 		}
 	}
 
@@ -546,9 +550,9 @@ class WildcardPluginInstaller
 		// then delete them from the database
 		$this->db->delete_query('themestylesheets', $where);
 
-		// now remove them from the list
+		// now remove them from the CSS file list
 		require_once MYBB_ROOT . "{$config['admin_dir']}/inc/functions_themes.php";
-		update_theme_stylesheet_list(1);
+		update_theme_stylesheet_list(1, false, true);
 	}
 
 	/*
