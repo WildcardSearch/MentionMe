@@ -14,7 +14,7 @@ if (!defined('IN_MYBB') ||
 }
 
 if (!defined('MYALERTS_PLUGIN_PATH')) {
-	define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MyAlerts/');
+	define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MybbStuff/');
 }
 
 /*
