@@ -7,6 +7,8 @@
  */
 
 var MentionMe = (function($, m) {
+	"use strict";
+
 	/**
 	 * insert the mention into the Quick Reply text area
 	 *

@@ -311,7 +311,7 @@ function mention_try_name($username = '')
  */
 function mentionme_initialize()
 {
-	global $mybb, $plugins, $lang, $templates;
+	global $mybb, $plugins, $lang, $templates, $mention_autocomplete_sceditor;
 
 	if (!$lang->mention) {
 		$lang->load('mention');
@@ -333,12 +333,10 @@ function mentionme_initialize()
 EOF;
 		}
 
+		eval("\$popup = \"" . $templates->get('mentionme_popup') . "\";");
+
 		if ($mybb->settings['bbcodeinserter'] &&
 			in_array(THIS_SCRIPT, array('newthread.php', 'newreply.php', 'editpost.php', 'private.php', 'usercp.php', 'modcp.php', 'calendar.php'))) {
-			global $mention_autocomplete_sceditor;
-
-			eval("\$popup = \"" . $templates->get('mentionme_popup') . "\";");
-
 			$mention_autocomplete_sceditor = <<<EOF
 <!-- MentionMe SCEditor Autocomplete Scripts -->
 <script type="text/javascript" src="{$mybb->asset_url}/jscripts/Caret.js/jquery.caret{$min}.js"></script>
@@ -397,6 +395,7 @@ EOF;
 // -->
 </script>
 EOF;
+				$mention_autocomplete_sceditor = $popup;
 			}
 		}
 	}

@@ -1,4 +1,15 @@
+/*
+ * Plugin Name: MentionMe for MyBB 1.8.x
+ * Copyright 2014 WildcardSearch
+ * http://www.rantcentralforums.com
+ *
+ * this file contains a module for SCEditor auto-completion
+ * functionality
+ */
+
 var MentionMe = (function($, m) {
+	"use strict";
+
 	var editor,
 		rangeHelper,
 
@@ -23,6 +34,9 @@ var MentionMe = (function($, m) {
 			BACKSPACE: 8,
 			NEWLINE: 10,
 			ENTER: 13,
+			SHIFT: 16,
+			CTRL: 17,
+			ALT: 18,
 			ESC: 27,
 			SPACE: 32,
 			PAGE_UP: 33,
@@ -55,8 +69,8 @@ var MentionMe = (function($, m) {
 	/**
 	 * load options and language (used externally)
 	 *
-	 * @var object options
-	 * @return  void
+	 * @param  object options
+	 * @return void
 	 */
 	function setup(opt) {
 		$.extend(lang, opt.lang || {});
@@ -67,7 +81,7 @@ var MentionMe = (function($, m) {
 	/**
 	 * prepare to auto-complete
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	function init() {
 		var doc;
@@ -109,18 +123,32 @@ var MentionMe = (function($, m) {
 	 * some navigation and editing for our key cache
 	 *
 	 * @param  event (Object)
-	 * @return  void
+	 * @return void
 	 */
 	function onKeyUp(e) {
+		var proceed = true;
+
 		getCaret();
 
+		if (!e.keyCode) {
+			if (e.originalEvent &&
+				e.originalEvent.keyCode) {
+				e.keyCode = e.originalEvent.keyCode;
+			} else {
+				return;
+			}
+		}
+
 		// open the popup when user types an @
-		if (!popup.isVisible() &&
-			e.keyCode != key.LEFT &&
-			e.keyCode != key.RIGHT &&
-			e.keyCode != key.BACKSPACE &&
-			e.keyCode != key.ESC) {
-			if ($currentNode.text().slice(selection.start - 1, selection.end) == "@") {
+		if (!popup.isVisible()) {
+			$([key.LEFT, key.RIGHT, key.UP, key.DOWN, key.BACKSPACE, key.ESC, key.SHIFT, key.CTRL, key.ALT]).each(function() {
+				if (e.keyCode == this) {
+					proceed = false;
+				}
+			});
+
+			if (proceed &&
+				$currentNode.text().slice(selection.start - 1, selection.end) == "@") {
 				popup.show();
 			}
 			return;
@@ -130,8 +158,8 @@ var MentionMe = (function($, m) {
 	/**
 	 * basic navigation for when the popup is open
 	 *
-	 * @param   event
-	 * @return  void
+	 * @param  event
+	 * @return void
 	 */
 	function onKeyDown(e) {
 		switch (e.keyCode) {
@@ -158,6 +186,13 @@ var MentionMe = (function($, m) {
 			break;
 		case key.ESC:
 			popup.hide();
+			return;
+			break;
+		case key.BACKSPACE:
+			if ($input.val() === "") {
+				popup.hide();
+			}
+			return;
 			break;
 		default:
 			return;
@@ -173,7 +208,7 @@ var MentionMe = (function($, m) {
 	/**
 	 * insert the mention and get out
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	function insertMention() {
 		var name = popup.getSelectedName(),
@@ -207,7 +242,7 @@ var MentionMe = (function($, m) {
 	/**
 	 * store info about the caret/selection
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	function getCaret() {
 		var range = rangeHelper.selectedRange();
@@ -220,99 +255,6 @@ var MentionMe = (function($, m) {
 
 		selection.start = range.startOffset;
 		selection.end = range.endOffset;
-	}
-
-	/**
-	 * position the caret
-	 *
-	 * @return  void
-	 */
-	function setCaret(position) {
-		var range = document.createRange();
-
-		range.setStart($currentNode[0], position);
-		range.setEnd($currentNode[0], position);
-		rangeHelper.selectRange(range);
-	}
-
-	/**
-	 * This function is from quirksmode.org
-	 * Modified for use in MyBB
-	*/
-	function getPageScroll() {
-		var yScroll;
-
-		if (self.pageYOffset) {
-			yScroll = self.pageYOffset;
-		// Explorer 6 Strict
-		} else if (document.documentElement &&
-			document.documentElement.scrollTop) {
-			yScroll = document.documentElement.scrollTop;
-		// all other Explorers
-		} else if (document.body) {
-			yScroll = document.body.scrollTop;
-		}
-
-		arrayPageScroll = new Array("", yScroll);
-
-		return arrayPageScroll;
-	}
-
-	/**
-	 * This function is from quirksmode.org
-	 * Modified for use in MyBB
-	 */
-	function getPageSize() {
-		var xScroll, yScroll;
-
-		if (window.innerHeight && window.scrollMaxY) {
-			xScroll = document.body.scrollWidth;
-			yScroll = window.innerHeight + window.scrollMaxY;
-		// All but Explorer Mac
-		} else if (document.body.scrollHeight > document.body.offsetHeight) {
-			xScroll = document.body.scrollWidth;
-			yScroll = document.body.scrollHeight;
-		// Explorer Mac...would also work in Explorer 6 Strict, Mozilla and Safari
-		} else {
-			xScroll = document.body.offsetWidth;
-			yScroll = document.body.offsetHeight;
-		}
-
-		var windowWidth, windowHeight;
-		// all except Explorer
-		if (self.innerHeight) {
-			windowWidth = self.innerWidth;
-			windowHeight = self.innerHeight;
-		// Explorer 6 Strict Mode
-		} else if (document.documentElement &&
-			document.documentElement.clientHeight) {
-			windowWidth = document.documentElement.clientWidth;
-			windowHeight = document.documentElement.clientHeight;
-		// other Explorers
-		} else if (document.body) {
-			windowWidth = document.body.clientWidth;
-			windowHeight = document.body.clientHeight;
-		}
-
-		var pageHeight, pageWidth;
-
-		// For small pages with total height less then height of the viewport
-		if (yScroll < windowHeight) {
-			pageHeight = windowHeight;
-		} else {
-			pageHeight = yScroll;
-		}
-
-		// For small pages with total width less then width of the viewport
-		if (xScroll < windowWidth) {
-			pageWidth = windowWidth;
-		} else {
-			pageWidth = xScroll;
-		}
-
-		var arrayPageSize = new Array(pageWidth, pageHeight,windowWidth, windowHeight);
-
-		return arrayPageSize;
 	}
 
 	/**
@@ -594,6 +536,7 @@ var MentionMe = (function($, m) {
 		spinnerVisible = false,
 
 		width = 0,
+		scrollWidth = 0,
 		lineHeight,
 		inputHeight;
 
@@ -603,7 +546,7 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function init() {
-			var e, $testDiv;
+			var $testDiv;
 
 			// create and show the main div off-screen
 			$mainDiv = $("#mentionme_popup").css({
@@ -630,7 +573,8 @@ var MentionMe = (function($, m) {
 			lineHeight = parseInt($testDiv.height());
 			width = $div.css("fontSize").replace("px", "") * (options.maxLength - 1);
 
-			$mainDiv.html($spinner).append($inputDiv).append($div);
+			$div.width(width);
+			scrollWidth = $div[0].scrollWidth;
 		}
 
 		/**
@@ -680,8 +624,8 @@ var MentionMe = (function($, m) {
 			visible = true;
 
 			// for highlighting, selecting and dismissing the popup and items
-			$mainDiv.mouseover(onMouseMove);
-			$mainDiv.click(onClick);
+			$div.mouseover(onMouseMove);
+			$div.click(onClick);
 			$(document).click(hide);
 			$body.click(hide);
 			$input.keydown(onKeyDown);
@@ -696,8 +640,8 @@ var MentionMe = (function($, m) {
 		 */
 		function hide() {
 			$mainDiv.hide();
-			$mainDiv.unbind("mouseover", onMouseMove);
-			$mainDiv.unbind("click", onClick);
+			$div.unbind("mouseover", onMouseMove);
+			$div.unbind("click", onClick);
 			$(document).unbind("click", hide);
 			$body.unbind("click", hide);
 			$input.unbind("keydown", onKeyDown);
@@ -707,6 +651,12 @@ var MentionMe = (function($, m) {
 			editor.focus();
 		}
 
+		/**
+		 * update the popup if necessary
+		 *
+		 * @param  object event
+		 * @return void
+		 */
 		function updateCheck(e) {
 			if (keyCache.update()) {
 				update();
@@ -716,7 +666,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * clear the popup
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function clear() {
 			$div.html("");
@@ -728,7 +678,7 @@ var MentionMe = (function($, m) {
 		 * fill the popup with suggested names from
 		 * the cache and search to fill the gaps
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function update() {
 			// if we get here too early, back off
@@ -755,9 +705,11 @@ var MentionMe = (function($, m) {
 		/**
 		 * build the actual list items (divs)
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function buildItems() {
+			var i;
+
 			// if we've got no matches and the spinner isn't up . . .
 			if (items.length === 0 &&
 				spinnerVisible == false) {
@@ -796,12 +748,12 @@ var MentionMe = (function($, m) {
 		 *
 		 * @param  left (Number) the left-most x coordinate
 		 * @param  top (Number) the top-most y coordinate
-		 * @return  void
+		 * @return void
 		 */
 		function move(left, top) {
 			var style = {
 				height: getCurrentHeight() + inputHeight + "px",
-				width: width + "px",
+				width: scrollWidth + "px",
 			};
 
 			if (typeof left != "undefined") {
@@ -810,9 +762,12 @@ var MentionMe = (function($, m) {
 			if (typeof top != "undefined") {
 				style.top = top + "px";
 			}
+
 			$mainDiv.css(style);
+
 			$div.css({
 				height: getCurrentHeight() + "px",
+				width: width + "px",
 			});
 		}
 
@@ -822,7 +777,7 @@ var MentionMe = (function($, m) {
 		 * @param  noScroll (Boolean) true to highlight without scrolling the item into
 		 * view (for the mouse to prevent weirdness) or false to scroll to the newly
 		 * highlighted item
-		 * @return  void
+		 * @return void
 		 */
 		function highlightSelected(noScroll) {
 			if (lastSelected == selected ||
@@ -849,7 +804,7 @@ var MentionMe = (function($, m) {
 		 * highlight items when the mouse is hovering
 		 *
 		 * @param  event (Object)
-		 * @return  void
+		 * @return void
 		 */
 		function onMouseMove(e) {
 			if (selectEventTarget(e)) {
@@ -875,7 +830,7 @@ var MentionMe = (function($, m) {
 		 * select the element that the event was originally triggered on
 		 *
 		 * @param  event (Object)
-		 * @return  void
+		 * @return void
 		 */
 		function selectEventTarget(e) {
 			if (!e) {
@@ -912,7 +867,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * return the name of the currently selected item (for insertMention)
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function getSelectedName() {
 			if (items.length === 0 ||
@@ -927,29 +882,31 @@ var MentionMe = (function($, m) {
 		 * highlight an item in the name list
 		 *
 		 * @param  selection (String) the position label
-		 * @return  void
+		 * @return void
 		 */
 		function select(selection) {
+			var lastItem = items.length - 1;
+
 			switch (selection) {
 			case "last":
-				selected = items.length - 1;
+				selected = lastItem;
 				break;
 			case "next":
 				selected++;
-				if (selected > items.length - 1) {
+				if (selected > lastItem) {
 					selected = 0;
 				}
 				break;
 			case "previous":
 				selected--;
 				if (selected < 0) {
-					selected = items.length - 1;
+					selected = lastItem;
 				}
 				break;
 			case "nextPage":
 				selected  += maxItems;
-				if (selected > items.length - 1) {
-					selected = items.length - 1;
+				if (selected > lastItem) {
+					selected = lastItem;
 				}
 				break;
 			case "previousPage":
@@ -969,7 +926,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for spinner visibility
 		 *
-		 * @return  (Boolean) true if visible, false if not
+		 * @return (Boolean) true if visible, false if not
 		 */
 		function spinnerIsVisible() {
 			return spinnerVisible;
@@ -990,7 +947,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * show the usage prompt
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function showInstructions() {
 			clear();
@@ -1005,13 +962,13 @@ var MentionMe = (function($, m) {
 		 * @return  (Number) the height in pixels
 		 */
 		function getCurrentHeight() {
-			return (lineHeight * (Math.max(1, Math.min(5, items.length))));
+			return (lineHeight * Math.max(1, Math.min(5, items.length)));
 		}
 
 		/**
 		 * getter for popup visibility
 		 *
-		 * @return  (Boolean) true if visible, false if not
+		 * @return (Boolean) true if visible, false if not
 		 */
 		function isVisible() {
 			return visible;

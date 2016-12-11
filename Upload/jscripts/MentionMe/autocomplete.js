@@ -7,6 +7,8 @@
  */
 
 var MentionMe = (function($, m) {
+	"use strict";
+
 	var maxItems = 5,
 		options = {
 			minLength: 3,
@@ -29,6 +31,9 @@ var MentionMe = (function($, m) {
 			BACKSPACE: 8,
 			NEWLINE: 10,
 			ENTER: 13,
+			SHIFT: 16,
+			CTRL: 17,
+			ALT: 18,
 			ESC: 27,
 			SPACE: 32,
 			PAGE_UP: 33,
@@ -44,6 +49,8 @@ var MentionMe = (function($, m) {
 
 		$textarea,
 		$container,
+		$input,
+		$inputDiv,
 
 		// maxkir js_cursor_position objects
 		selectionRange,
@@ -61,8 +68,8 @@ var MentionMe = (function($, m) {
 	/**
 	 * load options and language (used externally)
 	 *
-	 * @var object options
-	 * @return  void
+	 * @param  object options
+	 * @return void
 	 */
 	function setup(opt) {
 		$.extend(lang, opt.lang || {});
@@ -126,35 +133,72 @@ var MentionMe = (function($, m) {
 	 * @return  void
 	 */
 	function onKeyUp(e) {
+		var proceed = true;
+
 		getCaret();
 
 		// open the popup when user types an @
-		if (!popup.isVisible() &&
-			e.keyCode != key.LEFT &&
-			e.keyCode != key.RIGHT &&
-			e.keyCode != key.BACKSPACE &&
-			e.keyCode != key.ESC) {
-			if ($textarea.val().slice(selection.start - 1, selection.end) == "@") {
+		if (!popup.isVisible()) {
+			$([key.LEFT, key.RIGHT, key.UP, key.DOWN, key.BACKSPACE, key.ESC, key.SHIFT, key.CTRL, key.ALT]).each(function() {
+				if (e.keyCode == this) {
+					proceed = false;
+				}
+			});
+
+			if (proceed &&
+				$textarea.val().slice(selection.start - 1, selection.end) == "@") {
 				popup.show();
 			}
-			return;
 		}
+	}
 
-		getCaret();
-
+	/**
+	 * basic navigation for when the popup is open
+	 *
+	 * @param  event (Object)
+	 * @return void
+	 */
+	function onKeyDown(e) {
 		switch (e.keyCode) {
+		case key.ENTER:
+			insertMention();
+			break;
+		case key.UP:
+			popup.select("previous");
+			break;
+		case key.DOWN:
+			popup.select("next");
+			break;
+		case key.END:
+			popup.select("last");
+			break;
+		case key.HOME:
+			popup.select();
+			break;
+		case key.PAGE_UP:
+			popup.select("previousPage");
+			break;
+		case key.PAGE_DOWN:
+			popup.select("nextPage");
+			break;
 		case key.ESC:
 			popup.hide();
 			break;
-		case key.LEFT:
-		case key.RIGHT:
-			keyCache.checkCaret(e.keyCode);
+		case key.BACKSPACE:
+			if ($input.val() === "") {
+				popup.hide();
+			}
+			return;
 			break;
 		default:
-			if (keyCache.update()) {
-				popup.update();
-			}
+			return;
 		}
+
+		/**
+		 * prevent a few navigation keys from
+		 * working when the popup is in view
+		 */
+		e.preventDefault();
 	}
 
 	/**
@@ -165,8 +209,6 @@ var MentionMe = (function($, m) {
 	function insertMention() {
 		var name = popup.getSelectedName(),
 			offset = keyCache.getOffset(),
-			mention,
-			prevChar,
 			quote = "";
 
 		if (!name) {
@@ -188,18 +230,12 @@ var MentionMe = (function($, m) {
 			quote = "`";
 		}
 
-		// do the insertion
-		mention =
-			"@" +
+		$textarea.val($textarea.val().slice(0, offset) +
 			quote +
 			name +
-			quote;
-
-		$textarea.val($textarea.val().slice(0, offset - 1) +
-			mention +
-			$textarea.val().slice(offset +
-			keyCache.getLength()));
-		setCaret(offset + mention.length - 1);
+			quote +
+			$textarea.val().slice(offset));
+		setCaret(offset + name.length + 2);
 
 		// and we're done here (for now)
 		popup.hide();
@@ -255,67 +291,7 @@ var MentionMe = (function($, m) {
 			yScroll = document.body.scrollTop;
 		}
 
-		arrayPageScroll = new Array("", yScroll);
-
-		return arrayPageScroll;
-	}
-
-	/*
-	 * This function is from quirksmode.org
-	 * Modified for use in MyBB
-	 */
-	function getPageSize() {
-		var xScroll, yScroll;
-
-		if (window.innerHeight &&
-			window.scrollMaxY) {
-			xScroll = document.body.scrollWidth;
-			yScroll = window.innerHeight + window.scrollMaxY;
-		// All but Explorer Mac
-		} else if (document.body.scrollHeight > document.body.offsetHeight) {
-			xScroll = document.body.scrollWidth;
-			yScroll = document.body.scrollHeight;
-		// Explorer Mac...would also work in Explorer 6 Strict, Mozilla and Safari
-		} else {
-			xScroll = document.body.offsetWidth;
-			yScroll = document.body.offsetHeight;
-		}
-
-		var windowWidth, windowHeight;
-		// all except Explorer
-		if (self.innerHeight) {
-			windowWidth = self.innerWidth;
-			windowHeight = self.innerHeight;
-		// Explorer 6 Strict Mode
-		} else if (document.documentElement &&
-			document.documentElement.clientHeight) {
-			windowWidth = document.documentElement.clientWidth;
-			windowHeight = document.documentElement.clientHeight;
-		// other Explorers
-		} else if (document.body) {
-			windowWidth = document.body.clientWidth;
-			windowHeight = document.body.clientHeight;
-		}
-
-		var pageHeight, pageWidth;
-
-		// For small pages with total height less then height of the viewport
-		if (yScroll < windowHeight) {
-			pageHeight = windowHeight;
-		} else {
-			pageHeight = yScroll;
-		}
-
-		// For small pages with total width less then width of the viewport
-		if (xScroll < windowWidth) {
-			pageWidth = windowWidth;
-		} else {
-			pageWidth = xScroll;
-		}
-
-		var arrayPageSize = new Array(pageWidth, pageHeight,windowWidth, windowHeight);
-
-		return arrayPageSize;
+		return new Array("", yScroll);
 	}
 
 	/**
@@ -323,9 +299,8 @@ var MentionMe = (function($, m) {
 	 */
 	keyCache = (function() {
 		var data = "",
-		mirror = "",
-		offset = 0,
-		caret = 0;
+			mirror = "",
+			offset = 0;
 
 		/**
 		 * ready the typeahead cache
@@ -334,10 +309,8 @@ var MentionMe = (function($, m) {
 		 */
 		function init() {
 			data = "";
-			getCaret();
+			mirror = ""
 			offset = selection.start;
-			mirror = $textarea.val();
-			caret = 0;
 		}
 
 		/**
@@ -346,30 +319,13 @@ var MentionMe = (function($, m) {
 		 * @return  (Boolean) true if a character was added, false if not
 		 */
 		function update() {
-			if ($textarea.val() == mirror) {
-				return false;
+			var ret = false;
+			if (data !== $input.val()) {
+				ret = true;
 			}
 
-			var insertedChars = ($textarea.val().length - mirror.length),
-				newData;
-
-			if ($textarea.val().length < offset ||
-			    selection.start < offset ||
-				data.length + insertedChars > options.maxLength) {
-				popup.hide();
-				return false;
-			}
-
-			newData = $textarea.val().slice(offset, offset + data.length + insertedChars);
-
-			updateCaret();
-			if (newData == data) {
-				return false;
-			}
-
-			data = newData;
-			mirror = $textarea.val();
-			return true;
+			data = $input.val();
+			return ret;
 		}
 
 		/**
@@ -379,22 +335,9 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function checkCaret(code) {
-			if (selection.start < offset ||
-			    selection.start > offset + data.length ||
-				(offset + caret == $textarea.val().length &&
-				code == key.RIGHT)) {
+			if ($input.val().length > options.maxLength) {
 				popup.hide();
 			}
-			updateCaret();
-		}
-
-		/**
-		 * sync the caret position internally
-		 *
-		 * @return  void
-		 */
-		function updateCaret() {
-			caret = selection.start - offset;
 		}
 
 		/**
@@ -523,8 +466,8 @@ var MentionMe = (function($, m) {
 		}
 
 		/**
-		 * search for names that begin with the first {minLength} chars
-		 * of the keyCache
+		 * search for names that begin with the first
+		 * {minLength} chars of the keyCache
 		 *
 		 * @return  void
 		 */
@@ -532,8 +475,9 @@ var MentionMe = (function($, m) {
 			var search = keyCache.getText().slice(0, options.minLength);
 
 			/**
-			 * if we're already searching or we've already searched
-			 * this minimum-length name prefix, there is nothing to do
+			 * if we're already searching or we've
+			 * already searched this minimum-length
+			 * name prefix, there is nothing to do
 			 */
 			if (searching ||
 				searched.indexOf(search) != -1) {
@@ -641,16 +585,21 @@ var MentionMe = (function($, m) {
 	 */
 	popup = (function() {
 		var visible = false,
+		virgin = true,
 
 		selected = 0,
 		lastSelected = null,
 
+		$mainDiv,
 		$div,
 		$spinner,
+
 		spinnerVisible = false,
 
+		width = 0,
+		scrollWidth = 0,
 		lineHeight,
-		width = 0;
+		inputHeight;
 
 		/**
 		 * ready the popup
@@ -658,40 +607,35 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function init() {
-			var e;
+			var $testDiv;
 
 			// create and show the main div off-screen
-			$div = $("<div/>", {
-				id: "mentionme_popup",
-				"class": "mentionme_popup",
-			}).css({
+			$mainDiv = $("#mentionme_popup").css({
 				left: "-1000px",
 				top: "-1000px",
 			});
-			$container.append($div);
-			$div.show();
+			$spinner = $("#mentionme_spinner");
+			$input = $("#mentionme_popup_input");
+			$inputDiv = $("#mentionme_popup_input_container");
+			$div = $("#mentionme_popup_body");
 
-			// fill it with max amount of item divs
-			for (e = 0; e < maxItems; e++) {
-				$div.append($("<div/>")
-					.html(Array(options.maxLength + 1)
-					.join("M"))
-					.addClass("mentionme_popup_item"));
-			}
+			$container.append($mainDiv.show());
 
-			// and then figure the line height for later user
-			lineHeight = parseInt($div.height() / maxItems);
+			inputHeight = $inputDiv.height();
+
+			$testDiv = $("<div/>")
+						.html(Array(options.maxLength + 1)
+						.join("M"))
+						.addClass("mentionme_popup_item");
+
+			$div.append($testDiv);
+
+			// and then figure the line height for later use
+			lineHeight = parseInt($testDiv.height()) + 1;
 			width = $div.css("fontSize").replace("px", "") * (options.maxLength - 1);
 
-			// build the spinner
-			$spinner = $("<div/>", {
-				id: "mentionme_spinner",
-				"class": "mentionme_spinner",
-			}).append($("<img/>", {
-				src: "images/spinner.gif",
-			}));
-			$spinner.append($("<span/>").html(lang.loading));
-			$div.html($spinner);
+			$div.width(width);
+			scrollWidth = $div[0].scrollWidth;
 		}
 
 		/**
@@ -717,12 +661,18 @@ var MentionMe = (function($, m) {
 			// go ahead and fill the popup with suggestions from the name cache
 			popup.update();
 
-			left = taCoords.left + coords[0];
-			top = taCoords.top + coords[1] +  getPageScroll()[1];
+			left = taCoords.left +
+				   coords[0] +
+				   5;
+			top = (taCoords.top +
+				   coords[1] +
+				   getPageScroll()[1]) -
+				   lineHeight +
+				   3;
 
 			// resize, locate and show the popup, selecting the first item
 			move(left, top);
-			$div.show();
+			$mainDiv.show();
 			lastSelected = null;
 			select();
 			visible = true;
@@ -732,7 +682,9 @@ var MentionMe = (function($, m) {
 			$div.click(onClick);
 			$(document).click(hide);
 			$textarea.click(hide);
-			$textarea.keydown(onKeyDown);
+			$input.keydown(onKeyDown);
+			$input.keyup(updateCheck);
+			$input.focus();
 		}
 
 		/**
@@ -741,13 +693,28 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function hide() {
-			$div.hide();
+			$mainDiv.hide();
 			$div.unbind("mouseover", onMouseMove);
 			$div.unbind("click", onClick);
 			$(document).unbind("click", hide);
 			$textarea.unbind("click", hide);
-			$textarea.unbind("keydown", onKeyDown);
+			$input.unbind("keydown", onKeyDown);
+			$input.unbind("keyup", updateCheck);
 			visible = false;
+			$input.val("");
+			$textarea.focus();
+		}
+
+		/**
+		 * update the popup if necessary
+		 *
+		 * @param  object event
+		 * @return void
+		 */
+		function updateCheck(e) {
+			if (keyCache.update()) {
+				update();
+			}
 		}
 
 		/**
@@ -795,7 +762,7 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function buildItems() {
-			var thisClass;
+			var i;
 
 			// if we've got no matches and the spinner isn't up . . .
 			if (items.length === 0 &&
@@ -839,18 +806,23 @@ var MentionMe = (function($, m) {
 		 */
 		function move(left, top) {
 			var style = {
-				height: getCurrentHeight() + "px",
-				overflow: "auto",
-				width: width + "px",
+				height: getCurrentHeight() + inputHeight + "px",
+				width: scrollWidth + "px",
 			};
 
-			if (left) {
+			if (typeof left != "undefined") {
 				style.left = left + "px";
 			}
-			if (top) {
+			if (typeof top != "undefined") {
 				style.top = top + "px";
 			}
-			$div.css(style);
+
+			$mainDiv.css(style);
+
+			$div.css({
+				height: getCurrentHeight() + "px",
+				width: width + "px",
+			});
 		}
 
 		/**
@@ -882,48 +854,8 @@ var MentionMe = (function($, m) {
 			}
 
 			if (noScroll != true) {
-				selectedItem.parent("div").prop("scrollTop", selectedItem.prop("offsetTop"));
+				$div.prop("scrollTop", selectedItem.prop("offsetTop") - $inputDiv.height());
 			}
-		}
-
-		/**
-		 * basic navigation for when the popup is open
-		 *
-		 * @param  event (Object)
-		 * @return void
-		 */
-		function onKeyDown(event) {
-			switch (event.keyCode) {
-			case key.ENTER:
-				insertMention();
-				break;
-			case key.UP:
-				select("previous");
-				break;
-			case key.DOWN:
-				select("next");
-				break;
-			case key.END:
-				select("last");
-				break;
-			case key.HOME:
-				select();
-				break;
-			case key.PAGE_UP:
-				select("previousPage");
-				break;
-			case key.PAGE_DOWN:
-				select("nextPage");
-				break;
-			default:
-				return;
-			}
-
-			/**
-			 * prevent a few navigation keys from
-			 * working when the popup is in view
-			 */
-			event.preventDefault();
 		}
 
 		/**
@@ -1011,26 +943,28 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function select(selection) {
+			var lastItem = items.length - 1;
+
 			switch (selection) {
 			case "last":
-				selected = items.length - 1;
+				selected = lastItem;
 				break;
 			case "next":
 				selected++;
-				if (selected > items.length - 1) {
+				if (selected > lastItem) {
 					selected = 0;
 				}
 				break;
 			case "previous":
 				selected--;
 				if (selected < 0) {
-					selected = items.length - 1;
+					selected = lastItem;
 				}
 				break;
 			case "nextPage":
 				selected  += maxItems;
-				if (selected > items.length - 1) {
-					selected = items.length - 1;
+				if (selected > lastItem) {
+					selected = lastItem;
 				}
 				break;
 			case "previousPage":
@@ -1086,7 +1020,7 @@ var MentionMe = (function($, m) {
 		 * @return  (Number) the height in pixels
 		 */
 		function getCurrentHeight() {
-			return  (lineHeight * Math.max(1, Math.min(5, items.length))) + 4;
+			return (lineHeight * Math.max(1, Math.min(5, items.length))) + 2;
 		}
 
 		/**

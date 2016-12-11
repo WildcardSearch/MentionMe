@@ -7,6 +7,8 @@
  */
 
 var MentionMe = (function($, m) {
+	"use strict";
+
 	/**
 	 * 'turn on' any previously selected multi-mention buttons and if
 	 * applicable, show the mention insert notice in Quick Reply

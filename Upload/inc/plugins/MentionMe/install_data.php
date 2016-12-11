@@ -132,10 +132,13 @@ div.mentionme_popup {
 	color: #3D3D3D;
 	border: 2px outset #3D3D3D;
 	box-shadow: 5px 5px 5px #515151;
+	overflow: hidden;
 }
 
 #mentionme_popup_body {
-	overflow: auto;
+	font-weight: bold;
+	line-height: 1;
+	overflow-y: scroll;
 }
 
 div.mentionme_popup_item {
@@ -161,7 +164,7 @@ div.mentionme_spinner img {
 
 #mentionme_popup_input {
 	border: none;
-	width: 95%;
+	width: 100%;
 }
 
 .postbit_buttons a.postbit_multimention span {
