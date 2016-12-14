@@ -19,7 +19,6 @@ var MentionMe = (function($, m) {
 			maxLength: 30,
 		},
 		lang = {
-			loading: "loading . . .",
 			instructions: "type a user name",
 		},
 		cursorPointer = "pointer",
@@ -267,7 +266,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * ready the typeahead cache
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function init() {
 			data = "";
@@ -277,7 +276,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * mirror the currently typed characters in our key cache
 		 *
-		 * @return  (Boolean) true if a character was added, false if not
+		 * @return Boolean true if a character was added, false if not
 		 */
 		function update() {
 			var ret = false;
@@ -292,7 +291,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for keyCache data length
 		 *
-		 * @return  (Number) the length of the currently typed text
+		 * @return Number the length of the currently typed text
 		 */
 		function getLength() {
 			return data.length;
@@ -303,7 +302,7 @@ var MentionMe = (function($, m) {
 		 *
 		 * @param  natural (Boolean) true to return the cache as-is,
 		 * false to return lowercase
-		 * @return  (String) the currently typed text
+		 * @return String the currently typed text
 		 */
 		function getText(natural) {
 			if (natural != true) {
@@ -334,7 +333,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * ready the name cache
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function init() {
 			loading = true;
@@ -343,7 +342,7 @@ var MentionMe = (function($, m) {
 				url: "xmlhttp.php",
 				data: {
 					action: "mentionme",
-					mode: "get_name_cache"
+					mode: "getNameCache"
 				},
 				success: loadNameCache,
 			});
@@ -353,7 +352,7 @@ var MentionMe = (function($, m) {
 		 * deal with the server response and store the data
 		 *
 		 * @param  transport (Object) the XMLHTTP transport
-		 * @return  void
+		 * @return void
 		 */
 		function loadNameCache(response) {
 			ready = true;
@@ -374,7 +373,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * list names that match the keyCache (currently typed string)
 		 *
-		 * @return  (Number) the amount of items in total
+		 * @return Number the amount of items in total
 		 */
 		function match() {
 			var property, i = 0;
@@ -408,7 +407,7 @@ var MentionMe = (function($, m) {
 		 * search for names that begin with the first {minLength} chars
 		 * of the keyCache
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function search() {
 			var search = keyCache.getText().slice(0, options.minLength);
@@ -441,7 +440,7 @@ var MentionMe = (function($, m) {
 				url: "xmlhttp.php",
 				data: {
 					action: "mentionme",
-					mode: "name_search",
+					mode: "nameSearch",
 					search: search,
 				},
 				success: load,
@@ -452,7 +451,7 @@ var MentionMe = (function($, m) {
 		 * handle the response solicited by search()
 		 *
 		 * @param  transport (Object) the XMLHTTP transport
-		 * @return  void
+		 * @return void
 		 */
 		function load(names) {
 			var n = 0, property;
@@ -494,7 +493,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for ready state
 		 *
-		 * @return  (Boolean) true if cache loaded, false if not
+		 * @return Boolean true if cache loaded, false if not
 		 */
 		function isReady() {
 			return ready;
@@ -503,7 +502,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for loading state
 		 *
-		 * @return  (Boolean) true if cache loaded, false if not
+		 * @return Boolean true if cache loaded, false if not
 		 */
 		function isLoading() {
 			return loading;
@@ -543,7 +542,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * ready the popup
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function init() {
 			var $testDiv;
@@ -580,7 +579,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * display the popup where the user was typing (hopefully)
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function show() {
 			var coords,
@@ -636,7 +635,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * hide the popup
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function hide() {
 			$mainDiv.hide();
@@ -772,10 +771,12 @@ var MentionMe = (function($, m) {
 		}
 
 		/**
-		 * assign the "on" class to the currently selected list item
+		 * assign the "on" class to the currently selected
+		 * list item
 		 *
-		 * @param  noScroll (Boolean) true to highlight without scrolling the item into
-		 * view (for the mouse to prevent weirdness) or false to scroll to the newly
+		 * @param  noScroll (Boolean) true to highlight without
+		 * scrolling the item into view (for the mouse, to
+		 * prevent weirdness) or false to scroll to the newly
 		 * highlighted item
 		 * @return void
 		 */
@@ -803,7 +804,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * highlight items when the mouse is hovering
 		 *
-		 * @param  event (Object)
+		 * @param  Object event
 		 * @return void
 		 */
 		function onMouseMove(e) {
@@ -815,8 +816,8 @@ var MentionMe = (function($, m) {
 		/**
 		 * trigger mention insertion on click
 		 *
-		 * @param  event (Object)
-		 * @return  void
+		 * @param  Object event
+		 * @return void
 		 */
 		function onClick(e) {
 			if (selectEventTarget(e)) {
@@ -829,7 +830,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * select the element that the event was originally triggered on
 		 *
-		 * @param  event (Object)
+		 * @param  Object event
 		 * @return void
 		 */
 		function selectEventTarget(e) {
@@ -881,7 +882,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * highlight an item in the name list
 		 *
-		 * @param  selection (String) the position label
+		 * @param  String position label
 		 * @return void
 		 */
 		function select(selection) {
@@ -926,7 +927,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for spinner visibility
 		 *
-		 * @return (Boolean) true if visible, false if not
+		 * @return Boolean true if visible, false if not
 		 */
 		function spinnerIsVisible() {
 			return spinnerVisible;
@@ -935,7 +936,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * show the activity indicator
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function showSpinner() {
 			clear();
@@ -959,7 +960,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * approximate height based on initial line measurements
 		 *
-		 * @return  (Number) the height in pixels
+		 * @return Number height in pixels
 		 */
 		function getCurrentHeight() {
 			return (lineHeight * Math.max(1, Math.min(5, items.length)));
@@ -968,7 +969,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for popup visibility
 		 *
-		 * @return (Boolean) true if visible, false if not
+		 * @return Boolean true if visible, false if not
 		 */
 		function isVisible() {
 			return visible;

@@ -35,7 +35,7 @@ if (defined('IN_ADMINCP')) {
  * @return bool true if MyAlerts installed,
  * false if not
  */
-function mention_get_myalerts_status()
+function mentionGetMyAlertsStatus()
 {
 	static $status = false, $checked = false;
 

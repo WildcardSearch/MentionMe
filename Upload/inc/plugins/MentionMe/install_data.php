@@ -4,7 +4,8 @@
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
- * this file contains data used by classes/installer.php
+ * this file contains data used by
+ * classes/WildcardPluginInstaller.php
  */
 
 $settings = array(
@@ -122,7 +123,7 @@ EOF
 	),
 );
 
-$style_sheets = array(
+$styleSheets = array(
 	"mentionme" => array(
 		"attachedto" => '',
 		"stylesheet" => <<<EOF

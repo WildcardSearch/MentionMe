@@ -39,7 +39,7 @@ var MentionMe = (function($, m) {
 	 * if this is a new mention, add it to the cookie and if applicable,
 	 * turn on the button and show the Quick Reply notice
 	 *
-	 * @param  pid (Number) the post id
+	 * @param  Number post id
 	 * @return void
 	 */
 	function mention(pid) {
@@ -90,8 +90,8 @@ var MentionMe = (function($, m) {
 	/**
 	 * fetch the mentions
 	 *
-	 * @return (Boolean) true to use standard newreply.php functionality or
-	 * false if AJAX was used
+	 * @return Boolean true to use standard newreply.php
+	 * 	functionality or false if AJAX was used
 	 */
 	function load() {
 		if (use_xmlhttprequest == 1) {
@@ -100,7 +100,7 @@ var MentionMe = (function($, m) {
 				url: 'xmlhttp.php',
 				data: {
 					action: 'mentionme',
-					mode: 'get_multi_mentioned',
+					mode: 'getMultiMentioned',
 					load_all: 1,
 				},
 				success: insert,
@@ -143,7 +143,7 @@ var MentionMe = (function($, m) {
 	/**
 	 * clear the cookie and any buttons
 	 *
-	 * @return: n/a
+	 * @return void
 	 */
 	function clear() {
 		var $el,

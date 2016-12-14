@@ -23,8 +23,8 @@ if (!defined('MYALERTS_PLUGIN_PATH')) {
  * @param object post info
  * return void
  */
-$plugins->add_hook("datahandler_post_update", "mention_myalerts_datahandler_post_update");
-function mention_myalerts_datahandler_post_update($this_post)
+$plugins->add_hook("datahandler_post_update", "mentionMeMyAlertsDatahandlerPostUpdate");
+function mentionMeMyAlertsDatahandlerPostUpdate($this_post)
 {
 	global $db, $mybb, $post;
 
@@ -33,12 +33,12 @@ function mention_myalerts_datahandler_post_update($this_post)
 	$fid = (int) $this_post->data['fid'];
 	$tid = (int) $this_post->data['tid'];
 	$pid = (int) $this_post->data['pid'];
-	$post_uid = (int) $post['uid'];
-	$edit_uid = (int) $mybb->user['uid'];
+	$postUID = (int) $post['uid'];
+	$editUID = (int) $mybb->user['uid'];
 	$subject = $post['subject'];
 
 	// if another user is editing (mod) don't do alerts
-	if ($edit_uid != $post_uid) {
+	if ($editUID != $postUID) {
 		return;
 	}
 
@@ -48,7 +48,7 @@ function mention_myalerts_datahandler_post_update($this_post)
 
 	// get all mentions
 	$matches = array();
-	mention_find_in_post($message, $matches);
+	mentionMeFindInPost($message, $matches);
 
 	// no results, no alerts
 	if (!is_array($matches) ||
@@ -57,7 +57,7 @@ function mention_myalerts_datahandler_post_update($this_post)
 	}
 
 	// avoid duplicate mention alerts
-	$mentioned_already = array();
+	$mentionedAlready = array();
 
 	// loop through all matches (if any)
 	foreach ($matches as $val) {
@@ -71,21 +71,20 @@ function mention_myalerts_datahandler_post_update($this_post)
 
         // prevent multiple alerts for duplicate mentions in the post and
         // the user mentioning themselves
-        if ($mentioned_already[$uid] ||
-			$edit_uid == $uid ) {
+        if ($mentionedAlready[$uid] ||
+			$editUID == $uid ) {
             continue;
         }
 
         // if the user was already alerted for being mentioned in this post
         // do not create a duplicate
-        $mentioned_already[$uid] = true;
-        $already_alerted = false;
+        $mentionedAlready[$uid] = true;
 
-        if (!mention_can_view($username, $to_uid, $from_uid, $fid)) {
+        if (!mentionMeCheckPermissions($username, $to_uid, $fromUID, $fid)) {
 			continue;
 		}
 
-		$alert = new MybbStuff_MyAlerts_Entity_Alert((int) $post_uid, $alertType, $tid);
+		$alert = new MybbStuff_MyAlerts_Entity_Alert((int) $postUID, $alertType, $tid);
         $alert->setExtraDetails(
             array(
                 'thread_title' => $subject,
@@ -107,9 +106,9 @@ function mention_myalerts_datahandler_post_update($this_post)
  *
  * return void
  */
-$plugins->add_hook('newreply_do_newreply_end', 'mention_myalerts_do_newreply_end');
-$plugins->add_hook('newthread_do_newthread_end', 'mention_myalerts_do_newreply_end');
-function mention_myalerts_do_newreply_end()
+$plugins->add_hook('newreply_do_newreply_end', 'mentionMeMyAlertsDoNewReplyEnd');
+$plugins->add_hook('newthread_do_newthread_end', 'mentionMeMyAlertsDoNewReplyEnd');
+function mentionMeMyAlertsDoNewReplyEnd()
 {
 	global $mybb, $pid, $tid, $post, $thread, $fid;
 
@@ -133,7 +132,7 @@ function mention_myalerts_do_newreply_end()
 
     // get all mentions
 	$matches = array();
-	mention_find_in_post($message, $matches);
+	mentionMeFindInPost($message, $matches);
 
 	// no matches, no alerts
 	if (!is_array($matches) ||
@@ -142,7 +141,7 @@ function mention_myalerts_do_newreply_end()
 	}
 
 	// avoid duplicate mention alerts
-	$mentioned_already = array();
+	$mentionedAlready = array();
 
 	// loop through all matches (if any)
 	foreach ($matches as $val) {
@@ -156,7 +155,7 @@ function mention_myalerts_do_newreply_end()
 
         // create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
         if ($mybb->user['uid'] == $uid ||
-			$mentioned_already[$uid]) {
+			$mentionedAlready[$uid]) {
             continue;
         }
 
@@ -171,7 +170,7 @@ function mention_myalerts_do_newreply_end()
 		$alert->setFromUserId($fromUser);
         $alerts[] = $alert;
 
-        $mentioned_already[$uid] = true;
+        $mentionedAlready[$uid] = true;
 	}
 
     if (!empty($alerts)) {
@@ -179,8 +178,11 @@ function mention_myalerts_do_newreply_end()
     }
 }
 
-$plugins->add_hook('global_start', 'mention_myalerts_display');
-function mention_myalerts_display() {
+/*
+ * load custom alert formatter
+ */
+$plugins->add_hook('global_start', 'mentionMeMyAlertsDisplay');
+function mentionMeMyAlertsDisplay() {
     global $mybb, $lang;
 
     if (!$mybb->user['uid']) {
@@ -199,15 +201,15 @@ function mention_myalerts_display() {
  * @param array a reference to an array to store matches in
  * return void
  */
-function mention_find_in_post($message, &$matches)
+function mentionMeFindInPost($message, &$matches)
 {
 	global $mybb;
 
 	// no alerts for mentions inside quotes so strip the quoted portions prior to detection
-	$message = mention_strip_quotes($message);
+	$message = mentionMeStripQuotes($message);
 
 	// do the replacement in the message
-	$message =  mention_run($message);
+	$message =  mentionMeParseMessage($message);
 
 	// match all the mentions in this post
 	$pattern = '#@<a id="mention_(.*?)" href="(.*?)">(.*?)</a>#is';
@@ -220,7 +222,7 @@ function mention_find_in_post($message, &$matches)
  * @param string content of the post
  * @return string message
  */
-function mention_strip_quotes($message)
+function mentionMeStripQuotes($message)
 {
 	global $lang, $templates, $theme, $mybb;
 
@@ -252,18 +254,18 @@ function mention_strip_quotes($message)
  * @param int id of the forum in which the mention occurred
  * @return bool true to allow, false to deny
  */
-function mention_can_view($username, $uid, $from_uid, $fid)
+function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
 {
     global $cache;
-	static $name_cache, $mycache;
+	static $nameCache, $myCache;
 
 	// cache names to reduce queries
-	if ($mycache instanceof MentionMeCache == false) {
-		$mycache = MentionMeCache::get_instance();
+	if ($myCache instanceof MentionMeCache == false) {
+		$myCache = MentionMeCache::getInstance();
 	}
 
-	if (!isset($name_cache)) {
-		$name_cache = $mycache->read('namecache');
+	if (!isset($nameCache)) {
+		$nameCache = $myCache->read('namecache');
 	}
 
     $username = strtolower($username);
@@ -271,20 +273,20 @@ function mention_can_view($username, $uid, $from_uid, $fid)
     /* if the user name is in the cache (same one we use for mention
      * display in showthread.php) . . .
      */
-    if (isset($name_cache[$username])) {
+    if (isset($nameCache[$username])) {
         // use the stored values
-        $user = $name_cache[$username];
+        $user = $nameCache[$username];
     } else {
         global $db;
         $query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "uid='{$uid}'");
         $user = $db->fetch_array($query);
-        $name_cache[$username] = $user;
-        $mycache->update('namecache', $name_cache);
+        $nameCache[$username] = $user;
+        $myCache->update('namecache', $nameCache);
     }
 
 	// don't alert if mentioning user is on mentioned users ignore list
-    $ignore_list = explode(',', $user['ignorelist']);
-	if (in_array($from_uid, $ignore_list)) {
+    $ignoreList = explode(',', $user['ignorelist']);
+	if (in_array($fromUID, $ignoreList)) {
 		return false;
 	}
 
@@ -296,15 +298,15 @@ function mention_can_view($username, $uid, $from_uid, $fid)
         return true;
     }
 
-	$users_groups = mention_compile_groups($user);
+	$userGroups = mentionMeCompileGroups($user);
 
     // admins can see everything
-    if (in_array(4, $users_groups)) {
+    if (in_array(4, $userGroups)) {
         return true;
     }
 
     // check for permissions in all the user's groups
-    foreach ($users_groups as $gid) {
+    foreach ($userGroups as $gid) {
         // empty 'displaygroup' and 'additionalgroups' are 0 or blank, skip them
         if ((int) $gid == 0) {
             continue;
@@ -324,10 +326,10 @@ function mention_can_view($username, $uid, $from_uid, $fid)
 /*
  * indiscriminately dump the user array's three group-related fields into a single array
  *
- * @param array an array of the user's info
+ * @param  array an array of the user's info
  * @return array all the users associated group ids
  */
-function mention_compile_groups($user)
+function mentionMeCompileGroups($user)
 {
     return array_merge(array($user['usergroup']), explode(',', $user['additionalgroups']), array($user['displaygroup']));
 }

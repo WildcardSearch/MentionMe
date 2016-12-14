@@ -9,6 +9,11 @@
 
 class MentionMeFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
 {
+	/*
+	 * @const  version
+	 */
+	const VERSION = '1';
+
 	/**
 	 * creates a printable version of the mention alert
 	 *

@@ -15,7 +15,6 @@ var MentionMe = (function($, m) {
 			maxLength: 30,
 		},
 		lang = {
-			loading: "loading . . .",
 			instructions: "type a user name",
 		},
 		textAreaPadding = 2,
@@ -80,7 +79,7 @@ var MentionMe = (function($, m) {
 	/**
 	 * prepare to auto-complete
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	function init() {
 		//  look for a text area
@@ -130,7 +129,7 @@ var MentionMe = (function($, m) {
 	 * some navigation and editing for our key cache
 	 *
 	 * @param  event (Object)
-	 * @return  void
+	 * @return void
 	 */
 	function onKeyUp(e) {
 		var proceed = true;
@@ -204,7 +203,7 @@ var MentionMe = (function($, m) {
 	/**
 	 * insert the mention and get out
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	function insertMention() {
 		var name = popup.getSelectedName(),
@@ -244,7 +243,7 @@ var MentionMe = (function($, m) {
 	/**
 	 * store info about the caret/selection
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	function getCaret() {
 		var range = selectionRange.get_selection_range();
@@ -256,7 +255,8 @@ var MentionMe = (function($, m) {
 	/**
 	 * position the caret
 	 *
-	 * @return  void
+	 * @param  Number
+	 * @return void
 	 */
 	function setCaret(position) {
 		var temp = $textarea[0];
@@ -316,7 +316,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * mirror the currently typed characters in our key cache
 		 *
-		 * @return  (Boolean) true if a character was added, false if not
+		 * @return (Boolean) true if a character was added, false if not
 		 */
 		function update() {
 			var ret = false;
@@ -331,8 +331,8 @@ var MentionMe = (function($, m) {
 		/**
 		 * ensure the user is within bounds
 		 *
-		 * @param  code (Number) event.keyCode
-		 * @return  void
+		 * @param  Number key code
+		 * @return void
 		 */
 		function checkCaret(code) {
 			if ($input.val().length > options.maxLength) {
@@ -343,7 +343,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for keyCache data length
 		 *
-		 * @return  (Number) the length of the currently typed text
+		 * @return (Number) the length of the currently typed text
 		 */
 		function getLength() {
 			return data.length;
@@ -352,9 +352,9 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for keyCache data
 		 *
-		 * @param  natural (Boolean) true to return the cache as-is,
-		 * false to return lowercase
-		 * @return  (String) the currently typed text
+		 * @param  Boolean true to return the cache as-is,
+		 * 	false to return lowercase
+		 * @return String the currently typed text
 		 */
 		function getText(natural) {
 			if (natural != true) {
@@ -366,7 +366,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for offset
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function getOffset() {
 			return offset;
@@ -405,7 +405,7 @@ var MentionMe = (function($, m) {
 				url: "xmlhttp.php",
 				data: {
 					action: "mentionme",
-					mode: "get_name_cache"
+					mode: "getNameCache"
 				},
 				success: loadNameCache,
 			});
@@ -436,7 +436,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * list names that match the keyCache (currently typed string)
 		 *
-		 * @return  (Number) the amount of items in total
+		 * @return Number total items matched
 		 */
 		function match() {
 			var property, i = 0;
@@ -469,7 +469,7 @@ var MentionMe = (function($, m) {
 		 * search for names that begin with the first
 		 * {minLength} chars of the keyCache
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function search() {
 			var search = keyCache.getText().slice(0, options.minLength);
@@ -502,7 +502,7 @@ var MentionMe = (function($, m) {
 				url: "xmlhttp.php",
 				data: {
 					action: "mentionme",
-					mode: "name_search",
+					mode: "nameSearch",
 					search: search,
 				},
 				success: load,
@@ -513,7 +513,7 @@ var MentionMe = (function($, m) {
 		 * handle the response solicited by search()
 		 *
 		 * @param  transport (Object) the XMLHTTP transport
-		 * @return  void
+		 * @return void
 		 */
 		function load(names) {
 			var n = 0, property;
@@ -555,7 +555,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for ready state
 		 *
-		 * @return  (Boolean) true if cache loaded, false if not
+		 * @return Boolean true if cache loaded, false if not
 		 */
 		function isReady() {
 			return ready;
@@ -564,7 +564,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for loading state
 		 *
-		 * @return  (Boolean) true if cache loaded, false if not
+		 * @return Boolean true if cache loaded, false if not
 		 */
 		function isLoading() {
 			return loading;
@@ -604,7 +604,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * ready the popup
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function init() {
 			var $testDiv;
@@ -641,7 +641,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * display the popup where the user was typing (hopefully)
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function show() {
 			var coords = positioner.getPixelCoordinates(),
@@ -690,7 +690,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * hide the popup
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function hide() {
 			$mainDiv.hide();
@@ -720,7 +720,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * clear the popup
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function clear() {
 			$div.html("");
@@ -732,7 +732,7 @@ var MentionMe = (function($, m) {
 		 * fill the popup with suggested names from
 		 * the cache and search to fill the gaps
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function update() {
 			// if we get here too early, back off
@@ -862,7 +862,7 @@ var MentionMe = (function($, m) {
 		 * highlight items when the mouse is hovering
 		 *
 		 * @param  event (Object)
-		 * @return  void
+		 * @return void
 		 */
 		function onMouseMove(event) {
 			if (selectEventTarget(event)) {
@@ -874,7 +874,7 @@ var MentionMe = (function($, m) {
 		 * trigger mention insertion on click
 		 *
 		 * @param  event (Object)
-		 * @return  void
+		 * @return void
 		 */
 		function onClick(e) {
 			if (selectEventTarget(e)) {
@@ -925,7 +925,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * return the name of the currently selected item (for insertMention)
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function getSelectedName() {
 			if (items.length === 0 ||
@@ -940,7 +940,7 @@ var MentionMe = (function($, m) {
 		 * highlight an item in the name list
 		 *
 		 * @param  selection (String) the position label
-		 * @return  void
+		 * @return void
 		 */
 		function select(selection) {
 			var lastItem = items.length - 1;
@@ -984,7 +984,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for spinner visibility
 		 *
-		 * @return  (Boolean) true if visible, false if not
+		 * @return Boolean true if visible, false if not
 		 */
 		function spinnerIsVisible() {
 			return spinnerVisible;
@@ -993,7 +993,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * show the activity indicator
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function showSpinner() {
 			clear();
@@ -1005,7 +1005,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * show the usage prompt
 		 *
-		 * @return  void
+		 * @return void
 		 */
 		function showInstructions() {
 			clear();
@@ -1017,7 +1017,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * approximate height based on initial line measurements
 		 *
-		 * @return  (Number) the height in pixels
+		 * @return Number the height in pixels
 		 */
 		function getCurrentHeight() {
 			return (lineHeight * Math.max(1, Math.min(5, items.length))) + 2;
@@ -1026,7 +1026,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * getter for popup visibility
 		 *
-		 * @return  (Boolean) true if visible, false if not
+		 * @return Boolean true if visible, false if not
 		 */
 		function isVisible() {
 			return visible;
