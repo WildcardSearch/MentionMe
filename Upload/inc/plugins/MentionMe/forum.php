@@ -477,22 +477,36 @@ function mentionMeXMLHTTPnameSearch()
 		exit;
 	}
 
-	$name = $db->escape_string(trim($mybb->input['search']));
-	$name = strtr($name, array('%' => '=%', '=' => '==', '_' => '=_'));
+	$originalName = trim($mybb->input['search']);
+	$name = $db->escape_string($originalName);
+	$name = strtr($name,
+		array(
+			'%' => '=%',
+			'=' => '==',
+			'_' => '=_')
+		);
+
 	$query = $db->simple_select('users', 'username', "username LIKE '{$name}%' ESCAPE '='");
 
 	if ($db->num_rows($query) == 0) {
 		exit;
 	}
 
-	$json = array();
+	$names = array();
 	while ($username = $db->fetch_field($query, 'username')) {
-		$json[strtolower($username)] = $username;
+		if (strtolower(substr($username, 0, strlen($originalName))) === $originalName) {
+			$names[strtolower($username)] = $username;
+		}
 	}
+
+	if (empty($names)) {
+		exit;
+	}
+	$json = json_encode($names);
 
 	// send our headers.
 	header('Content-type: application/json');
-	echo(json_encode($json));
+	echo($json);
 	exit;
 }
 
