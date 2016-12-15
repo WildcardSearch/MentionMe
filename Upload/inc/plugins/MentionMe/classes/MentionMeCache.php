@@ -7,7 +7,7 @@
  * wrapper to handle our plugin's cache
  */
 
-if (!class_exists('WildcardPluginCache') {
+if (!class_exists('WildcardPluginCache')) {
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginCache.php';
 }
 
