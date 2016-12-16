@@ -80,8 +80,11 @@ function mentionDetect($match)
 		$nameCache = $myCache->read('namecache');
 	}
 
-	// if the user entered the mention in quotes then it will be returned in
-	// $match[2], if not it will be returned in $match[3]
+	/*
+	 * if the user entered the mention in quotes then it
+	 * will be returned in $match['quoted'], if not it will
+	 * be returned in $match['unquoted']
+	 */
 	if (strlen(trim($match['quoted'])) >= $mybb->settings['minnamelength']) {
 		$originalName = html_entity_decode($match['quoted']);
 	} elseif (strlen(trim($match['unquoted'])) >= $mybb->settings['minnamelength']) {
@@ -91,7 +94,7 @@ function mentionDetect($match)
 		return $match[0];
 	}
 
-	$match[0] = trim(strtolower($originalName));
+	$match[0] = trim(mb_strtolower($originalName));
 
 	// if the name is already in the cache . . .
 	if (isset($nameCache[$match[0]])) {
@@ -191,7 +194,7 @@ function mentionDetect($match)
 			}
 
 			// cache the user name HTML
-			$username = strtolower($user['username']);
+			$username = mb_strtolower($user['username']);
 
 			// preserve any surrounding chars from the original match
 			$trailingChars = substr($originalName, strlen($user['username']) + $padding);
@@ -278,7 +281,7 @@ function mentionTryName($username = '')
 		return false;
 	}
 
-	$username = strtolower($username);
+	$username = mb_strtolower($username);
 
 	// if the name is in this cache (has been searched for before)
 	if ($nameList[$username]) {
@@ -288,8 +291,10 @@ function mentionTryName($username = '')
 
 	global $db;
 
+	$searchname = $db->escape_string($username);
+
 	// query the db
-	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups', "LOWER(username)='{$db->escape_string($username)}'", array('limit' => 1));
+	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups', "LOWER(username)='{$searchname}'", array('limit' => 1));
 
 	// result?
 	if ($db->num_rows($query) !== 1) {
@@ -494,8 +499,8 @@ function mentionMeXMLHTTPnameSearch()
 
 	$names = array();
 	while ($username = $db->fetch_field($query, 'username')) {
-		if (strtolower(substr($username, 0, strlen($originalName))) === $originalName) {
-			$names[strtolower($username)] = $username;
+		if (mb_strtolower(substr($username, 0, strlen($originalName))) === $originalName) {
+			$names[mb_strtolower($username)] = $username;
 		}
 	}
 
