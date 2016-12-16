@@ -1,6 +1,6 @@
 <?php
 /*
- * Plugin Name: MentionMe for MyBB 1.6.x
+ * Plugin Name: MentionMe for MyBB 1.8.x
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
@@ -8,26 +8,22 @@
  * data to conserve queries during normal forum operation
  */
 
-/*
- * task_mentiome_namecache()
- *
- * @param - $task an integer represented the MyBB task id
- * @return: n/a
+/**
+ * @param  int task id
+ * @return void
  */
 function task_mentiome_namecache($task)
 {
 	global $db, $mybb, $lang;
 
-	if(!$lang->mention)
-	{
+	if (!$lang->mention) {
 		$lang->load('mention');
 	}
 
 	$cache_days = (int) $mybb->settings['mention_cache_time'];
 
 	// if the user has not set a valid amount of cache_days
-	if((int) $cache_days <= 0)
-	{
+	if ((int) $cache_days <= 0) {
 		// default to one week
 		$cache_days = 7;
 	}
@@ -37,11 +33,9 @@ function task_mentiome_namecache($task)
 	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "lastvisit > {$timesearch}", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
 
     $name_cache = array();
-	if($db->num_rows($query) > 0)
-	{
+	if ($db->num_rows($query) > 0) {
 		// if there are any results then build an array of data used for @mentions
-		while($user = $db->fetch_array($query))
-		{
+		while ($user = $db->fetch_array($query)) {
 			$name_cache[strtolower($user['username'])] = $user;
 		}
 
@@ -50,14 +44,11 @@ function task_mentiome_namecache($task)
         $total_cache_size = get_friendly_size(strlen(serialize($name_cache)));
 
 		$report = $lang->sprintf($lang->mention_task_success, $cache_days, $user_count, $total_cache_size);
-	}
-	else
-	{
+	} else {
 		$report = $lang->mention_task_fail;
 	}
 
-    if(!class_exists('MentionMeCache'))
-	{
+    if (!class_exists('MentionMeCache')) {
 		require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/MentionMeCache.php';
 	}
 

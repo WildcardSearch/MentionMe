@@ -1,6 +1,6 @@
 <?php
 /*
- * Plugin Name: MentionMe for MyBB 1.6.x
+ * Plugin Name: MentionMe for MyBB 1.8.x
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
@@ -20,12 +20,8 @@ $l['mentionme_popup_description'] = 'enter a user to mention by name';
 $l['mentionme_popup_close'] = 'Close Window';
 
 // MyAlerts
-$l['myalerts_mention'] = '{1} mentioned you in this thread: <a href="{2}">{3}</a>. ({4})';
+$l['myalerts_mention_alert'] = '{1} mentioned you in "<strong>{2}</strong>".';
 $l['myalerts_setting_mention'] = 'Receive alert when mentioned in a post?';
-$l['myalerts_help_alert_types_mentioned'] = '<strong>Mentioned in a post</strong>
-<p>
-	This alert type is received whenever another member of the site mentions you within a post anywhere on the site using <a href="http://mods.mybb.com/view/mentionme"><span style="color: #32CD32;"><strong>MentionMe</strong></span></a> Twitter-style mention tags.
-</p>';
 
 // multi-mention on post bit
 $l['mention_posts_selected'] = 'You have selected one or more users to mention.';
