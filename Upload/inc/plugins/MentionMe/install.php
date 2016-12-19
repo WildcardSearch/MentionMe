@@ -92,7 +92,7 @@ EOF;
         'name' => $name,
         'description' => $mentionDescription,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '3.0.1',
+        'version' => '3.0.2',
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
 		'compatibility' => '18*'

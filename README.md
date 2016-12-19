@@ -1,4 +1,4 @@
-##MentionMe 3.0.1
+##MentionMe 3.0.2
 
 A plugin for MyBB 1.8.x that allows Twitter-style tagging and integration with [MyAlerts](https://github.com/euantorano/MyAlerts)
 
@@ -10,7 +10,6 @@ MyBB Release Thread: http://community.mybb.com/thread-131448.html
 * mention auto-completion while typing
 * ability to add a postbit button that allows single or multi-mention tagging and insert in Quick Reply
 * improved name; caching rarely needs to query
-* features popup with auto-filling of user names
 * ready to seamlessly integrate with MyAlerts
 * abides by user's ignore list when sending alerts
 * checks permissions when sending alerts
