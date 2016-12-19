@@ -53,7 +53,7 @@ function task_mentiome_namecache($task)
 	}
 
 	// store the resulting array in our cache (if it is empty even)
-    MentionMeCache::get_instance()->update('namecache', $name_cache);
+    MentionMeCache::getInstance()->update('namecache', $name_cache);
 
 	// add an entry to the log
 	add_task_log($task, $report);
