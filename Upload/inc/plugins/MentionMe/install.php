@@ -92,7 +92,7 @@ EOF;
         'name' => $name,
         'description' => $mentionDescription,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '3.0.2',
+        'version' => '3.0.3',
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
 		'compatibility' => '18*'
@@ -172,7 +172,7 @@ function mention_activate()
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 	find_replace_templatesets('headerinclude', "#" . preg_quote('{$stylesheets}') . "#i", '{$mentionAutocomplete}{$stylesheets}');
-	find_replace_templatesets('footer', "#" . preg_quote('{$auto_dst_detection}') . "([\r\n?|\n]*?)</div>#i", '{$auto_dst_detection}$1</div>{$mentionAutocompleteSCEditor}');
+	find_replace_templatesets('footer', '#^(.*?)$#s', '$1{$mentionAutocompleteSCEditor}');
 
 	// have we already added our name caching task?
 	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
