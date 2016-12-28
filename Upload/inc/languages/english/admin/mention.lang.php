@@ -29,8 +29,8 @@ $l['mention_cache_time_description'] = 'The task caches usernames based on when 
 $l['mention_auto_complete_title'] = 'Auto-Complete Mentions?';
 $l['mention_auto_complete_description'] = 'YES (default) to autocomplete mentions as they are typed on showthread in Quick Reply and full post/edit pages';
 
-$l['mention_add_codebutton_title'] = 'Add A Code Button?';
-$l['mention_add_codebutton_description'] = 'YES (default) to add a code button to the full editor';
+$l['mention_max_items_title'] = 'Maximum Items In Popup';
+$l['mention_max_items_description'] = 'if autocomplete is used, this setting will limit the size of the popup';
 
 $l['mention_add_postbit_button_title'] = 'Add a Postbit Button?';
 $l['mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';

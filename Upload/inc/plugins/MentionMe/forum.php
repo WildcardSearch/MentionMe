@@ -345,6 +345,7 @@ function mentionMeInitialize()
 		},
 		minLength: {$mybb->settings['minnamelength']},
 		maxLength: {$mybb->settings['maxnamelength']},
+		maxItems: {$mybb->settings['mention_max_items']},
 	});
 // -->
 </script>

@@ -27,6 +27,15 @@ $settings = array(
 				"value" => '1',
 				"disporder" => '10'
 			),
+			"mention_max_items" => array(
+				"sid" => "NULL",
+				"name" => "mention_max_items",
+				"title" => $lang->mention_max_items_title,
+				"description" => $lang->mention_max_items_description,
+				"optionscode" => 'text',
+				"value" => '5',
+				"disporder" => '20'
+			),
 			"mention_add_postbit_button" => array(
 				"sid" => "NULL",
 				"name" => "mention_add_postbit_button",
@@ -34,7 +43,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '20'
+				"disporder" => '30'
 			),
 			"mention_multiple" => array(
 				"sid" => "NULL",
@@ -43,7 +52,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '30'
+				"disporder" => '40'
 			),
 			"mention_cache_time" => array(
 				"sid" => "NULL",
@@ -52,7 +61,7 @@ $settings = array(
 				"description" => $lang->mention_cache_time_description,
 				"optionscode" => "text",
 				"value" => '7',
-				"disporder" => '40'
+				"disporder" => '50'
 			),
 			"mention_format_names" => array(
 				"sid" => "NULL",
@@ -61,7 +70,7 @@ $settings = array(
 				"description" => $lang->mention_format_names_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '50'
+				"disporder" => '60'
 			),
 			"mention_minify_js" => array(
 				"sid" => "NULL",
@@ -70,7 +79,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '60'
+				"disporder" => '70'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => "NULL",
@@ -79,7 +88,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '70'
+				"disporder" => '80'
 			),
 		)
 	)
