@@ -158,6 +158,17 @@ function mention_activate()
 	if (version_compare($oldVersion, $info['version'], '<') &&
 		$oldVersion != '' &&
 		$oldVersion != 0) {
+
+		if (version_compare($oldVersion, '3.1', '<')) {
+			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/cursor_position.js');
+			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/selection_range.js');
+			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/string_splitter.js');
+			@rmdir(MYBB_ROOT . 'jscripts/js_cursor_position');
+
+			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.js');
+			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.min.js');
+		}
+
 		// check everything and upgrade if necessary
 		mention_install();
     }
@@ -171,8 +182,7 @@ function mention_activate()
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<input type="hidden" name="lastpid"') . "#i", '{$mentionedIDs}<input type="hidden" name="lastpid"');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
-	find_replace_templatesets('headerinclude', "#" . preg_quote('{$stylesheets}') . "#i", '{$mentionAutocomplete}{$stylesheets}');
-	find_replace_templatesets('footer', '#^(.*?)$#s', '$1{$mentionAutocompleteSCEditor}');
+	find_replace_templatesets('footer', '#^(.*?)$#s', '$1{$mentionAutocomplete}');
 
 	// have we already added our name caching task?
 	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
@@ -234,8 +244,7 @@ function mention_deactivate()
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('{$mentionedIDs}') . "#i", '');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
-	find_replace_templatesets('headerinclude', "#" . preg_quote('{$mentionAutocomplete}') . "#i", '');
-	find_replace_templatesets('footer', "#" . preg_quote('{$mentionAutocompleteSCEditor}') . "#i", '');
+	find_replace_templatesets('footer', "#" . preg_quote('{$mentionAutocomplete}') . "#i", '');
 }
 
 /**

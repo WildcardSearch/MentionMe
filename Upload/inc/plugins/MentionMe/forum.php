@@ -316,7 +316,7 @@ function mentionTryName($username = '')
  */
 function mentionMeInitialize()
 {
-	global $mybb, $plugins, $lang, $templates, $mentionAutocompleteSCEditor;
+	global $mybb, $plugins, $lang, $templates, $mentionAutocomplete;
 
 	if (!$lang->mention) {
 		$lang->load('mention');
@@ -331,21 +331,12 @@ function mentionMeInitialize()
 			$min = '.min';
 		}
 
-		if (file_exists(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.debug.js')) {
-			$debugScript = <<<EOF
-
-<script type="text/javascript" src="jscripts/MentionMe/autocomplete.debug.js"></script>
-EOF;
-		}
-
 		eval("\$popup = \"" . $templates->get('mentionme_popup') . "\";");
 
-		if ($mybb->settings['bbcodeinserter'] &&
-			in_array(THIS_SCRIPT, array('newthread.php', 'newreply.php', 'editpost.php', 'private.php', 'usercp.php', 'modcp.php', 'calendar.php'))) {
-			$mentionAutocompleteSCEditor = <<<EOF
-<!-- MentionMe SCEditor Autocomplete Scripts -->
+		$mentionAutocomplete = <<<EOF
+<!-- MentionMe Autocomplete Scripts -->
 <script type="text/javascript" src="{$mybb->asset_url}/jscripts/Caret.js/jquery.caret{$min}.js"></script>
-<script type="text/javascript" src="{$mybb->asset_url}/jscripts/MentionMe/autocomplete.sceditor{$min}.js"></script>{$debugScript}
+<script type="text/javascript" src="{$mybb->asset_url}/jscripts/MentionMe/autocomplete{$min}.js"></script>
 <script type="text/javascript">
 <!--
 	MentionMe.autoComplete.setup({
@@ -359,48 +350,6 @@ EOF;
 </script>
 {$popup}
 EOF;
-		} elseif (THIS_SCRIPT == 'showthread.php' ||
-				(!$mybb->settings['bbcodeinserter'] &&
-				in_array(THIS_SCRIPT, array('newthread.php', 'newreply.php', 'editpost.php', 'private.php', 'usercp.php', 'modcp.php', 'calendar.php')))) {
-			$addJS = true;
-			switch (THIS_SCRIPT) {
-			case 'usercp.php':
-				$addJS = ($mybb->input['action'] == 'editsig');
-				break;
-			case 'private.php':
-				$addJS = (in_array($mybb->input['action'], array('read', 'send')));
-				break;
-			case 'modcp.php':
-				$addJS = (in_array($mybb->input['action'], array('edit_announcement', 'new_announcement', 'editprofile')));
-				break;
-			case 'calendar.php':
-				$addJS = (in_array($mybb->input['action'], array('addevent', 'editevent')));
-				break;
-			}
-
-			if ($addJS) {
-				global $mentionAutocomplete;
-				$mentionAutocomplete = <<<EOF
-<!-- MentionMe Autocomplete Scripts -->
-<script type="text/javascript" src="jscripts/js_cursor_position/selection_range.js"></script>
-<script type="text/javascript" src="jscripts/js_cursor_position/string_splitter.js"></script>
-<script type="text/javascript" src="jscripts/js_cursor_position/cursor_position.js"></script>
-<script type="text/javascript" src="jscripts/MentionMe/autocomplete{$min}.js"></script>{$debugScript}
-<script type="text/javascript">
-<!--
-	MentionMe.autoComplete.setup({
-		lang: {
-			instructions: '{$lang->mention_autocomplete_instructions}',
-		},
-		minLength: {$mybb->settings['minnamelength']},
-		maxLength: {$mybb->settings['maxnamelength']},
-	});
-// -->
-</script>
-EOF;
-				$mentionAutocompleteSCEditor = $popup;
-			}
-		}
 	}
 
 	// only add the showthread hook if we are there and we are adding a postbit multi-mention button

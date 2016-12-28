@@ -134,6 +134,7 @@ div.mentionme_popup {
 	border: 2px outset #3D3D3D;
 	box-shadow: 5px 5px 5px #515151;
 	overflow: hidden;
+	z-index: 999;
 }
 
 #mentionme_popup_body {
