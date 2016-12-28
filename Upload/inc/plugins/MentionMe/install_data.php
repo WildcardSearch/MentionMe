@@ -72,6 +72,15 @@ $settings = array(
 				"value" => '1',
 				"disporder" => '60'
 			),
+			"mention_display_symbol" => array(
+				"sid" => "NULL",
+				"name" => "mention_display_symbol",
+				"title" => $lang->mention_display_symbol_title,
+				"description" => $lang->mention_display_symbol_desc,
+				"optionscode" => "text",
+				"value" => '@',
+				"disporder" => '70'
+			),
 			"mention_minify_js" => array(
 				"sid" => "NULL",
 				"name" => "mention_minify_js",
@@ -79,7 +88,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '70'
+				"disporder" => '80'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => "NULL",
@@ -88,7 +97,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '80'
+				"disporder" => '90'
 			),
 		)
 	)

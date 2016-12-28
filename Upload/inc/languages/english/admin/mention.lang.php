@@ -50,6 +50,9 @@ $l['mention_minify_js_desc'] = 'YES (default) to serve client-side scripts minif
 $l['mention_format_names_title'] = 'Format Usernames?';
 $l['mention_format_names_desc'] = 'YES (default) to format user names according to their display group, NO to format mentions as plain links';
 
+$l['mention_display_symbol_title'] = 'Display Symbol';
+$l['mention_display_symbol_desc'] = 'Set this to @ or another symbol to use to prefix mentions, leave blank for no prefix';
+
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
 $l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! You must uninstall and reinstall the plugin to receive mention alerts.';
