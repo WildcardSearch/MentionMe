@@ -316,7 +316,7 @@ function mentionTryName($username = '')
  */
 function mentionMeInitialize()
 {
-	global $mybb, $plugins, $lang, $templates, $mentionAutocomplete;
+	global $mybb, $plugins, $lang, $templates, $mentionAutocomplete, $templatelist;
 
 	if (!$lang->mention) {
 		$lang->load('mention');
@@ -326,12 +326,14 @@ function mentionMeInitialize()
 		require_once MYBB_ROOT . 'inc/plugins/MentionMe/alerts.php';
 	}
 
+	$addTemplates = '';
 	if ($mybb->settings['mention_auto_complete']) {
+		$plugins->add_hook('global_intermediate', mentionMeBuildPopup);
+
+		$addTemplates .= ',mentionme_popup';
 		if ($mybb->settings['mention_minify_js']) {
 			$min = '.min';
 		}
-
-		eval("\$popup = \"" . $templates->get('mentionme_popup') . "\";");
 
 		$mentionAutocomplete = <<<EOF
 <!-- MentionMe Autocomplete Scripts -->
@@ -350,7 +352,6 @@ function mentionMeInitialize()
 	});
 // -->
 </script>
-{$popup}
 EOF;
 	}
 
@@ -359,6 +360,7 @@ EOF;
 		$mybb->settings['mention_add_postbit_button']) {
 		$plugins->add_hook('showthread_start', 'mentionMeShowThreadStart');
 		$plugins->add_hook('postbit', 'mentionMePostbit');
+		$addTemplates .= ',mentionme_postbit_button,mentionme_quickreply_notice';
 	}
 
 	// only add the xmlhttp hook if required
@@ -368,6 +370,8 @@ EOF;
 	}
 
 	$plugins->add_hook('parse_message', 'mentionMeParseMessage');
+
+	$templatelist .= $addTemplates;
 }
 
 /*
@@ -609,6 +613,18 @@ EOF;
 <script type="text/javascript" src="jscripts/MentionMe/thread{$multi}{$min}.js"></script>
 
 EOF;
+}
+
+/**
+ * output the popup HTML
+ *
+ * @return void
+ */
+function mentionMeBuildPopup() {
+	global $templates, $mentionMeAutocomplete;
+
+	eval("\$popup = \"" . $templates->get('mentionme_popup') . "\";");
+	$mentionMeAutocomplete .= $popup;
 }
 
 ?>
