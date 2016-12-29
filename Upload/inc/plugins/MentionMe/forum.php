@@ -621,10 +621,10 @@ EOF;
  * @return void
  */
 function mentionMeBuildPopup() {
-	global $templates, $mentionMeAutocomplete;
+	global $templates, $mentionAutocomplete;
 
 	eval("\$popup = \"" . $templates->get('mentionme_popup') . "\";");
-	$mentionMeAutocomplete .= $popup;
+	$mentionAutocomplete .= $popup;
 }
 
 ?>
