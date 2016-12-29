@@ -143,7 +143,7 @@ EOF
 	<div id="mentionme_popup_input_container">
 		<input id="mentionme_popup_input" type="text" autocomplete="off" />
 	</div>
-	<div id="mentionme_popup_body">
+	<div id="mentionme_popup_body"></div>
 </div>
 EOF
 		),
