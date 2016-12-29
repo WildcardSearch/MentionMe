@@ -13,6 +13,7 @@ var MentionMe = (function($, m) {
 			minLength: 3,
 			maxLength: 30,
 			maxItems: 5,
+			tid: '',
 		},
 
 		lang = {
@@ -653,11 +654,13 @@ var MentionMe = (function($, m) {
 	 */
 	nameCache = (function() {
 		var data = {},
-		ready = false,
-		loading = false,
-		searching = false,
-		searched = [],
-		items = [];
+			threadNames = {},
+			allNames = {},
+			ready = false,
+			loading = false,
+			searching = false,
+			searched = [],
+			items = [];
 
 		/**
 		 * ready the name cache
@@ -671,7 +674,8 @@ var MentionMe = (function($, m) {
 				url: "xmlhttp.php",
 				data: {
 					action: "mentionme",
-					mode: "getNameCache"
+					mode: "getNameCache",
+					tid: options.tid,
 				},
 				success: loadNameCache,
 			});
@@ -686,7 +690,11 @@ var MentionMe = (function($, m) {
 		function loadNameCache(response) {
 			ready = true;
 			loading = false;
-			data = response;
+			threadNames = response.inThread;
+			allNames = response.cached;
+
+			$.extend(data, threadNames, allNames);
+
 			if (data.length === 0) {
 				data = {};
 				popup.showInstructions();
@@ -705,30 +713,70 @@ var MentionMe = (function($, m) {
 		 * @return Number total items matched
 		 */
 		function match() {
-			var property, i = 0;
+			var property,
+				i = 0,
+				done = {},
+				threadItems = [],
+				allItems = [];
 
 			items = [];
-			for (property in data) {
-				if (!data.hasOwnProperty(property) ||
-					!data[property] ||
+
+			for (property in threadNames) {
+				if (!threadNames.hasOwnProperty(property) ||
+					!threadNames[property] ||
+					done[property] ||
 					(keyCache.getLength() &&
 					property.slice(0, keyCache.getLength()) != keyCache.getText())) {
 					continue;
 				}
 
-				items.push(data[property]);
+				threadItems.push(threadNames[property]);
+				done[property] = true;
 				i++;
 			}
-			items = items.sort(function(a, b) {
-				if (a.length < b.length) {
-					return -1;
-				} else if (a.length > b.length) {
-					return 1;
-				} else {
-					return 0;
-				}
+
+			threadItems = threadItems.sort();
+
+			$(threadItems).each(function() {
+				items.push(this);
 			});
+
+			for (property in data) {
+				if (!data.hasOwnProperty(property) ||
+					!data[property] ||
+					done[property] ||
+					(keyCache.getLength() &&
+					property.slice(0, keyCache.getLength()) != keyCache.getText())) {
+					continue;
+				}
+
+				allItems.push(data[property]);
+				done[property] = true;
+				i++;
+			}
+
+			allItems = allItems.sort(sortNames);
+
+			$(allItems).each(function() {
+				items.push(this);
+			});
+
 			return i;
+		}
+
+		/**
+		 * sort names by length
+		 *
+		 * @return number
+		 */
+		function sortNames(a, b) {
+			if (a.length < b.length) {
+				return -1;
+			} else if (a.length > b.length) {
+				return 1;
+			} else {
+				return 0;
+			}
 		}
 
 		/**

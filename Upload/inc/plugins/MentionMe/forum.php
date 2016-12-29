@@ -346,6 +346,7 @@ function mentionMeInitialize()
 		minLength: {$mybb->settings['minnamelength']},
 		maxLength: {$mybb->settings['maxnamelength']},
 		maxItems: {$mybb->settings['mention_max_items']},
+		tid: '{$mybb->input['tid']}',
 	});
 // -->
 </script>
@@ -472,16 +473,33 @@ function mentionMeXMLHTTPnameSearch()
  */
 function mentionMeXMLHTTPgetNameCache()
 {
+	global $mybb, $db;
+
 	$nameCache = MentionMeCache::getInstance()->read('namecache');
 
-	$json = array();
+	$names = array(
+		"cached" => array(),
+		"inThread" => array(),
+	);
 	foreach ($nameCache as $key => $data) {
-		$json[$key] = $data['username'];
+		$names['cached'][$key] = $data['username'];
+	}
+
+	$tid = (int) $mybb->input['tid'];
+	if ($tid &&
+		$mybb->settings['mention_get_thread_participants']) {
+		$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'dateline', "order_dir" => 'DESC', "group_by" => 'username'));
+		if ($db->num_rows($query) > 0) {
+			while ($post = $db->fetch_array($query)) {
+				$key = mb_strtolower($post['username']);
+				$names['inThread'][$key] = $post['username'];
+			}
+		}
 	}
 
 	// send our headers.
 	header('Content-type: application/json');
-	echo(json_encode($json));
+	echo(json_encode($names));
 	exit;
 }
 
