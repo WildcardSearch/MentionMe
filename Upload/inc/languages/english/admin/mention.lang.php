@@ -58,7 +58,8 @@ $l['mention_advanced_matching_desc'] = 'This option allows user names with white
 
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
-$l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! You must uninstall and reinstall the plugin to receive mention alerts.';
+$l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! Click the link below to integrate.';
+$l['mention_myalerts_integrate_link'] = 'Integrate With MyAlerts';
 $l['mention_myalerts_successfully_integrated'] = 'MentionMe has been successfully integrated with MyAlerts';
 
 // force enable

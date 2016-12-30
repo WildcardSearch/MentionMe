@@ -42,14 +42,17 @@ EOF;
 			if (mentionGetMyAlertsStatus()) {
 				// if so give them a success message
 				$myAlertsReport = <<<EOF
-				<li style="list-style-image: url(../images/valid.png)">
+				<li style="list-style-image: url(styles/{$cp_style}/images/icons/success.png)">
 					{$lang->mention_myalerts_successfully_integrated}
 				</li>
 EOF;
 			} else {
-				// if not, warn them and provide instructions for integration
+				// if not, warn them and provide a link for integration
 				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">{$lang->mention_myalerts_integration_message}
+				</li>
+				<li style="list-style-image: url(styles/{$cp_style}/images/icons/group.png)">
+					<a href="index.php?module=config-plugins&amp;action=mention_myalerts_integrate">{$lang->mention_myalerts_integrate_link}</a>
 				</li>
 EOF;
 			}
@@ -404,6 +407,25 @@ function mentionMeUnsetCacheVersion()
 /*
  * MyAlerts
  */
+
+/**
+ * integrate with MyAlerts
+ *
+ * @return void
+ */
+$plugins->add_hook("admin_load", "mentionMeAdminLoad");
+function mentionMeAdminLoad()
+{
+	global $mybb, $page, $lang;
+	if($page->active_action == 'plugins' && $mybb->input['action'] == 'mention_myalerts_integrate')
+	{
+		// if it is our time
+		mentionMeMyAlertsIntegrate();
+		flash_message($lang->mention_myalerts_successfully_integrated, 'success');
+		admin_redirect('index.php?module=config-plugins');
+		exit;
+	}
+}
 
 /*
  * build the single ACP setting and add it to the MyAlerts group

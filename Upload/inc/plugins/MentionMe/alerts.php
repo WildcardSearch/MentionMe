@@ -13,10 +13,6 @@ if (!defined('IN_MYBB') ||
     die('Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.');
 }
 
-if (!defined('MYALERTS_PLUGIN_PATH')) {
-	define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MybbStuff/');
-}
-
 /*
  * create alerts when users edit a post and add a new mention. try to avoid sending any duplicate alerts.
  *
