@@ -165,9 +165,12 @@ div.mentionme_popup {
 }
 
 #mentionme_popup_body {
-	font-weight: bold;
 	line-height: 1;
 	overflow-y: scroll;
+}
+
+span.mention_name_highlight {
+	font-weight: bold;
 }
 
 div.mentionme_popup_item {

@@ -75,7 +75,7 @@ var MentionMe = (function($, m) {
 				container = core.getContainer();
 
 			$popup = $("#mentionme_popup");
-			$spinner = $("#mentionme_spinner");
+			$spinner = $("#mentionme_spinner").hide();
 			$input = $("#mentionme_popup_input");
 			$inputDiv = $("#mentionme_popup_input_container");
 			$body = $("#mentionme_popup_body");
@@ -228,6 +228,8 @@ var MentionMe = (function($, m) {
 		 */
 		function buildItems() {
 			var i,
+				text,
+				start,
 				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ?
 					"hand" :
 					"pointer";
@@ -247,7 +249,9 @@ var MentionMe = (function($, m) {
 					showInstructions();
 				}
 				// resize the popup
-				move();
+				if (isVisible()) {
+					move();
+				}
 				return;
 			}
 
@@ -255,16 +259,20 @@ var MentionMe = (function($, m) {
 			clear();
 
 			for (i = 0; i < nameCache.getItemsLength(); i++) {
+				start = items[i].toLowerCase().search(keyCache.getText());
+				text = items[i].slice(0, start) + '<span class="mention_name_highlight">' + items[i].slice(start, keyCache.getText().length) + '</span>' + items[i].slice(start + keyCache.getText().length);
 				$body.append($("<div/>", {
 					id: "mentionme_popup_item_" + i,
 					"class": "mentionme_popup_item"
-				}).html(items[i]).css({
+				}).html(text).css({
 					cursor: c,
 				}));
 			}
 
 			// resize the popup
-			move();
+			if (isVisible()) {
+				move();
+			}
 		}
 
 		/**
@@ -276,6 +284,11 @@ var MentionMe = (function($, m) {
 			$body.html("");
 			lastSelected = null;
 			spinnerVisible = false;
+
+			// resize the popup
+			if (isVisible()) {
+				move();
+			}
 		}
 
 		/**
@@ -287,7 +300,11 @@ var MentionMe = (function($, m) {
 			clear();
 			$body.html($spinner);
 			spinnerVisible = true;
-			move();
+
+			// resize the popup
+			if (isVisible()) {
+				move();
+			}
 		}
 
 		/**
@@ -698,7 +715,10 @@ var MentionMe = (function($, m) {
 			if (data.length === 0) {
 				data = {};
 				popup.showInstructions();
-				popup.move();
+				// resize the popup
+				if (popup.isVisible()) {
+					popup.move();
+				}
 				return;
 			}
 
