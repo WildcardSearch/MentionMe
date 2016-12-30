@@ -54,6 +54,15 @@ $settings = array(
 				"value" => '1',
 				"disporder" => '40'
 			),
+			"mention_full_text_search" => array(
+				"sid" => "NULL",
+				"name" => "mention_full_text_search",
+				"title" => $lang->mention_full_text_search_title,
+				"description" => $lang->mention_full_text_search_description,
+				"optionscode" => "yesno",
+				"value" => '0',
+				"disporder" => '50'
+			),
 			"mention_add_postbit_button" => array(
 				"sid" => "NULL",
 				"name" => "mention_add_postbit_button",
@@ -61,7 +70,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '50'
+				"disporder" => '60'
 			),
 			"mention_multiple" => array(
 				"sid" => "NULL",
@@ -70,7 +79,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '60'
+				"disporder" => '70'
 			),
 			"mention_format_names" => array(
 				"sid" => "NULL",
@@ -79,7 +88,7 @@ $settings = array(
 				"description" => $lang->mention_format_names_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '70'
+				"disporder" => '80'
 			),
 			"mention_display_symbol" => array(
 				"sid" => "NULL",
@@ -88,7 +97,7 @@ $settings = array(
 				"description" => $lang->mention_display_symbol_desc,
 				"optionscode" => "text",
 				"value" => '@',
-				"disporder" => '80'
+				"disporder" => '90'
 			),
 			"mention_minify_js" => array(
 				"sid" => "NULL",
@@ -97,7 +106,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '90'
+				"disporder" => '100'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => "NULL",
@@ -106,7 +115,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '100'
+				"disporder" => '110'
 			),
 		)
 	)

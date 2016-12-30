@@ -259,8 +259,18 @@ var MentionMe = (function($, m) {
 			clear();
 
 			for (i = 0; i < nameCache.getItemsLength(); i++) {
-				start = items[i].toLowerCase().search(keyCache.getText());
-				text = items[i].slice(0, start) + '<span class="mention_name_highlight">' + items[i].slice(start, keyCache.getText().length) + '</span>' + items[i].slice(start + keyCache.getText().length);
+				text = items[i];
+				if (keyCache.getText()) {
+					start = items[i].toLowerCase().indexOf(keyCache.getText());
+
+					if (start !== -1) {
+						text = items[i].slice(0, start) +
+						'<span class="mention_name_highlight">' +
+						items[i].slice(start, start + keyCache.getText().length) +
+						'</span>' +
+						items[i].slice(start + keyCache.getText().length);
+					}
+				}
 				$body.append($("<div/>", {
 					id: "mentionme_popup_item_" + i,
 					"class": "mentionme_popup_item"
@@ -746,7 +756,10 @@ var MentionMe = (function($, m) {
 					!threadNames[property] ||
 					done[property] ||
 					(keyCache.getLength() &&
-					property.slice(0, keyCache.getLength()) != keyCache.getText())) {
+					((!options.fullText &&
+					property.slice(0, keyCache.getLength()) !== keyCache.getText()) ||
+					(options.fullText &&
+					property.indexOf(keyCache.getText()) === -1)))) {
 					continue;
 				}
 
@@ -766,7 +779,10 @@ var MentionMe = (function($, m) {
 					!data[property] ||
 					done[property] ||
 					(keyCache.getLength() &&
-					property.slice(0, keyCache.getLength()) != keyCache.getText())) {
+					((!options.fullText &&
+					property.slice(0, keyCache.getLength()) !== keyCache.getText()) ||
+					(options.fullText &&
+					property.indexOf(keyCache.getText()) === -1)))) {
 					continue;
 				}
 

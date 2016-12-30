@@ -349,6 +349,7 @@ function mentionMeInitialize()
 		maxLength: {$mybb->settings['maxnamelength']},
 		maxItems: {$mybb->settings['mention_max_items']},
 		tid: '{$mybb->input['tid']}',
+		fullText: '{$mybb->settings['mention_full_text_search']}',
 	});
 // -->
 </script>
@@ -446,7 +447,12 @@ function mentionMeXMLHTTPnameSearch()
 			'_' => '=_')
 		);
 
-	$query = $db->simple_select('users', 'username', "username LIKE '{$name}%' ESCAPE '='");
+	$fullText = '';
+	if ($mybb->settings['mention_full_text_search']) {
+		$fullText = '%';
+	}
+
+	$query = $db->simple_select('users', 'username', "username LIKE '{$fullText}{$name}%' ESCAPE '='");
 
 	if ($db->num_rows($query) == 0) {
 		exit;
@@ -454,7 +460,10 @@ function mentionMeXMLHTTPnameSearch()
 
 	$names = array();
 	while ($username = $db->fetch_field($query, 'username')) {
-		if (mb_strtolower(substr($username, 0, strlen($originalName))) === $originalName) {
+		if (($fullText === '' &&
+			mb_strtolower(substr($username, 0, strlen($originalName))) === $originalName) ||
+			($fullText &&
+			strpos(mb_strtolower($username), mb_strtolower($originalName)) !== -1)) {
 			$names[mb_strtolower($username)] = $username;
 		}
 	}
