@@ -263,7 +263,8 @@ var MentionMe = (function($, m) {
 				if (keyCache.getText()) {
 					start = items[i].toLowerCase().indexOf(keyCache.getText());
 
-					if (start !== -1) {
+					if ((options.fullText && start !== -1) ||
+						(!options.fullText && start === 0)) {
 						text = items[i].slice(0, start) +
 						'<span class="mention_name_highlight">' +
 						items[i].slice(start, start + keyCache.getText().length) +
@@ -1584,6 +1585,8 @@ var MentionMe = (function($, m) {
 		$.extend(lang, opt.lang || {});
 		delete opt.lang;
 		$.extend(options, opt || {});
+
+		options.fullText = parseInt(options.fullText);
 	}
 
 	/**
