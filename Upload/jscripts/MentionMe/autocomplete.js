@@ -1650,7 +1650,8 @@ var MentionMe = (function($, m) {
 
 		return quote +
 			name +
-			quote;
+			quote +
+			' ';
 	}
 
 	$(init);
