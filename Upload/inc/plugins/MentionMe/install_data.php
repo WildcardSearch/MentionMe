@@ -185,11 +185,11 @@ div.mentionme_popup {
 	-moz-border-radius: 4px;
 	border-radius: 4px;
 
-	-moz-box-shadow: 5px 5px 5px #818181;
-	-webkit-box-shadow: 5px 5px 5px #818181;
-	box-shadow: 5px 5px 5px #818181;
-	-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=5, Direction=135, Color='#818181')";
-	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=5, Direction=135, Color='#818181');
+	-moz-box-shadow: 3px 3px 3px #818181;
+	-webkit-box-shadow: 3px 3px 3px #818181;
+	box-shadow: 3px 3px 3px #818181;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=3, Direction=135, Color='#818181')";
+	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=3, Direction=135, Color='#818181');
 }
 
 #mentionme_popup_body {
@@ -229,13 +229,12 @@ span.mention_name_highlight_on {
 }
 
 img.mention_user_avatar {
+	background: white;
 	vertical-align: middle;
 	height: 25px;
 	width: 25px;
 
-	margin-right: 5px;
-	margin-left: 5px;
-	padding: 2px;
+	margin: 2px 5px 2px 5px;
 
 	-webkit-border-radius: 50%;
 	-moz-border-radius: 50%;

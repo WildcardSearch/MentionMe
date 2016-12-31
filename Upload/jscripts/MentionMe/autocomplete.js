@@ -14,6 +14,8 @@ var MentionMe = (function($, m) {
 			maxLength: 30,
 			maxItems: 5,
 			tid: '',
+			fullText: 0,
+			showAvatars: 1,
 		},
 
 		lang = {
@@ -451,6 +453,7 @@ var MentionMe = (function($, m) {
 			var selectedItem = $("#mentionme_popup_item_" + selected),
 				lastSelectedItem = $("#mentionme_popup_item_" + lastSelected),
 				highlightSpan = lastSelectedItem.find("span.mention_name_highlight_on");
+
 			if (lastSelectedItem.length) {
 				lastSelectedItem.removeClass("mentionme_popup_item_on");
 
@@ -757,7 +760,7 @@ var MentionMe = (function($, m) {
 			searched = [],
 			items = [],
 			avatars = [],
-			longestName = 0;
+			longestName = 5;
 
 		/**
 		 * ready the name cache
@@ -823,6 +826,7 @@ var MentionMe = (function($, m) {
 
 			items = [];
 			avatars = [];
+			longestName = 5;
 
 			for (property in threadNames) {
 				if (!checkEntry(property, threadNames, done)) {
