@@ -1437,7 +1437,7 @@ var MentionMe = (function($, m) {
 		 * @return bool
 		 */
 		function focus() {
-			editor.focus();
+			$iFrame.focus();
 		}
 
 		/**
