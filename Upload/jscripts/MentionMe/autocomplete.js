@@ -158,6 +158,7 @@ var MentionMe = (function($, m) {
 			core.bindClick(hide);
 			$input.keydown(onKeyDown);
 			$input.keyup(updateCheck);
+			$input.click(onInputClick);
 			$input.focus();
 		}
 
@@ -174,6 +175,7 @@ var MentionMe = (function($, m) {
 			core.unBindClick(hide);
 			$input.unbind("keydown", onKeyDown);
 			$input.unbind("keyup", updateCheck);
+			$input.unbind("click", onInputClick);
 			visible = false;
 			$input.val("");
 			core.focus();
@@ -549,6 +551,15 @@ var MentionMe = (function($, m) {
 			} else {
 				e.preventDefault();
 			}
+		}
+
+		/**
+		 * prevent event bubbling for clicks in input
+		 *
+		 * @return void
+		 */
+		function onInputClick(e) {
+			e.stopPropagation();
 		}
 
 		/**
