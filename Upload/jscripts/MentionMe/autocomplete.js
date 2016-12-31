@@ -57,6 +57,7 @@ var MentionMe = (function($, m) {
 			lineHeight,
 
 			items = [],
+			avatars = [],
 
 			$container,
 			$popup,
@@ -72,6 +73,7 @@ var MentionMe = (function($, m) {
 		 */
 		function init() {
 			var $testDiv,
+				$testAvatar,
 				container = core.getContainer();
 
 			$popup = $("#mentionme_popup");
@@ -98,16 +100,21 @@ var MentionMe = (function($, m) {
 
 			inputHeight = $inputDiv.height();
 
+			$testAvatar = $("<img/>", {
+				"class": "mention_user_avatar",
+				src: "images/default_avatar.png",
+			});
 			$testDiv = $("<div/>")
-						.html(Array(options.maxLength + 1)
-						.join("M"))
+						.html($testAvatar)
+						.append(Array(options.maxLength + 1)
+							.join("M"))
 						.addClass("mentionme_popup_item");
 
-			$body.append($testDiv);
+			$body.html($testDiv);
 
 			// figure the line height for later use
 			lineHeight = parseInt($testDiv.height()) + core.lineHeightModifier;
-			width = $body.css("fontSize").replace("px", "") * (options.maxLength - 1);
+			width = $testDiv.width();
 
 			$body.width(width);
 			scrollWidth = $body[0].scrollWidth;
@@ -229,12 +236,14 @@ var MentionMe = (function($, m) {
 		function buildItems() {
 			var i,
 				text,
+				avatar,
 				start,
 				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ?
 					"hand" :
 					"pointer";
 
 			items = nameCache.getItems();
+			avatars = nameCache.getAvatars();
 
 			// if we've got no matches and the spinner isn't up . . .
 			if (nameCache.getItemsLength() === 0 &&
@@ -272,10 +281,18 @@ var MentionMe = (function($, m) {
 						items[i].slice(start + keyCache.getText().length);
 					}
 				}
+
+				avatar = '';
+				if (options.showAvatars) {
+					if (!avatars[i]) {
+						avatars[i] = "images/default_avatar.png";
+					}
+					avatar = '<img class="mention_user_avatar" src="' + avatars[i] + '" />';
+				}
 				$body.append($("<div/>", {
 					id: "mentionme_popup_item_" + i,
 					"class": "mentionme_popup_item"
-				}).html(text).css({
+				}).html(avatar + text).css({
 					cursor: c,
 				}));
 			}
@@ -400,12 +417,12 @@ var MentionMe = (function($, m) {
 		 */
 		function highlightSelected(noScroll) {
 			if (lastSelected == selected ||
-				!$("#mentionme_popup_item_" + selected)) {
+				$("#mentionme_popup_item_" + selected).length === 0) {
 				return;
 			}
 
 			var selectedItem = $("#mentionme_popup_item_" + selected);
-			if ($("#mentionme_popup_item_" + lastSelected)) {
+			if ($("#mentionme_popup_item_" + lastSelected).length) {
 				$("#mentionme_popup_item_" + lastSelected).removeClass("mentionme_popup_item_on");
 			}
 			lastSelected = selected;
@@ -416,7 +433,7 @@ var MentionMe = (function($, m) {
 			}
 
 			if (noScroll != true) {
-				$body.prop("scrollTop", selectedItem.prop("offsetTop") - $inputDiv.height());
+				$body.prop("scrollTop", parseInt(selectedItem.prop("offsetTop") - inputHeight));
 			}
 		}
 
@@ -688,7 +705,8 @@ var MentionMe = (function($, m) {
 			loading = false,
 			searching = false,
 			searched = [],
-			items = [];
+			items = [],
+			avatars = [];
 
 		/**
 		 * ready the name cache
@@ -748,46 +766,47 @@ var MentionMe = (function($, m) {
 				i = 0,
 				done = {},
 				threadItems = [],
-				allItems = [];
+				allItems = [],
+				threadAvatars = [],
+				allAvatars = [];
 
 			items = [];
+			avatars = [];
 
 			for (property in threadNames) {
-				if (!threadNames.hasOwnProperty(property) ||
-					!threadNames[property] ||
-					done[property] ||
-					(keyCache.getLength() &&
-					((!options.fullText &&
-					property.slice(0, keyCache.getLength()) !== keyCache.getText()) ||
-					(options.fullText &&
-					property.indexOf(keyCache.getText()) === -1)))) {
+				if (!checkEntry(property, threadNames, done)) {
 					continue;
 				}
 
-				threadItems.push(threadNames[property]);
+				threadItems.push(threadNames[property]['username']);
+
+				if (options.showAvatars) {
+					threadAvatars.push(threadNames[property]['avatar']);
+				}
 				done[property] = true;
 				i++;
 			}
-
-			threadItems = threadItems.sort();
 
 			$(threadItems).each(function() {
 				items.push(this);
 			});
 
+			if (options.showAvatars) {
+				$(threadAvatars).each(function() {
+					avatars.push(this);
+				});
+			}
+
 			for (property in data) {
-				if (!data.hasOwnProperty(property) ||
-					!data[property] ||
-					done[property] ||
-					(keyCache.getLength() &&
-					((!options.fullText &&
-					property.slice(0, keyCache.getLength()) !== keyCache.getText()) ||
-					(options.fullText &&
-					property.indexOf(keyCache.getText()) === -1)))) {
+				if (!checkEntry(property, data, done)) {
 					continue;
 				}
 
-				allItems.push(data[property]);
+				allItems.push(data[property]['username']);
+
+				if (options.showAvatars) {
+					allAvatars.push(data[property]['avatar']);
+				}
 				done[property] = true;
 				i++;
 			}
@@ -798,6 +817,11 @@ var MentionMe = (function($, m) {
 				items.push(this);
 			});
 
+			if (options.showAvatars) {
+				$(allAvatars).each(function() {
+					avatars.push(this);
+				});
+			}
 			return i;
 		}
 
@@ -814,6 +838,20 @@ var MentionMe = (function($, m) {
 			} else {
 				return 0;
 			}
+		}
+
+		function checkEntry(property, data, done) {
+			if (!data.hasOwnProperty(property) ||
+				!data[property] ||
+				done[property] ||
+				(keyCache.getLength() &&
+				((!options.fullText &&
+				property.slice(0, keyCache.getLength()) !== keyCache.getText()) ||
+				(options.fullText &&
+				property.indexOf(keyCache.getText()) === -1)))) {
+				return false;
+			}
+			return true;
 		}
 
 		/**
@@ -922,12 +960,21 @@ var MentionMe = (function($, m) {
 		}
 
 		/**
-		 * getter for the items list
+		 * getter for the item list
 		 *
 		 * @return array
 		 */
 		function getItems() {
 			return items;
+		}
+
+		/**
+		 * getter for the avatar list
+		 *
+		 * @return array
+		 */
+		function getAvatars() {
+			return avatars;
 		}
 
 		/**
@@ -947,6 +994,7 @@ var MentionMe = (function($, m) {
 			isReady: isReady,
 			isLoading: isLoading,
 			getItems: getItems,
+			getAvatars: getAvatars,
 			getItemsLength: getItemsLength,
 		};
 	})(),
@@ -1149,7 +1197,7 @@ var MentionMe = (function($, m) {
 		return {
 			init: init,
 			check: check,
-			heightModifier: 2,
+			heightModifier: 5,
 			lineHeightModifier: 1,
 			insert: insertMention,
 			bindClick: bindClick,
@@ -1260,7 +1308,7 @@ var MentionMe = (function($, m) {
 					iframe: $iFrame[0],
 				}),
 				left = parseInt(coords.left) + 7,
-				top = parseInt(coords.top + (popup.getLineHeight() * options.maxItems)) + 7;
+				top = parseInt(coords.top + $container.find('div.sceditor-toolbar').height()) + 7;
 
 			popup.show(left, top);
 		}
@@ -1343,7 +1391,7 @@ var MentionMe = (function($, m) {
 		return {
 			init: init,
 			check: check,
-			heightModifier: 0,
+			heightModifier: -2,
 			lineHeightModifier: 0,
 			insert: insertMention,
 			bindClick: bindClick,
@@ -1587,6 +1635,7 @@ var MentionMe = (function($, m) {
 		$.extend(options, opt || {});
 
 		options.fullText = parseInt(options.fullText);
+		options.showAvatars = parseInt(options.showAvatars);
 	}
 
 	/**

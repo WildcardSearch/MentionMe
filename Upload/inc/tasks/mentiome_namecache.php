@@ -28,9 +28,14 @@ function task_mentiome_namecache($task)
 		$cache_days = 7;
 	}
 
+	$fieldList = 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist';
+	if ($mybb->settings['mention_show_avatars']) {
+		$fieldList .= ', avatar';
+	}
+
 	// find all users that have been active within the specified amount of days
 	$timesearch = TIME_NOW - (60 * 60 * 24 * $cache_days);
-	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist', "lastvisit > {$timesearch}", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
+	$query = $db->simple_select('users', $fieldList, "lastvisit > {$timesearch}", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
 
     $name_cache = array();
 	if ($db->num_rows($query) > 0) {

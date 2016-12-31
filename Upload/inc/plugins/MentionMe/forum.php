@@ -289,12 +289,17 @@ function mentionTryName($username = '')
 		return $nameList[$username];
 	}
 
-	global $db;
+	global $db, $mybb;
 
 	$searchname = $db->escape_string($username);
 
+	$fieldList = 'uid, username, usergroup, displaygroup, additionalgroups, ignorelist';
+	if ($mybb->settings['mention_show_avatars']) {
+		$fieldList .= ', avatar';
+	}
+
 	// query the db
-	$query = $db->simple_select('users', 'uid, username, usergroup, displaygroup, additionalgroups', "LOWER(username)='{$searchname}'", array('limit' => 1));
+	$query = $db->simple_select('users', $fieldList, "LOWER(username)='{$searchname}'", array('limit' => 1));
 
 	// result?
 	if ($db->num_rows($query) !== 1) {
@@ -350,6 +355,7 @@ function mentionMeInitialize()
 		maxItems: {$mybb->settings['mention_max_items']},
 		tid: '{$mybb->input['tid']}',
 		fullText: '{$mybb->settings['mention_full_text_search']}',
+		showAvatars: '{$mybb->settings['mention_show_avatars']}',
 	});
 // -->
 </script>
@@ -447,24 +453,30 @@ function mentionMeXMLHTTPnameSearch()
 			'_' => '=_')
 		);
 
+	$fieldList = 'username';
+	if ($mybb->settings['mention_show_avatars']) {
+		$fieldList .= ', avatar';
+	}
+
 	$fullText = '';
 	if ($mybb->settings['mention_full_text_search']) {
 		$fullText = '%';
 	}
 
-	$query = $db->simple_select('users', 'username', "username LIKE '{$fullText}{$name}%' ESCAPE '='");
+	$query = $db->simple_select('users', $fieldList, "username LIKE '{$fullText}{$name}%' ESCAPE '='");
 
 	if ($db->num_rows($query) == 0) {
 		exit;
 	}
 
 	$names = array();
-	while ($username = $db->fetch_field($query, 'username')) {
+	while ($user = $db->fetch_array($query)) {
+		$username = mb_strtolower($user['username']);
 		if (($fullText === '' &&
-			mb_strtolower(substr($username, 0, strlen($originalName))) === $originalName) ||
+			substr($username, 0, strlen($originalName)) === $originalName) ||
 			($fullText &&
-			strpos(mb_strtolower($username), mb_strtolower($originalName)) !== -1)) {
-			$names[mb_strtolower($username)] = $username;
+			strpos($username, $originalName) !== -1)) {
+			$names[$username] = $user;
 		}
 	}
 
@@ -495,17 +507,29 @@ function mentionMeXMLHTTPgetNameCache()
 		"inThread" => array(),
 	);
 	foreach ($nameCache as $key => $data) {
-		$names['cached'][$key] = $data['username'];
+		$names['cached'][$key] = $data;
 	}
 
 	$tid = (int) $mybb->input['tid'];
 	if ($tid &&
 		$mybb->settings['mention_get_thread_participants']) {
-		$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'dateline', "order_dir" => 'DESC', "group_by" => 'username'));
+		if ($mybb->settings['mention_show_avatars']) {
+			$query = $db->write_query("
+				SELECT p.username, u.avatar
+				FROM {$db->table_prefix}posts p
+				LEFT JOIN {$db->table_prefix}users u ON (p.uid=u.uid)
+				WHERE p.tid='{$tid}'
+				GROUP BY p.username
+				ORDER BY p.dateline DESC
+			");
+		} else {
+			$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'dateline', "order_dir" => 'DESC', "group_by" => 'username'));
+		}
+
 		if ($db->num_rows($query) > 0) {
-			while ($post = $db->fetch_array($query)) {
-				$key = mb_strtolower($post['username']);
-				$names['inThread'][$key] = $post['username'];
+			while ($user = $db->fetch_array($query)) {
+				$key = mb_strtolower($user['username']);
+				$names['inThread'][$key] = $user;
 			}
 		}
 	}

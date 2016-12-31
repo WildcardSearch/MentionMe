@@ -63,6 +63,15 @@ $settings = array(
 				"value" => '0',
 				"disporder" => '50'
 			),
+			"mention_show_avatars" => array(
+				"sid" => "NULL",
+				"name" => "mention_show_avatars",
+				"title" => $lang->mention_show_avatars_title,
+				"description" => $lang->mention_show_avatars_description,
+				"optionscode" => "yesno",
+				"value" => '1',
+				"disporder" => '60'
+			),
 			"mention_add_postbit_button" => array(
 				"sid" => "NULL",
 				"name" => "mention_add_postbit_button",
@@ -70,7 +79,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '60'
+				"disporder" => '70'
 			),
 			"mention_multiple" => array(
 				"sid" => "NULL",
@@ -79,7 +88,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '70'
+				"disporder" => '80'
 			),
 			"mention_format_names" => array(
 				"sid" => "NULL",
@@ -88,7 +97,7 @@ $settings = array(
 				"description" => $lang->mention_format_names_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '80'
+				"disporder" => '90'
 			),
 			"mention_display_symbol" => array(
 				"sid" => "NULL",
@@ -97,7 +106,7 @@ $settings = array(
 				"description" => $lang->mention_display_symbol_desc,
 				"optionscode" => "text",
 				"value" => '@',
-				"disporder" => '90'
+				"disporder" => '100'
 			),
 			"mention_minify_js" => array(
 				"sid" => "NULL",
@@ -106,7 +115,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '100'
+				"disporder" => '110'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => "NULL",
@@ -115,7 +124,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '110'
+				"disporder" => '120'
 			),
 		)
 	)
@@ -174,12 +183,18 @@ div.mentionme_popup {
 }
 
 #mentionme_popup_body {
-	line-height: 1;
+	font-family: arial;
+	font-size: 16px;
 	overflow-y: scroll;
+	font-weight: normal !important;
 }
 
-span.mention_name_highlight {
-	font-weight: bold;
+#mentionme_input_container {
+}
+
+#mentionme_popup_input {
+	border: none;
+	width: 100%;
 }
 
 div.mentionme_popup_item {
@@ -189,6 +204,18 @@ div.mentionme_popup_item {
 div.mentionme_popup_item_on {
 	background: #3D3D3D;
 	color: #F5F5F5;
+}
+
+span.mention_name_highlight {
+	font-weight: bolder;
+}
+
+img.mention_user_avatar {
+	vertical-align: middle;
+	height: 25px;
+	width: 25px;
+	margin-right: 5px;
+	padding: 2px;
 }
 
 div.mentionme_spinner {
@@ -201,11 +228,6 @@ div.mentionme_spinner {
 div.mentionme_spinner img {
 	float: right;
 	padding-right: 5px;
-}
-
-#mentionme_popup_input {
-	border: none;
-	width: 100%;
 }
 
 .postbit_buttons a.postbit_multimention span {

@@ -38,6 +38,9 @@ $l['mention_get_thread_participants_description'] = 'YES (default) to include an
 $l['mention_full_text_search_title'] = 'Full Text Search?';
 $l['mention_full_text_search_description'] = 'YES to match characters in the autocomplete popup anywhere in the username, NO (default) to search for usernames that start with the typed characters';
 
+$l['mention_show_avatars_title'] = 'Show User Avatars?';
+$l['mention_show_avatars_description'] = 'YES (default) to show user avatars in the autocomplete popup, NO to show usernames only';
+
 $l['mention_add_postbit_button_title'] = 'Add a Postbit Button?';
 $l['mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';
 
