@@ -53,6 +53,7 @@ var MentionMe = (function($, m) {
 			width = 0,
 			inputHeight,
 			scrollWidth = 0,
+			scrollWidthDiff = 0,
 			inputHeight,
 			lineHeight,
 
@@ -113,11 +114,17 @@ var MentionMe = (function($, m) {
 			$body.html($testDiv);
 
 			// figure the line height for later use
-			lineHeight = parseInt($testDiv.height()) + core.lineHeightModifier;
-			width = $testDiv.width();
+			lineHeight = parseInt($testDiv.height()) +
+				core.lineHeightModifier +
+				parseInt($testDiv.css("paddingTop").replace("px", "")) +
+				parseInt($testDiv.css("paddingBottom").replace("px", ""));
+			width = $testDiv.width() +
+				parseInt($testDiv.css("paddingLeft").replace("px", "")) +
+				parseInt($testDiv.css("paddingRight").replace("px", ""));
 
 			$body.width(width);
 			scrollWidth = $body[0].scrollWidth;
+			scrollWidthDiff = width - scrollWidth;
 		}
 
 		/**
@@ -180,7 +187,26 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function move(left, top) {
-			var style = {
+			var style,
+				longestName = nameCache.getLongestName(),
+				$testAvatar;
+
+			$testAvatar = $("<img/>", {
+				"class": "mention_user_avatar",
+				src: "images/default_avatar.png",
+			}).css({
+				left: "-1000px",
+				top: "-1000px",
+			}).appendTo($container);
+
+			width = $testAvatar.width() +
+				parseInt($body.css("fontSize").replace("px", "") * longestName);
+			$testAvatar.remove()
+
+			$body.width(width);
+			scrollWidth = width - scrollWidthDiff;
+
+			style = {
 				height: getCurrentHeight() + inputHeight + "px",
 				width: scrollWidth + "px",
 			};
@@ -196,7 +222,6 @@ var MentionMe = (function($, m) {
 
 			$body.css({
 				height: getCurrentHeight() + "px",
-				width: width + "px",
 			});
 		}
 
@@ -421,15 +446,29 @@ var MentionMe = (function($, m) {
 				return;
 			}
 
-			var selectedItem = $("#mentionme_popup_item_" + selected);
-			if ($("#mentionme_popup_item_" + lastSelected).length) {
-				$("#mentionme_popup_item_" + lastSelected).removeClass("mentionme_popup_item_on");
+			var selectedItem = $("#mentionme_popup_item_" + selected),
+				lastSelectedItem = $("#mentionme_popup_item_" + lastSelected),
+				highlightSpan = lastSelectedItem.find("span.mention_name_highlight_on");
+			if (lastSelectedItem.length) {
+				lastSelectedItem.removeClass("mentionme_popup_item_on");
+
+				if (highlightSpan.length) {
+					highlightSpan.removeClass("mention_name_highlight_on");
+					highlightSpan.addClass("mention_name_highlight");
+				}
 			}
 			lastSelected = selected;
 
-			if (selectedItem &&
-				!selectedItem.hasClass("mentionme_popup_item_on")) {
-				selectedItem.addClass("mentionme_popup_item_on");
+			if (selectedItem) {
+				if (!selectedItem.hasClass("mentionme_popup_item_on")) {
+					selectedItem.addClass("mentionme_popup_item_on");
+				}
+
+				highlightSpan = selectedItem.find("span.mention_name_highlight");
+				if (highlightSpan.length) {
+					highlightSpan.removeClass("mention_name_highlight");
+					highlightSpan.addClass("mention_name_highlight_on");
+				}
 			}
 
 			if (noScroll != true) {
@@ -706,7 +745,8 @@ var MentionMe = (function($, m) {
 			searching = false,
 			searched = [],
 			items = [],
-			avatars = [];
+			avatars = [],
+			longestName = 0;
 
 		/**
 		 * ready the name cache
@@ -778,6 +818,9 @@ var MentionMe = (function($, m) {
 					continue;
 				}
 
+				if (property.length > longestName) {
+					longestName = property.length;
+				}
 				threadItems.push(threadNames[property]['username']);
 
 				if (options.showAvatars) {
@@ -802,6 +845,9 @@ var MentionMe = (function($, m) {
 					continue;
 				}
 
+				if (property.length > longestName) {
+					longestName = property.length;
+				}
 				allItems.push(data[property]['username']);
 
 				if (options.showAvatars) {
@@ -986,6 +1032,10 @@ var MentionMe = (function($, m) {
 			return items.length;
 		}
 
+		function getLongestName() {
+			return longestName;
+		}
+
 		// the public methods
 		return {
 			init: init,
@@ -996,6 +1046,7 @@ var MentionMe = (function($, m) {
 			getItems: getItems,
 			getAvatars: getAvatars,
 			getItemsLength: getItemsLength,
+			getLongestName: getLongestName,
 		};
 	})(),
 
@@ -1197,7 +1248,7 @@ var MentionMe = (function($, m) {
 		return {
 			init: init,
 			check: check,
-			heightModifier: 5,
+			heightModifier: 0,
 			lineHeightModifier: 1,
 			insert: insertMention,
 			bindClick: bindClick,

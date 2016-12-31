@@ -174,16 +174,26 @@ $styleSheets = array(
 		"stylesheet" => <<<EOF
 div.mentionme_popup {
 	position: absolute;
-	background: #F5F5F5;
-	color: #3D3D3D;
-	border: 2px outset #3D3D3D;
-	box-shadow: 5px 5px 5px #515151;
 	overflow: hidden;
 	z-index: 999;
+
+	background: white;
+	color: black;
+
+	border: 2px outset #3D3D3D;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+
+	-moz-box-shadow: 5px 5px 5px #818181;
+	-webkit-box-shadow: 5px 5px 5px #818181;
+	box-shadow: 5px 5px 5px #818181;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=5, Direction=135, Color='#818181')";
+	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=5, Direction=135, Color='#818181');
 }
 
 #mentionme_popup_body {
-	font-family: arial;
+	font-family: Arial, Helvetica, sans-serif;
 	font-size: 16px;
 	overflow-y: scroll;
 	font-weight: normal !important;
@@ -198,15 +208,22 @@ div.mentionme_popup {
 }
 
 div.mentionme_popup_item {
-	padding: 1px 3px 1px 3px;
+	padding: 5px 3px 5px 3px !important;
+	border-bottom: 1px solid lightgrey;
 }
 
 div.mentionme_popup_item_on {
-	background: #3D3D3D;
-	color: #F5F5F5;
+	background: #3366FF;
+	color: white;
 }
 
 span.mention_name_highlight {
+	color: #3366FF;
+	font-weight: bolder;
+}
+
+span.mention_name_highlight_on {
+	color: white;
 	font-weight: bolder;
 }
 
@@ -214,8 +231,14 @@ img.mention_user_avatar {
 	vertical-align: middle;
 	height: 25px;
 	width: 25px;
+
 	margin-right: 5px;
+	margin-left: 5px;
 	padding: 2px;
+
+	-webkit-border-radius: 50%;
+	-moz-border-radius: 50%;
+	border-radius: 50%;
 }
 
 div.mentionme_spinner {
