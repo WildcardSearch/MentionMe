@@ -251,7 +251,7 @@ function mentionBuild($user)
 
 	// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
 	return <<<EOF
-{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}">{$username}</a>
+{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}" class="mentionme_mention">{$username}</a>
 EOF;
 }
 

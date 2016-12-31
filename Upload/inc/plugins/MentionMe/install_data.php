@@ -200,6 +200,7 @@ div.mentionme_popup {
 }
 
 #mentionme_input_container {
+	/* style input container here */
 }
 
 #mentionme_popup_input {
@@ -259,6 +260,10 @@ div.mentionme_spinner img {
 
 .postbit_buttons a.postbit_multimention_on span {
 	background-image: url(images/MentionMe/postbit_multimention_on.png);
+}
+
+a.mentionme_mention {
+	/* style mention links here */
 }
 EOF
 	),
