@@ -886,6 +886,11 @@ var MentionMe = (function($, m) {
 			}
 		}
 
+		/**
+		 * check a name before using it
+		 *
+		 * @return bool
+		 */
 		function checkEntry(property, data, done) {
 			if (!data.hasOwnProperty(property) ||
 				!data[property] ||
@@ -1032,6 +1037,11 @@ var MentionMe = (function($, m) {
 			return items.length;
 		}
 
+		/**
+		 * getter for longest name length
+		 *
+		 * @return number
+		 */
 		function getLongestName() {
 			return longestName;
 		}

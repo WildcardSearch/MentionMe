@@ -20,7 +20,7 @@ $l['mention_task_fail'] = 'MentionMe found no users to cache information for.';
 // settings
 $l['mention_description'] = 'Display @mentions with links (and MyAlerts if installed)';
 $l['mention_plugin_settings'] = 'Plugin Settings';
-$l['mention_plugin_settings_title'] = 'MentionMe Configuration';
+$l['mention_plugin_settings_title'] = 'MentionMe Settings';
 $l['mention_settingsgroup_description'] = 'Enable or disable advanced matching';
 
 $l['mention_auto_complete_title'] = 'Auto-Complete Mentions?';
@@ -64,12 +64,5 @@ $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
 $l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! Click the link below to integrate.';
 $l['mention_myalerts_integrate_link'] = 'Integrate With MyAlerts';
 $l['mention_myalerts_successfully_integrated'] = 'MentionMe has been successfully integrated with MyAlerts';
-
-// force enable
-$l['mention_myalerts_force_enable_alerts'] = 'Force Enable Mention Alerts For All Users';
-$l['mention_myalerts_force_enable_fail_myalerts'] = 'MyAlerts components missing. MyAlerts is either not installed or installed improperly!';
-$l['mention_myalerts_force_enable_fail_not_installed'] = 'MentionMe not installed!';
-$l['mention_myalerts_force_enable_fail_no_users'] = 'There were no users to enable alerts for!';
-$l['mention_myalerts_force_enable_success'] = 'Mention alerts are enabled for all users';
 
 ?>

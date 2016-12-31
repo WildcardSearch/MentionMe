@@ -314,7 +314,7 @@ function mentionMeGetSettingsgroup()
  * builds the URL to modify plugin settings if given valid info
  *
  * @param - $gid is an integer representing a valid settings group id
- * @return: (string) the setting group URL
+ * @return string setting group URL
  */
 function mentionMeBuildSettingsURL($gid)
 {
@@ -325,6 +325,7 @@ function mentionMeBuildSettingsURL($gid)
 
 /**
  * builds a link to modify plugin settings if it exists
+ *
  * @return setting group link HTML
  */
 function mentionMeBuildSettingsLink()

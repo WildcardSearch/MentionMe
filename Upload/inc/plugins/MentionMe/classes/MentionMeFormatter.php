@@ -9,7 +9,7 @@
 
 class MentionMeFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
 {
-	/*
+	/**
 	 * @const  version
 	 */
 	const VERSION = '1';
@@ -32,11 +32,13 @@ class MentionMeFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
             $outputAlert['from_user'],
             $alertContent['thread_title'],
             $outputAlert['dateline']
-            );
+		);
     }
 
 	/**
 	 * load the language variables
+	 *
+	 * @return void
 	 */
     public function init()
     {
@@ -48,8 +50,8 @@ class MentionMeFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
 	/**
 	 * build the post link
 	 *
-	 * @param  object the alert
-	 * @return string the link HTML
+	 * @param  object alert
+	 * @return string link HTML
 	 */
     public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
     {

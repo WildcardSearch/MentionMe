@@ -29,11 +29,11 @@ if (defined('IN_ADMINCP')) {
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/forum.php';
 }
 
-/*
+/**
  * used by _info to verify the mention MyAlerts setting
  *
  * @return bool true if MyAlerts installed,
- * false if not
+ * 	false if not
  */
 function mentionGetMyAlertsStatus()
 {
