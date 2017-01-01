@@ -114,7 +114,7 @@ $settings = array(
 				"title" => $lang->mention_minify_js_title,
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
-				"value" => '0',
+				"value" => '1',
 				"disporder" => '110'
 			),
 			"mention_advanced_matching" => array(

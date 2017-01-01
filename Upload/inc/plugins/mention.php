@@ -14,6 +14,7 @@ if (!defined('IN_MYBB')) {
 
 // checked by other plugin files
 define('IN_MENTIONME', true);
+define('MENTIONME_VERSION', '3.1');
 
 if (!class_exists('MentionMeCache')) {
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/MentionMeCache.php';
