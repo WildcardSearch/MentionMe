@@ -13,15 +13,11 @@ if (!defined('IN_MYBB') ||
     die('Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.');
 }
 
-if (!defined('MYALERTS_PLUGIN_PATH')) {
-	define('MYALERTS_PLUGIN_PATH', MYBB_ROOT . 'inc/plugins/MybbStuff/');
-}
-
-/*
+/**
  * create alerts when users edit a post and add a new mention. try to avoid sending any duplicate alerts.
  *
- * @param object post info
- * return void
+ * @param  object post info
+ * @return void
  */
 $plugins->add_hook("datahandler_post_update", "mentionMeMyAlertsDatahandlerPostUpdate");
 function mentionMeMyAlertsDatahandlerPostUpdate($this_post)
@@ -100,11 +96,11 @@ function mentionMeMyAlertsDatahandlerPostUpdate($this_post)
     }
 }
 
-/*
+/**
  * check posts for mentions when they are initially created and
  * create alerts if appropriate
  *
- * return void
+ * @return void
  */
 $plugins->add_hook('newreply_do_newreply_end', 'mentionMeMyAlertsDoNewReplyEnd');
 $plugins->add_hook('newthread_do_newthread_end', 'mentionMeMyAlertsDoNewReplyEnd');
@@ -178,8 +174,10 @@ function mentionMeMyAlertsDoNewReplyEnd()
     }
 }
 
-/*
+/**
  * load custom alert formatter
+ *
+ * @return void
  */
 $plugins->add_hook('global_start', 'mentionMeMyAlertsDisplay');
 function mentionMeMyAlertsDisplay() {
@@ -194,12 +192,12 @@ function mentionMeMyAlertsDisplay() {
 	$formatterManager->registerFormatter(new MentionMeFormatter($mybb, $lang, 'mention'));
 }
 
-/*
+/**
  * find all mentions in the current post that are not within quote tags
  *
- * @param string
- * @param array a reference to an array to store matches in
- * return void
+ * @param  string
+ * @param  array a reference to an array to store matches in
+ * @return void
  */
 function mentionMeFindInPost($message, &$matches)
 {
@@ -216,10 +214,10 @@ function mentionMeFindInPost($message, &$matches)
 	preg_match_all($pattern, $message, $matches, PREG_SET_ORDER);
 }
 
-/*
+/**
  * strips all quotes and their content from the post
  *
- * @param string content of the post
+ * @param  string content of the post
  * @return string message
  */
 function mentionMeStripQuotes($message)
@@ -244,14 +242,14 @@ function mentionMeStripQuotes($message)
 	return preg_replace($find, '', $message);
 }
 
-/*
+/**
  * determine whether a user can view a forum and ultimately whether they can receive
  * an alert initiated by a mention in the given forum
  *
- * @param string username
- * @param int uid of the user receiving the alert (potentially)
- * @param int uid of the user sending the alert (potentially)
- * @param int id of the forum in which the mention occurred
+ * @param  string username
+ * @param  int uid of the user receiving the alert (potentially)
+ * @param  int uid of the user sending the alert (potentially)
+ * @param  int id of the forum in which the mention occurred
  * @return bool true to allow, false to deny
  */
 function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
@@ -270,8 +268,10 @@ function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
 
     $username = strtolower($username);
 
-    /* if the user name is in the cache (same one we use for mention
-     * display in showthread.php) . . .
+    /*
+	 * if the user name is in the cache
+	 * (the same one we use for mentions)
+     * display in showthread.php...
      */
     if (isset($nameCache[$username])) {
         // use the stored values
@@ -323,7 +323,7 @@ function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
     return false; // :( u can no lookie
 }
 
-/*
+/**
  * indiscriminately dump the user array's three group-related fields into a single array
  *
  * @param  array an array of the user's info

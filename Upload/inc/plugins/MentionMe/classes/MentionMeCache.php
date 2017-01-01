@@ -13,12 +13,12 @@ if (!class_exists('WildcardPluginCache')) {
 
 class MentionMeCache extends WildcardPluginCache
 {
-	/*
+	/**
 	 * @var  string cache key
 	 */
 	protected $cacheKey = 'wildcard_plugins';
 
-	/*
+	/**
 	 * @var  string cache sub key
 	 */
 	protected $subKey = 'mentionme';

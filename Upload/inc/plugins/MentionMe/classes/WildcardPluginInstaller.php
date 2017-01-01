@@ -11,87 +11,87 @@
 
 class WildcardPluginInstaller
 {
-	/*
-	 * @const  version
+	/**
+	 * @const version
 	 */
 	const VERSION = '1.2.1';
 
-	/*
+	/**
 	 * @var object a copy of the MyBB db object
 	 */
 	private $db;
 
-	/*
+	/**
 	 * @var array the table data
 	 */
 	protected $tables = array();
 
-	/*
+	/**
 	 * @var array the table names
 	 */
 	protected $tableNames = array();
 
-	/*
+	/**
 	 * @var array the column data
 	 */
 	protected $columns = array();
 
-	/*
+	/**
 	 * @var array the settings data
 	 */
 	protected $settings = array();
 
-	/*
+	/**
 	 * @var array the setting names
 	 */
 	protected $settingNames = array();
 
-	/*
+	/**
 	 * @var array the setting group data
 	 */
 	protected $settinggroups = array();
 
-	/*
+	/**
 	 * @var array the setting group names
 	 */
 	protected $settingGroupNames = array();
 
-	/*
+	/**
 	 * @var array the template data
 	 */
 	protected $templates = array();
 
-	/*
+	/**
 	 * @var array the template names
 	 */
 	protected $templateNames = array();
 
-	/*
+	/**
 	 * @var array the template group data
 	 */
 	protected $templategroups = array();
 
-	/*
+	/**
 	 * @var array the template group names
 	 */
 	protected $templategroupNames = array();
 
-	/*
+	/**
 	 * @var array the template data
 	 */
 	protected $styleSheets = array();
 
-	/*
+	/**
 	 * @var array the template names
 	 */
 	protected $styleSheetNames = array();
 
-	/*
+	/**
 	 * @var array the image data
 	 */
 	protected $images = array();
 
-	/*
+	/**
 	 * load the installation data and prepare for anything
 	 *
 	 * @param  string path to the install data
@@ -151,7 +151,7 @@ class WildcardPluginInstaller
 		$this->db = $db;
 	}
 
-	/*
+	/**
 	 * install all the elements stored in the installation data file
 	 *
 	 * @return void
@@ -166,7 +166,7 @@ class WildcardPluginInstaller
 		$this->addImages();
 	}
 
-	/*
+	/**
 	 * uninstall all elements as provided in the install data
 	 *
 	 * @return void
@@ -183,7 +183,7 @@ class WildcardPluginInstaller
 		rebuild_settings();
 	}
 
-	/*
+	/**
 	 * create a correctly collated table from an array of options
 	 *
 	 * @param  string table name without prefix
@@ -213,7 +213,7 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * create multiple tables from stored info
 	 *
 	 * @param  array database tables and their columns
@@ -236,7 +236,7 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * drop multiple database tables
 	 *
 	 * @return void
@@ -252,10 +252,10 @@ class WildcardPluginInstaller
 		$this->db->drop_table($dropList);
 	}
 
-	/*
+	/**
 	 * add columns in the list to a table (if they do not already exist)
 	 *
-	 * @param array tables and columns
+	 * @param  array tables and columns
 	 * @return void
 	 */
 	public function addColumns($columns = '')
@@ -280,10 +280,10 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * drop multiple listed columns
 	 *
-	 * @param array an associative array of tables and columns
+	 * @param  array an associative array of tables and columns
 	 * @return void
 	 */
 	public function removeColumns()
@@ -308,7 +308,7 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * create multiple setting groups
 	 *
 	 * @param  array an associative array of setting groups
@@ -336,7 +336,7 @@ class WildcardPluginInstaller
 		return $gids;
 	}
 
-	/*
+	/**
 	 * create settings from an array
 	 *
 	 * @param  array an associative array of groups and settings
@@ -375,7 +375,7 @@ class WildcardPluginInstaller
 		rebuild_settings();
 	}
 
-	/*
+	/**
 	 * create or update the template groups stored in the object
 	 *
 	 * @return void
@@ -404,7 +404,7 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * create multiple templates from stored info
 	 *
 	 * @return void
@@ -446,7 +446,7 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * add any listed style sheets
 	 *
 	 * @return void
@@ -492,7 +492,7 @@ class WildcardPluginInstaller
 			), "name='{$name}'");
 
 			// now update/insert the master stylesheet
-			$query = $this->db->simple_select('themestylesheets', 'sid', "tid='1' AND cachefile='{$name}'");
+			$query = $this->db->simple_select('themestylesheets', 'sid', "tid='1' AND name='{$name}'");
 			$sid = (int) $this->db->fetch_field($query, 'sid');
 
 			if ($sid) {
@@ -515,10 +515,10 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * completely remove any style sheets in install_data.php
 	 *
-	 * @return: n/a
+	 * @return void
 	 */
 	public function removeStyleSheets()
 	{
@@ -553,7 +553,7 @@ class WildcardPluginInstaller
 		update_theme_stylesheet_list(1, false, true);
 	}
 
-	/*
+	/**
 	 * copy default images to each theme
 	 *
 	 * @return void
@@ -655,7 +655,7 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * removed rows from a named table when values of the
 	 * named column are matched with members of the list
 	 *
@@ -681,7 +681,7 @@ class WildcardPluginInstaller
 		}
 	}
 
-	/*
+	/**
 	 * verify the existence of named table
 	 *
 	 * @param  string table name without prefix
@@ -697,7 +697,7 @@ class WildcardPluginInstaller
 		return isset($tableList[$this->db->table_prefix . $table]);
 	}
 
-	/*
+	/**
 	 * build an array of all the tables in the current database
 	 *
 	 * @return array keys for the table names and 1 for the values
@@ -718,7 +718,7 @@ class WildcardPluginInstaller
 		return $tableList;
 	}
 
-	/*
+	/**
 	 * verify the existence of the named column of the named table
 	 *
 	 * @param  string table name without prefix
@@ -735,7 +735,7 @@ class WildcardPluginInstaller
 		return isset($fieldList[$table][$field]);
 	}
 
-	/*
+	/**
 	 * build an array of all the columns of the named table
 	 *
 	 * @param  string table name without prefix

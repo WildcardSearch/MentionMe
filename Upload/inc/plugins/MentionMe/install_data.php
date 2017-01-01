@@ -27,6 +27,42 @@ $settings = array(
 				"value" => '1',
 				"disporder" => '10'
 			),
+			"mention_max_items" => array(
+				"sid" => "NULL",
+				"name" => "mention_max_items",
+				"title" => $lang->mention_max_items_title,
+				"description" => $lang->mention_max_items_description,
+				"optionscode" => 'text',
+				"value" => '5',
+				"disporder" => '20'
+			),
+			"mention_get_thread_participants" => array(
+				"sid" => "NULL",
+				"name" => "mention_get_thread_participants",
+				"title" => $lang->mention_get_thread_participants_title,
+				"description" => $lang->mention_get_thread_participants_description,
+				"optionscode" => "yesno",
+				"value" => '1',
+				"disporder" => '30'
+			),
+			"mention_full_text_search" => array(
+				"sid" => "NULL",
+				"name" => "mention_full_text_search",
+				"title" => $lang->mention_full_text_search_title,
+				"description" => $lang->mention_full_text_search_description,
+				"optionscode" => "yesno",
+				"value" => '0',
+				"disporder" => '40'
+			),
+			"mention_show_avatars" => array(
+				"sid" => "NULL",
+				"name" => "mention_show_avatars",
+				"title" => $lang->mention_show_avatars_title,
+				"description" => $lang->mention_show_avatars_description,
+				"optionscode" => "yesno",
+				"value" => '1',
+				"disporder" => '50'
+			),
 			"mention_add_postbit_button" => array(
 				"sid" => "NULL",
 				"name" => "mention_add_postbit_button",
@@ -34,7 +70,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '20'
+				"disporder" => '60'
 			),
 			"mention_multiple" => array(
 				"sid" => "NULL",
@@ -43,16 +79,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '30'
-			),
-			"mention_cache_time" => array(
-				"sid" => "NULL",
-				"name" => "mention_cache_time",
-				"title" => $lang->mention_cache_time_title,
-				"description" => $lang->mention_cache_time_description,
-				"optionscode" => "text",
-				"value" => '7',
-				"disporder" => '40'
+				"disporder" => '70'
 			),
 			"mention_format_names" => array(
 				"sid" => "NULL",
@@ -61,7 +88,25 @@ $settings = array(
 				"description" => $lang->mention_format_names_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '50'
+				"disporder" => '80'
+			),
+			"mention_display_symbol" => array(
+				"sid" => "NULL",
+				"name" => "mention_display_symbol",
+				"title" => $lang->mention_display_symbol_title,
+				"description" => $lang->mention_display_symbol_desc,
+				"optionscode" => "text",
+				"value" => '@',
+				"disporder" => '90'
+			),
+			"mention_cache_time" => array(
+				"sid" => "NULL",
+				"name" => "mention_cache_time",
+				"title" => $lang->mention_cache_time_title,
+				"description" => $lang->mention_cache_time_description,
+				"optionscode" => "text",
+				"value" => '7',
+				"disporder" => '100'
 			),
 			"mention_minify_js" => array(
 				"sid" => "NULL",
@@ -69,8 +114,8 @@ $settings = array(
 				"title" => $lang->mention_minify_js_title,
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
-				"value" => '0',
-				"disporder" => '60'
+				"value" => '1',
+				"disporder" => '110'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => "NULL",
@@ -79,7 +124,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '70'
+				"disporder" => '120'
 			),
 		)
 	)
@@ -129,26 +174,74 @@ $styleSheets = array(
 		"stylesheet" => <<<EOF
 div.mentionme_popup {
 	position: absolute;
-	background: #F5F5F5;
-	color: #3D3D3D;
-	border: 2px outset #3D3D3D;
-	box-shadow: 5px 5px 5px #515151;
 	overflow: hidden;
+	z-index: 999;
+
+	background: white;
+	color: black;
+
+	border: 2px solid #dddddd;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+
+	-moz-box-shadow: 3px 3px 3px #818181;
+	-webkit-box-shadow: 3px 3px 3px #818181;
+	box-shadow: 3px 3px 3px #818181;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=3, Direction=135, Color='#818181')";
+	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=3, Direction=135, Color='#818181');
 }
 
 #mentionme_popup_body {
-	font-weight: bold;
-	line-height: 1;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 16px;
 	overflow-y: scroll;
+	font-weight: normal !important;
+}
+
+#mentionme_input_container {
+	/* style input container here */
+}
+
+#mentionme_popup_input {
+	border: none;
+	width: 100%;
+	height: 25px;
+	font-size: 16px;
+	padding-left: 3px;
 }
 
 div.mentionme_popup_item {
-	padding: 1px 3px 1px 3px;
+	padding: 2px 3px 2px 3px !important;
+	border-bottom: 1px solid lightgrey;
 }
 
 div.mentionme_popup_item_on {
-	background: #3D3D3D;
-	color: #F5F5F5;
+	background: #3366FF;
+	color: white;
+}
+
+span.mention_name_highlight {
+	color: #3366FF;
+	font-weight: bolder;
+}
+
+span.mention_name_highlight_on {
+	color: white;
+	font-weight: bolder;
+}
+
+img.mention_user_avatar {
+	background: white;
+	vertical-align: middle;
+	height: 30px;
+	width: 30px;
+
+	margin: 2px 10px 2px 5px;
+
+	-webkit-border-radius: 50%;
+	-moz-border-radius: 50%;
+	border-radius: 50%;
 }
 
 div.mentionme_spinner {
@@ -163,17 +256,16 @@ div.mentionme_spinner img {
 	padding-right: 5px;
 }
 
-#mentionme_popup_input {
-	border: none;
-	width: 100%;
-}
-
 .postbit_buttons a.postbit_multimention span {
 	background-image: url(images/MentionMe/postbit_multimention.png);
 }
 
 .postbit_buttons a.postbit_multimention_on span {
 	background-image: url(images/MentionMe/postbit_multimention_on.png);
+}
+
+a.mentionme_mention {
+	/* style mention links here */
 }
 EOF
 	),

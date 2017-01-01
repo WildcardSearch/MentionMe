@@ -9,17 +9,17 @@
 
 abstract class WildcardPluginCache
 {
-	/*
-	 * @const  version
+	/**
+	 * @const version
 	 */
 	const VERSION = '1.1';
 
-	/*
-	 * @var  array cache data
+	/**
+	 * @var array cache data
 	 */
 	protected $cacheData = array();
 
-	/*
+	/**
 	 * create a new cache wrapper instance
 	 *
 	 * @return void
@@ -30,10 +30,11 @@ abstract class WildcardPluginCache
 		$this->cacheData = $cache->read($this->cacheKey);
 	}
 
-	/*
+	/**
 	 * retrieve an individual cache entry
 	 *
-	 * @param string the name of the entry
+	 * @param  string the name of the entry
+	 * @return bool
 	 */
 	public function read($key)
 	{
@@ -46,14 +47,16 @@ abstract class WildcardPluginCache
 		return false;
 	}
 
-	/*
+	/**
 	 * update the value of a single cache entry
 	 *
-	 * @param string the name of the entry
-	 * @param mixed the value of the entry
-	 * @param bool true to save immediately or
+	 * @param  string the name of the entry
+	 * @param  mixed the value of the entry
+	 * @param  bool true to save immediately or
 	 * 	false (default) to wait till shut down
-	 * @param bool true [default] to update the entire cache in the db
+	 * @param  bool true (default) to update the
+	 * 	entire cache in the db
+	 * @return void
 	 */
 	public function update($key, $val, $hard = false)
 	{
@@ -65,10 +68,10 @@ abstract class WildcardPluginCache
 		$this->hasChanged($hard);
 	}
 
-	/*
+	/**
 	 * save the entire cache to the db
 	 *
-	 * return void
+	 * @return void
 	 */
 	public function save()
 	{
@@ -76,12 +79,12 @@ abstract class WildcardPluginCache
 		$cache->update($this->cacheKey, $this->cacheData);
 	}
 
-	/*
+	/**
 	 * clear the entire cache
 	 *
-	 * @param bool true to clear and save immediately or
+	 * @param  bool true to clear and save immediately or
 	 * false (default) to wait till shut down
-	 * return void
+	 * @return void
 	 */
 	public function clear($hard = false)
 	{
@@ -93,14 +96,14 @@ abstract class WildcardPluginCache
 		$this->hasChanged($hard);
 	}
 
-	/*
+	/**
 	 * mark the cache as in need of saving if shut
 	 * down functionality is enabled, or save immediately
 	 * if not
 	 *
-	 * @param bool true to clear and save immediately or
+	 * @param  bool true to clear and save immediately or
 	 * false (default) to wait till shut down
-	 * return void
+	 * @return void
 	 */
 	protected function hasChanged($hard = false)
 	{

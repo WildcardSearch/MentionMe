@@ -42,14 +42,17 @@ EOF;
 			if (mentionGetMyAlertsStatus()) {
 				// if so give them a success message
 				$myAlertsReport = <<<EOF
-				<li style="list-style-image: url(../images/valid.png)">
+				<li style="list-style-image: url(styles/{$cp_style}/images/icons/success.png)">
 					{$lang->mention_myalerts_successfully_integrated}
 				</li>
 EOF;
 			} else {
-				// if not, warn them and provide instructions for integration
+				// if not, warn them and provide a link for integration
 				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">{$lang->mention_myalerts_integration_message}
+				</li>
+				<li style="list-style-image: url(styles/{$cp_style}/images/icons/group.png)">
+					<a href="index.php?module=config-plugins&amp;action=mention_myalerts_integrate">{$lang->mention_myalerts_integrate_link}</a>
 				</li>
 EOF;
 			}
@@ -92,7 +95,7 @@ EOF;
         'name' => $name,
         'description' => $mentionDescription,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '3.0.4',
+        'version' => MENTIONME_VERSION,
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
 		'compatibility' => '18*'
@@ -158,6 +161,19 @@ function mention_activate()
 	if (version_compare($oldVersion, $info['version'], '<') &&
 		$oldVersion != '' &&
 		$oldVersion != 0) {
+
+		if (version_compare($oldVersion, '3.1', '<')) {
+			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/cursor_position.js');
+			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/selection_range.js');
+			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/string_splitter.js');
+			@rmdir(MYBB_ROOT . 'jscripts/js_cursor_position');
+
+			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.js');
+			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.min.js');
+
+			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/installer.php');
+		}
+
 		// check everything and upgrade if necessary
 		mention_install();
     }
@@ -171,8 +187,7 @@ function mention_activate()
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('<input type="hidden" name="lastpid"') . "#i", '{$mentionedIDs}<input type="hidden" name="lastpid"');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
-	find_replace_templatesets('headerinclude', "#" . preg_quote('{$stylesheets}') . "#i", '{$mentionAutocomplete}{$stylesheets}');
-	find_replace_templatesets('footer', '#^(.*?)$#s', '$1{$mentionAutocompleteSCEditor}');
+	find_replace_templatesets('footer', '#^(.*?)$#s', '$1{$mentionAutocomplete}');
 
 	// have we already added our name caching task?
 	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
@@ -234,8 +249,7 @@ function mention_deactivate()
 	find_replace_templatesets('showthread_quickreply', "#" . preg_quote('{$mentionedIDs}') . "#i", '');
 	find_replace_templatesets('postbit', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_mention\']}') . "#i", '');
-	find_replace_templatesets('headerinclude', "#" . preg_quote('{$mentionAutocomplete}') . "#i", '');
-	find_replace_templatesets('footer', "#" . preg_quote('{$mentionAutocompleteSCEditor}') . "#i", '');
+	find_replace_templatesets('footer', "#" . preg_quote('{$mentionAutocomplete}') . "#i", '');
 }
 
 /**
@@ -275,6 +289,34 @@ function mention_uninstall()
 }
 
 /**
+ * settings
+ */
+
+/**
+ * add peekers
+ *
+ * @param  array peekers
+ * @return array peekers
+ */
+$plugins->add_hook('admin_settings_print_peekers', 'mentionMeAddPeekers');
+function mentionMeAddPeekers($peekers)
+{
+	global $mybb;
+
+	if ($mybb->input['module'] != 'config-settings' ||
+		$mybb->input['action'] != 'change' ||
+		$mybb->input['gid'] != mentionMeGetSettingsgroup()) {
+		return;
+	}
+
+	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_get_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars"), 1, true)';
+
+	$peekers[] = 'new Peeker($(".setting_mention_add_postbit_button"), $("#row_setting_mention_multiple"), 1, true)';
+
+	return $peekers;
+}
+
+/**
  * retrieves the plugin's settings group gid if it exists
  * attempts to cache repeat calls
  *
@@ -302,7 +344,7 @@ function mentionMeGetSettingsgroup()
  * builds the URL to modify plugin settings if given valid info
  *
  * @param - $gid is an integer representing a valid settings group id
- * @return: (string) the setting group URL
+ * @return string setting group URL
  */
 function mentionMeBuildSettingsURL($gid)
 {
@@ -313,6 +355,7 @@ function mentionMeBuildSettingsURL($gid)
 
 /**
  * builds a link to modify plugin settings if it exists
+ *
  * @return setting group link HTML
  */
 function mentionMeBuildSettingsLink()
@@ -395,6 +438,25 @@ function mentionMeUnsetCacheVersion()
 /*
  * MyAlerts
  */
+
+/**
+ * integrate with MyAlerts
+ *
+ * @return void
+ */
+$plugins->add_hook('admin_load', 'mentionMeAdminLoad');
+function mentionMeAdminLoad()
+{
+	global $mybb, $page, $lang;
+	if($page->active_action == 'plugins' && $mybb->input['action'] == 'mention_myalerts_integrate')
+	{
+		// if it is our time
+		mentionMeMyAlertsIntegrate();
+		flash_message($lang->mention_myalerts_successfully_integrated, 'success');
+		admin_redirect('index.php?module=config-plugins');
+		exit;
+	}
+}
 
 /*
  * build the single ACP setting and add it to the MyAlerts group

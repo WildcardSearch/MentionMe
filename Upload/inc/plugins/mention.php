@@ -14,6 +14,7 @@ if (!defined('IN_MYBB')) {
 
 // checked by other plugin files
 define('IN_MENTIONME', true);
+define('MENTIONME_VERSION', '3.1');
 
 if (!class_exists('MentionMeCache')) {
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/MentionMeCache.php';
@@ -22,18 +23,18 @@ if (!class_exists('MentionMeCache')) {
 // load install routines only if in ACP
 if (defined('IN_ADMINCP')) {
 	global $mybb;
-	if ($mybb->input['module'] == 'config-plugins') {
+	if ($mybb->input['module'] == 'config-plugins' ||
+		$mybb->input['module'] == 'config-settings') {
 		require_once MYBB_ROOT . 'inc/plugins/MentionMe/install.php';
 	}
 } else {
 	require_once MYBB_ROOT . 'inc/plugins/MentionMe/forum.php';
 }
 
-/*
- * used by _info to verify the mention MyAlerts setting
+/**
+ * used to verify the MyAlerts integration status
  *
- * @return bool true if MyAlerts installed,
- * false if not
+ * @return bool true if integrated, false if not
  */
 function mentionGetMyAlertsStatus()
 {
@@ -43,12 +44,14 @@ function mentionGetMyAlertsStatus()
 		return $status;
 	}
 
-	global $db;
+	global $cache;
 	$checked = true;
-	if ($db->table_exists('alert_types')) {
-		$query = $db->simple_select('alert_types', "*", "code='mention'");
-		return $status = ($db->num_rows($query) == 1);
-	}
+	$myalerts_plugins = $cache->read('mybbstuff_myalerts_alert_types');
+
+	if ($myalerts_plugins['mention']['code'] == 'mention' &&
+		$myalerts_plugins['mention']['enabled'] == 1) {
+		return true;
+    }
 	return false;
 }
 
