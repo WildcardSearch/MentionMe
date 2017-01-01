@@ -13,7 +13,7 @@ var MentionMe = (function($, m) {
 			minLength: 3,
 			maxLength: 30,
 			maxItems: 5,
-			tid: '',
+			tid: "",
 			fullText: 0,
 			showAvatars: 1,
 		},
@@ -39,8 +39,60 @@ var MentionMe = (function($, m) {
 			UP: 38,
 			RIGHT: 39,
 			DOWN: 40,
-			DEL: 46,
+			INSERT: 45,
+			DELETE: 46,
+			NUMLOCK: 144,
 		},
+
+	/**
+	 * for older browsers
+	 * From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+	 */
+	getObjectKeys = (typeof Object.keys === "function") ?
+		Object.keys :
+		(function() {
+		"use strict";
+
+		var hasOwnProperty = Object.prototype.hasOwnProperty,
+			hasDontEnumBug = !({ toString: null }).propertyIsEnumerable("toString"),
+			dontEnums = [
+				"toString",
+				"toLocaleString",
+				"valueOf",
+				"hasOwnProperty",
+				"isPrototypeOf",
+				"propertyIsEnumerable",
+				"constructor"
+			],
+			dontEnumsLength = dontEnums.length;
+
+		return function(obj) {
+			if (typeof obj !== "object" &&
+				(typeof obj !== "function" ||
+				obj === null)) {
+				throw new TypeError("Object.keys called on non-object");
+			}
+
+			var result = [],
+				prop,
+				i;
+
+			for (prop in obj) {
+				if (hasOwnProperty.call(obj, prop)) {
+					result.push(prop);
+				}
+			}
+
+			if (hasDontEnumBug) {
+				for (i = 0; i < dontEnumsLength; i++) {
+					if (hasOwnProperty.call(obj, dontEnums[i])) {
+						result.push(dontEnums[i]);
+					}
+				}
+			}
+			return result;
+		};
+	}()),
 
 	/**
 	 * the popup object
@@ -84,10 +136,10 @@ var MentionMe = (function($, m) {
 			$inputDiv = $("#mentionme_popup_input_container");
 			$body = $("#mentionme_popup_body");
 
-			if (typeof container === 'string' &&
+			if (typeof container === "string" &&
 				$("#" + container)) {
 				$container = $("#" + container);
-			} else if (typeof container === 'object' &&
+			} else if (typeof container === "object" &&
 				$(container).length) {
 				$container = $(container);
 			} else {
@@ -158,6 +210,7 @@ var MentionMe = (function($, m) {
 			$input.keydown(onKeyDown);
 			$input.keyup(updateCheck);
 			$input.click(onInputClick);
+
 			$input.focus();
 		}
 
@@ -168,6 +221,7 @@ var MentionMe = (function($, m) {
 		 */
 		function hide() {
 			$popup.hide();
+
 			$body.unbind("mouseover", onMouseMove);
 			$body.unbind("click", onClick);
 			$(document).unbind("click", hide);
@@ -175,6 +229,7 @@ var MentionMe = (function($, m) {
 			$input.unbind("keydown", onKeyDown);
 			$input.unbind("keyup", updateCheck);
 			$input.unbind("click", onInputClick);
+
 			visible = false;
 			$input.val("");
 			core.focus();
@@ -265,6 +320,7 @@ var MentionMe = (function($, m) {
 				text,
 				avatar,
 				start,
+				cacheLength = nameCache.getItemsLength(),
 				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ?
 					"hand" :
 					"pointer";
@@ -273,7 +329,7 @@ var MentionMe = (function($, m) {
 			avatars = nameCache.getAvatars();
 
 			// if we've got no matches and the spinner isn't up . . .
-			if (nameCache.getItemsLength() === 0 &&
+			if (cacheLength === 0 &&
 				spinnerVisible == false) {
 				// . . . and there are typed chars . . .
 				if (keyCache.getLength() > 0) {
@@ -294,7 +350,7 @@ var MentionMe = (function($, m) {
 			// if we have content, clear out and get ready to build items
 			clear();
 
-			for (i = 0; i < nameCache.getItemsLength(); i++) {
+			for (i = 0; i < cacheLength; i++) {
 				text = items[i];
 				if (keyCache.getText()) {
 					start = items[i].toLowerCase().indexOf(keyCache.getText());
@@ -309,7 +365,7 @@ var MentionMe = (function($, m) {
 					}
 				}
 
-				avatar = '';
+				avatar = "";
 				if (options.showAvatars) {
 					if (!avatars[i]) {
 						avatars[i] = "images/default_avatar.png";
@@ -704,12 +760,13 @@ var MentionMe = (function($, m) {
 		 * @return (Boolean) true if a character was added, false if not
 		 */
 		function update() {
-			var ret = false;
-			if (data !== popup.getInputValue()) {
+			var ret = false,
+				inputVal = popup.getInputValue();
+			if (data !== inputVal) {
 				ret = true;
 			}
 
-			data = popup.getInputValue();
+			data = inputVal;
 			return ret;
 		}
 
@@ -834,23 +891,19 @@ var MentionMe = (function($, m) {
 				if (property.length > longestName) {
 					longestName = property.length;
 				}
-				threadItems.push(threadNames[property]['username']);
+				threadItems.push(threadNames[property]["username"]);
 
 				if (options.showAvatars) {
-					threadAvatars.push(threadNames[property]['avatar']);
+					threadAvatars.push(threadNames[property]["avatar"]);
 				}
 				done[property] = true;
 				i++;
 			}
 
-			$(threadItems).each(function() {
-				items.push(this);
-			});
+			$.merge(items, threadItems);
 
 			if (options.showAvatars) {
-				$(threadAvatars).each(function() {
-					avatars.push(this);
-				});
+				$.merge(avatars, threadAvatars);
 			}
 
 			for (property in data) {
@@ -861,10 +914,10 @@ var MentionMe = (function($, m) {
 				if (property.length > longestName) {
 					longestName = property.length;
 				}
-				allItems.push(data[property]['username']);
+				allItems.push(data[property]["username"]);
 
 				if (options.showAvatars) {
-					allAvatars.push(data[property]['avatar']);
+					allAvatars.push(data[property]["avatar"]);
 				}
 				done[property] = true;
 				i++;
@@ -872,14 +925,10 @@ var MentionMe = (function($, m) {
 
 			allItems = allItems.sort(sortNames);
 
-			$(allItems).each(function() {
-				items.push(this);
-			});
+			$.merge(items, allItems);
 
 			if (options.showAvatars) {
-				$(allAvatars).each(function() {
-					avatars.push(this);
-				});
+				$.merge(avatars, allAvatars);
 			}
 			return i;
 		}
@@ -933,7 +982,7 @@ var MentionMe = (function($, m) {
 			 * name prefix, there is nothing to do
 			 */
 			if (searching ||
-				searched.indexOf(search) != -1) {
+				searched.indexOf(search) !== -1) {
 				// if the spinner is up then we found nothing
 				if (popup.spinnerIsVisible()) {
 					// so get out
@@ -1113,12 +1162,11 @@ var MentionMe = (function($, m) {
 			// usercp.php and modcp.php use this id
 			} else if ($("#signature").length) {
 				id = "signature";
-			} else {
-				return false;
 			}
 
 			// if no suitable text area is present, get out
-			if (!$("#" + id).length) {
+			if (!id ||
+				!$("#" + id).length) {
 				return false;
 			}
 
@@ -1141,19 +1189,11 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function onKeyUp(e) {
-			var proceed = true;
-
 			getCaret();
 
 			// open the popup when user types an @
 			if (!popup.isVisible()) {
-				$([key.LEFT, key.RIGHT, key.UP, key.DOWN, key.BACKSPACE, key.ESC, key.SHIFT, key.CTRL, key.ALT, key.ENTER]).each(function() {
-					if (e.keyCode == this) {
-						proceed = false;
-					}
-				});
-
-				if (proceed &&
+				if (checkKeyCode(e.keyCode) &&
 					$textarea.val().slice(selection.start - 1, selection.end) == "@") {
 					showPopup();
 				}
@@ -1247,7 +1287,7 @@ var MentionMe = (function($, m) {
 		 * @return bool
 		 */
 		function unBindClick(f) {
-			$textarea.unbind('click', f);
+			$textarea.unbind("click", f);
 		}
 
 		/**
@@ -1343,8 +1383,6 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function onKeyUp(e) {
-			var proceed = true;
-
 			getCaret();
 
 			if (!e.keyCode) {
@@ -1358,13 +1396,7 @@ var MentionMe = (function($, m) {
 
 			// open the popup when user types an @
 			if (!popup.isVisible()) {
-				$([key.LEFT, key.RIGHT, key.UP, key.DOWN, key.BACKSPACE, key.ESC, key.SHIFT, key.CTRL, key.ALT, key.ENTER]).each(function() {
-					if (e.keyCode == this) {
-						proceed = false;
-					}
-				});
-
-				if (proceed &&
+				if (checkKeyCode(e.keyCode) &&
 					$currentNode.text().slice(selection.start - 1, selection.end) == "@") {
 					showPopup();
 				}
@@ -1382,7 +1414,7 @@ var MentionMe = (function($, m) {
 					iframe: $iFrame[0],
 				}),
 				left = parseInt(coords.left) + 7,
-				top = parseInt(coords.top + $container.find('div.sceditor-toolbar').height()) + 7;
+				top = parseInt(coords.top + $container.find("div.sceditor-toolbar").height()) + 7;
 
 			popup.show(left, top);
 		}
@@ -1441,7 +1473,7 @@ var MentionMe = (function($, m) {
 		 * @return bool
 		 */
 		function unBindClick(f) {
-			$body.unbind('click', f);
+			$body.unbind("click", f);
 		}
 
 		/**
@@ -1511,7 +1543,7 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function init() {
-			var key = Object.keys(CKEDITOR.instances)[0];
+			var key = getObjectKeys(CKEDITOR.instances)[0];
 
 			if (typeof CKEDITOR.instances[key] !== "object") {
 				return false;
@@ -1553,13 +1585,7 @@ var MentionMe = (function($, m) {
 
 			// open the popup when user types an @
 			if (!popup.isVisible()) {
-				$([key.LEFT, key.RIGHT, key.UP, key.DOWN, key.BACKSPACE, key.ESC, key.SHIFT, key.CTRL, key.ALT, key.ENTER]).each(function() {
-					if (e.keyCode == this) {
-						proceed = false;
-					}
-				});
-
-				if (proceed &&
+				if (checkKeyCode(e.keyCode) &&
 					getPrevChar() == "@") {
 					showPopup();
 				}
@@ -1661,7 +1687,7 @@ var MentionMe = (function($, m) {
 		 * @return bool
 		 */
 		function unBindClick(f) {
-			$body.unbind('click', f);
+			$body.unbind("click", f);
 		}
 
 		/**
@@ -1708,7 +1734,7 @@ var MentionMe = (function($, m) {
 		delete opt.lang;
 		$.extend(options, opt || {});
 
-		$(['minLength', 'maxLength', 'maxItems', 'fullText', 'showAvatars']).each(function() {
+		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars"]).each(function() {
 			options[this] = parseInt(options[this], 10);
 		});
 	}
@@ -1778,7 +1804,17 @@ var MentionMe = (function($, m) {
 		return quote +
 			name +
 			quote +
-			' ';
+			" ";
+	}
+
+	/**
+	 * check key code against a bad list
+	 *
+	 * @param  number e.keyCode
+	 * @return bool success
+	 */
+	function checkKeyCode(keyCode) {
+		return [key.LEFT, key.RIGHT, key.UP, key.DOWN, key.BACKSPACE, key.ESC, key.SHIFT, key.CTRL, key.ALT, key.ENTER, key.DELETE, key.INSERT, key.END, key.NUMLOCK].indexOf(keyCode) === -1;
 	}
 
 	$(init);
