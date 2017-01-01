@@ -170,6 +170,8 @@ function mention_activate()
 
 			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.js');
 			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.min.js');
+
+			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/installer.php');
 		}
 
 		// check everything and upgrade if necessary
