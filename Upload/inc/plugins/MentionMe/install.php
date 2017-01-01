@@ -287,6 +287,33 @@ function mention_uninstall()
 }
 
 /**
+ * settings
+ */
+
+/**
+ * add peekers
+ *
+ * @return array peekers
+ */
+$plugins->add_hook('admin_settings_print_peekers', 'mentionMeAddPeekers');
+function mentionMeAddPeekers($peekers)
+{
+	global $mybb;
+
+	if ($mybb->input['module'] != 'config-settings' ||
+		$mybb->input['action'] != 'change' ||
+		$mybb->input['gid'] != mentionMeGetSettingsgroup()) {
+		return;
+	}
+
+	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_cache_time, #row_setting_mention_get_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars"), 1, true)';
+
+	$peekers[] = 'new Peeker($(".setting_mention_add_postbit_button"), $("#row_setting_mention_multiple"), 1, true)';
+
+	return $peekers;
+}
+
+/**
  * retrieves the plugin's settings group gid if it exists
  * attempts to cache repeat calls
  *
@@ -414,7 +441,7 @@ function mentionMeUnsetCacheVersion()
  *
  * @return void
  */
-$plugins->add_hook("admin_load", "mentionMeAdminLoad");
+$plugins->add_hook('admin_load', 'mentionMeAdminLoad');
 function mentionMeAdminLoad()
 {
 	global $mybb, $page, $lang;

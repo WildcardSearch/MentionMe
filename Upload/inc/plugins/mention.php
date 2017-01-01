@@ -22,7 +22,8 @@ if (!class_exists('MentionMeCache')) {
 // load install routines only if in ACP
 if (defined('IN_ADMINCP')) {
 	global $mybb;
-	if ($mybb->input['module'] == 'config-plugins') {
+	if ($mybb->input['module'] == 'config-plugins' ||
+		$mybb->input['module'] == 'config-settings') {
 		require_once MYBB_ROOT . 'inc/plugins/MentionMe/install.php';
 	}
 } else {
