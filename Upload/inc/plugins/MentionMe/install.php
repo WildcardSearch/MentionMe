@@ -95,7 +95,7 @@ EOF;
         'name' => $name,
         'description' => $mentionDescription,
         'website' => 'https://github.com/WildcardSearch/MentionMe',
-        'version' => '3.0.4',
+        'version' => MENTIONME_VERSION,
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
 		'compatibility' => '18*'
@@ -293,6 +293,7 @@ function mention_uninstall()
 /**
  * add peekers
  *
+ * @param  array peekers
  * @return array peekers
  */
 $plugins->add_hook('admin_settings_print_peekers', 'mentionMeAddPeekers');
@@ -306,7 +307,7 @@ function mentionMeAddPeekers($peekers)
 		return;
 	}
 
-	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_cache_time, #row_setting_mention_get_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars"), 1, true)';
+	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_get_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars"), 1, true)';
 
 	$peekers[] = 'new Peeker($(".setting_mention_add_postbit_button"), $("#row_setting_mention_multiple"), 1, true)';
 

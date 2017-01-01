@@ -36,15 +36,6 @@ $settings = array(
 				"value" => '5',
 				"disporder" => '20'
 			),
-			"mention_cache_time" => array(
-				"sid" => "NULL",
-				"name" => "mention_cache_time",
-				"title" => $lang->mention_cache_time_title,
-				"description" => $lang->mention_cache_time_description,
-				"optionscode" => "text",
-				"value" => '7',
-				"disporder" => '30'
-			),
 			"mention_get_thread_participants" => array(
 				"sid" => "NULL",
 				"name" => "mention_get_thread_participants",
@@ -52,7 +43,7 @@ $settings = array(
 				"description" => $lang->mention_get_thread_participants_description,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '40'
+				"disporder" => '30'
 			),
 			"mention_full_text_search" => array(
 				"sid" => "NULL",
@@ -61,7 +52,7 @@ $settings = array(
 				"description" => $lang->mention_full_text_search_description,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '50'
+				"disporder" => '40'
 			),
 			"mention_show_avatars" => array(
 				"sid" => "NULL",
@@ -70,7 +61,7 @@ $settings = array(
 				"description" => $lang->mention_show_avatars_description,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '60'
+				"disporder" => '50'
 			),
 			"mention_add_postbit_button" => array(
 				"sid" => "NULL",
@@ -79,7 +70,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '70'
+				"disporder" => '60'
 			),
 			"mention_multiple" => array(
 				"sid" => "NULL",
@@ -88,7 +79,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '80'
+				"disporder" => '70'
 			),
 			"mention_format_names" => array(
 				"sid" => "NULL",
@@ -97,7 +88,7 @@ $settings = array(
 				"description" => $lang->mention_format_names_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '90'
+				"disporder" => '80'
 			),
 			"mention_display_symbol" => array(
 				"sid" => "NULL",
@@ -106,6 +97,15 @@ $settings = array(
 				"description" => $lang->mention_display_symbol_desc,
 				"optionscode" => "text",
 				"value" => '@',
+				"disporder" => '90'
+			),
+			"mention_cache_time" => array(
+				"sid" => "NULL",
+				"name" => "mention_cache_time",
+				"title" => $lang->mention_cache_time_title,
+				"description" => $lang->mention_cache_time_description,
+				"optionscode" => "text",
+				"value" => '7',
 				"disporder" => '100'
 			),
 			"mention_minify_js" => array(
