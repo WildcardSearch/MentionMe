@@ -19,7 +19,7 @@ $settings = array(
 		),
 		"settings" => array(
 			"mention_auto_complete" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_auto_complete",
 				"title" => $lang->mention_auto_complete_title,
 				"description" => $lang->mention_auto_complete_description,
@@ -28,7 +28,7 @@ $settings = array(
 				"disporder" => '10'
 			),
 			"mention_max_items" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_max_items",
 				"title" => $lang->mention_max_items_title,
 				"description" => $lang->mention_max_items_description,
@@ -37,7 +37,7 @@ $settings = array(
 				"disporder" => '20'
 			),
 			"mention_get_thread_participants" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_get_thread_participants",
 				"title" => $lang->mention_get_thread_participants_title,
 				"description" => $lang->mention_get_thread_participants_description,
@@ -46,7 +46,7 @@ $settings = array(
 				"disporder" => '30'
 			),
 			"mention_full_text_search" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_full_text_search",
 				"title" => $lang->mention_full_text_search_title,
 				"description" => $lang->mention_full_text_search_description,
@@ -55,7 +55,7 @@ $settings = array(
 				"disporder" => '40'
 			),
 			"mention_show_avatars" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_show_avatars",
 				"title" => $lang->mention_show_avatars_title,
 				"description" => $lang->mention_show_avatars_description,
@@ -64,7 +64,7 @@ $settings = array(
 				"disporder" => '50'
 			),
 			"mention_add_postbit_button" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_add_postbit_button",
 				"title" => $lang->mention_add_postbit_button_title,
 				"description" => $lang->mention_add_postbit_button_description,
@@ -73,7 +73,7 @@ $settings = array(
 				"disporder" => '60'
 			),
 			"mention_multiple" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_multiple",
 				"title" => $lang->mention_multiple_title,
 				"description" => $lang->mention_multiple_description,
@@ -82,7 +82,7 @@ $settings = array(
 				"disporder" => '70'
 			),
 			"mention_format_names" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_format_names",
 				"title" => $lang->mention_format_names_title,
 				"description" => $lang->mention_format_names_desc,
@@ -91,7 +91,7 @@ $settings = array(
 				"disporder" => '80'
 			),
 			"mention_display_symbol" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_display_symbol",
 				"title" => $lang->mention_display_symbol_title,
 				"description" => $lang->mention_display_symbol_desc,
@@ -100,7 +100,7 @@ $settings = array(
 				"disporder" => '90'
 			),
 			"mention_cache_time" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_cache_time",
 				"title" => $lang->mention_cache_time_title,
 				"description" => $lang->mention_cache_time_description,
@@ -109,7 +109,7 @@ $settings = array(
 				"disporder" => '100'
 			),
 			"mention_minify_js" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_minify_js",
 				"title" => $lang->mention_minify_js_title,
 				"description" => $lang->mention_minify_js_desc,
@@ -118,7 +118,7 @@ $settings = array(
 				"disporder" => '110'
 			),
 			"mention_advanced_matching" => array(
-				"sid" => "NULL",
+				"sid" => '0',
 				"name" => "mention_advanced_matching",
 				"title" => $lang->mention_advanced_matching,
 				"description" => $lang->mention_advanced_matching_desc,
