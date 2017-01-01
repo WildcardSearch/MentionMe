@@ -208,6 +208,7 @@ div.mentionme_popup {
 	width: 100%;
 	height: 25px;
 	font-size: 16px;
+	padding-left: 3px;
 }
 
 div.mentionme_popup_item {
