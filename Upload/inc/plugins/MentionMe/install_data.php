@@ -180,10 +180,10 @@ div.mentionme_popup {
 	background: white;
 	color: black;
 
-	border: 2px outset #3D3D3D;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
+	border: 2px solid #dddddd;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 
 	-moz-box-shadow: 3px 3px 3px #818181;
 	-webkit-box-shadow: 3px 3px 3px #818181;
@@ -206,10 +206,12 @@ div.mentionme_popup {
 #mentionme_popup_input {
 	border: none;
 	width: 100%;
+	height: 25px;
+	font-size: 16px;
 }
 
 div.mentionme_popup_item {
-	padding: 5px 3px 5px 3px !important;
+	padding: 2px 3px 2px 3px !important;
 	border-bottom: 1px solid lightgrey;
 }
 
@@ -231,10 +233,10 @@ span.mention_name_highlight_on {
 img.mention_user_avatar {
 	background: white;
 	vertical-align: middle;
-	height: 25px;
-	width: 25px;
+	height: 30px;
+	width: 30px;
 
-	margin: 2px 5px 2px 5px;
+	margin: 2px 10px 2px 5px;
 
 	-webkit-border-radius: 50%;
 	-moz-border-radius: 50%;

@@ -1208,7 +1208,7 @@ var MentionMe = (function($, m) {
 		function showPopup() {
 			var coords = $textarea.caret("offset"),
 				left = coords.left + 3,
-				top = coords.top;
+				top = coords.top - 5;
 
 			popup.show(left, top);
 		}
@@ -1312,7 +1312,7 @@ var MentionMe = (function($, m) {
 			init: init,
 			check: check,
 			heightModifier: 0,
-			lineHeightModifier: 1,
+			lineHeightModifier: 0,
 			insert: insertMention,
 			bindClick: bindClick,
 			unBindClick: unBindClick,
@@ -1414,7 +1414,7 @@ var MentionMe = (function($, m) {
 					iframe: $iFrame[0],
 				}),
 				left = parseInt(coords.left) + 7,
-				top = parseInt(coords.top + $container.find("div.sceditor-toolbar").height()) + 7;
+				top = parseInt(coords.top + $container.find("div.sceditor-toolbar").height()) + 2;
 
 			popup.show(left, top);
 		}
@@ -1497,7 +1497,7 @@ var MentionMe = (function($, m) {
 		return {
 			init: init,
 			check: check,
-			heightModifier: -2,
+			heightModifier: 0,
 			lineHeightModifier: 0,
 			insert: insertMention,
 			bindClick: bindClick,
@@ -1603,7 +1603,7 @@ var MentionMe = (function($, m) {
 				}),
 				iFrameOffset = $iFrame.offset(),
 				left = parseInt(coords.left + iFrameOffset.left) + 2,
-				top = parseInt(coords.top + iFrameOffset.top);
+				top = parseInt(coords.top + iFrameOffset.top) - 5;
 
 			popup.show(left, top);
 		}
@@ -1711,7 +1711,7 @@ var MentionMe = (function($, m) {
 			init: init,
 			check: check,
 			heightModifier: 0,
-			lineHeightModifier: 2,
+			lineHeightModifier: 0,
 			insert: insertMention,
 			bindClick: bindClick,
 			unBindClick: unBindClick,
