@@ -54,7 +54,6 @@ var MentionMe = (function($, m) {
 
 			width = 0,
 			inputHeight,
-			scrollWidth = 0,
 			scrollWidthDiff = 0,
 			inputHeight,
 			lineHeight,
@@ -103,15 +102,18 @@ var MentionMe = (function($, m) {
 
 			inputHeight = $inputDiv.height();
 
-			$testAvatar = $("<img/>", {
-				"class": "mention_user_avatar",
-				src: "images/default_avatar.png",
-			});
-			$testDiv = $("<div/>")
-						.html($testAvatar)
-						.append(Array(options.maxLength + 1)
-							.join("M"))
-						.addClass("mentionme_popup_item");
+			$testDiv = $("<div/>");
+
+			if (options.showAvatars) {
+				$testAvatar = $("<img/>", {
+					"class": "mention_user_avatar",
+					src: "images/default_avatar.png",
+				}).appendTo($testDiv);
+			}
+
+			$testDiv.append(Array(options.maxLength + 1)
+						.join("M"))
+					.addClass("mentionme_popup_item");
 
 			$body.html($testDiv);
 
@@ -120,13 +122,8 @@ var MentionMe = (function($, m) {
 				core.lineHeightModifier +
 				parseInt($testDiv.css("paddingTop").replace("px", "")) +
 				parseInt($testDiv.css("paddingBottom").replace("px", ""));
-			width = $testDiv.width() +
-				parseInt($testDiv.css("paddingLeft").replace("px", "")) +
-				parseInt($testDiv.css("paddingRight").replace("px", ""));
 
-			$body.width(width);
-			scrollWidth = $body[0].scrollWidth;
-			scrollWidthDiff = width - scrollWidth;
+			scrollWidthDiff = $body.width() - $body[0].scrollWidth;
 		}
 
 		/**
@@ -195,24 +192,24 @@ var MentionMe = (function($, m) {
 				longestName = nameCache.getLongestName(),
 				$testAvatar;
 
-			$testAvatar = $("<img/>", {
-				"class": "mention_user_avatar",
-				src: "images/default_avatar.png",
-			}).css({
-				left: "-1000px",
-				top: "-1000px",
-			}).appendTo($container);
+			width = 0;
+			if (options.showAvatars) {
+				$testAvatar = $("<img/>", {
+					"class": "mention_user_avatar",
+					src: "images/default_avatar.png",
+				}).css({
+					left: "-1000px",
+					top: "-1000px",
+				}).appendTo($container);
+				width += $testAvatar.width();
+				$testAvatar.remove();
+			}
 
-			width = $testAvatar.width() +
-				parseInt($body.css("fontSize").replace("px", "") * longestName);
-			$testAvatar.remove()
-
-			$body.width(width);
-			scrollWidth = width - scrollWidthDiff;
+			width += parseInt($body.css("fontSize").replace("px", "") * longestName);
 
 			style = {
 				height: getCurrentHeight() + inputHeight + "px",
-				width: scrollWidth + "px",
+				width: parseInt(width - scrollWidthDiff) + "px",
 			};
 
 			if (typeof left != "undefined") {
@@ -226,6 +223,7 @@ var MentionMe = (function($, m) {
 
 			$body.css({
 				height: getCurrentHeight() + "px",
+				width: width,
 			});
 		}
 
