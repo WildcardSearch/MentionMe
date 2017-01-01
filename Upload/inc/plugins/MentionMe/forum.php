@@ -350,9 +350,9 @@ function mentionMeInitialize()
 		lang: {
 			instructions: '{$lang->mention_autocomplete_instructions}',
 		},
-		minLength: {$mybb->settings['minnamelength']},
-		maxLength: {$mybb->settings['maxnamelength']},
-		maxItems: {$mybb->settings['mention_max_items']},
+		minLength: '{$mybb->settings['minnamelength']}',
+		maxLength: '{$mybb->settings['maxnamelength']}',
+		maxItems: '{$mybb->settings['mention_max_items']}',
 		tid: '{$mybb->input['tid']}',
 		fullText: '{$mybb->settings['mention_full_text_search']}',
 		showAvatars: '{$mybb->settings['mention_show_avatars']}',

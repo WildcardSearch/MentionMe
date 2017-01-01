@@ -1708,8 +1708,9 @@ var MentionMe = (function($, m) {
 		delete opt.lang;
 		$.extend(options, opt || {});
 
-		options.fullText = parseInt(options.fullText);
-		options.showAvatars = parseInt(options.showAvatars);
+		$(['minLength', 'maxLength', 'maxItems', 'fullText', 'showAvatars']).each(function() {
+			options[this] = parseInt(options[this], 10);
+		});
 	}
 
 	/**
