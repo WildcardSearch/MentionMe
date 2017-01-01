@@ -31,10 +31,9 @@ if (defined('IN_ADMINCP')) {
 }
 
 /**
- * used by _info to verify the mention MyAlerts setting
+ * used to verify the MyAlerts integration status
  *
- * @return bool true if MyAlerts installed,
- * 	false if not
+ * @return bool true if integrated, false if not
  */
 function mentionGetMyAlertsStatus()
 {
@@ -44,12 +43,14 @@ function mentionGetMyAlertsStatus()
 		return $status;
 	}
 
-	global $db;
+	global $cache;
 	$checked = true;
-	if ($db->table_exists('alert_types')) {
-		$query = $db->simple_select('alert_types', "*", "code='mention'");
-		return $status = ($db->num_rows($query) == 1);
-	}
+	$myalerts_plugins = $cache->read('mybbstuff_myalerts_alert_types');
+
+	if ($myalerts_plugins['mention']['code'] == 'mention' &&
+		$myalerts_plugins['mention']['enabled'] == 1) {
+		return true;
+    }
 	return false;
 }
 
