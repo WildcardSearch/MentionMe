@@ -1520,6 +1520,7 @@ var MentionMe = (function($, m) {
 
 			$container,
 			$iFrame,
+			$doc,
 			$body,
 			$currentNode;
 
@@ -1560,12 +1561,10 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function finalize() {
-			var doc;
-
 			$iFrame = $("iframe");
 			$container = $iFrame.closest("div");
-			doc = ($iFrame[0].contentDocument) ? $iFrame[0].contentDocument : $iFrame[0].contentWindow.document;
-			$body = $(doc).find("body");
+			$doc = $(($iFrame[0].contentDocument) ? $iFrame[0].contentDocument : $iFrame[0].contentWindow.document);
+			$body = $doc.find("body");
 
 			$(editor.document.$).keyup(onKeyUp);
 
@@ -1678,7 +1677,7 @@ var MentionMe = (function($, m) {
 		 * @return bool
 		 */
 		function bindClick(f) {
-			$body.click(f);
+			$doc.click(f);
 		}
 
 		/**
@@ -1687,7 +1686,7 @@ var MentionMe = (function($, m) {
 		 * @return bool
 		 */
 		function unBindClick(f) {
-			$body.unbind("click", f);
+			$doc.unbind("click", f);
 		}
 
 		/**
