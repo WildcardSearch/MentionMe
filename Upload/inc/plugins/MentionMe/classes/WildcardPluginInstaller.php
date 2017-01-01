@@ -492,7 +492,7 @@ class WildcardPluginInstaller
 			), "name='{$name}'");
 
 			// now update/insert the master stylesheet
-			$query = $this->db->simple_select('themestylesheets', 'sid', "tid='1' AND cachefile='{$name}'");
+			$query = $this->db->simple_select('themestylesheets', 'sid', "tid='1' AND name='{$name}'");
 			$sid = (int) $this->db->fetch_field($query, 'sid');
 
 			if ($sid) {
