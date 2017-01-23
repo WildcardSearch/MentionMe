@@ -107,7 +107,7 @@ $plugins->add_hook('newthread_do_newthread_end', 'mentionMeMyAlertsDoNewReplyEnd
 function mentionMeMyAlertsDoNewReplyEnd()
 {
 	global $mybb, $pid, $tid, $post, $thread, $fid;
-	if($mybb->user['uid'] && mentionGetMyAlertsStatus() == true)
+	if($mybb->user['uid'])
 	{		
 		$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
 		$alerts = array();
@@ -156,7 +156,7 @@ function mentionMeMyAlertsDoNewReplyEnd()
 			$mentionedAlready[$uid]) {
             continue;
         }
-		if($mybb->user['uid'] && mentionGetMyAlertsStatus() == true)
+		if($mybb->user['uid'])
 		{		
 			$alert = new MybbStuff_MyAlerts_Entity_Alert((int) $uid, $alertType, $tid);
 			$alert->setExtraDetails(
@@ -172,7 +172,7 @@ function mentionMeMyAlertsDoNewReplyEnd()
         $mentionedAlready[$uid] = true;
 	}
 	
-    if (!empty($alerts) && $mybb->user['uid'] && mentionGetMyAlertsStatus() == true) {
+    if (!empty($alerts) && $mybb->user['uid']) {
         MybbStuff_MyAlerts_AlertManager::getInstance()->addAlerts($alerts);
     }
 }
