@@ -14,7 +14,8 @@ $l['mention_task_success'] = 'The MentionMe name cache task ran successfully. Go
 $l['mention_task_fail'] = 'MentionMe found no users to cache information for.';
 
 // postbit button
-$l['mention_title'] = 'Mention';
+$l['mention_button'] = 'Mention';
+$l['mention_title'] = 'Mention user';
 
 // MyAlerts
 $l['myalerts_mention_alert'] = '{1} mentioned you in "<strong>{2}</strong>".';
