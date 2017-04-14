@@ -13,7 +13,7 @@ $l['mentionme_logo'] = 'MentionMe Logo';
 
 // task
 $l['mention_task_name'] = 'MentionMe Name Caching';
-$l['mention_task_description'] = 'caches active user names mention links to conserve queries during daily use';
+$l['mention_task_description'] = 'Caches active user names mention links to conserve queries during daily use';
 $l['mention_task_success'] = 'The MentionMe name cache task ran successfully. Going back {1} days, {2} users were stored at a total cache size of {3}';
 $l['mention_task_fail'] = 'MentionMe found no users to cache information for.';
 
