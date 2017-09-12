@@ -249,9 +249,14 @@ function mentionBuild($user)
 	}
 	$url = get_profile_link($user['uid']);
 
+	$target = '';
+	if ($mybb->settings['mention_format_names']) {
+		$target = ' target="_blank"';
+	}
+
 	// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
 	return <<<EOF
-{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}" class="mentionme_mention">{$username}</a>
+{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}" class="mentionme_mention"{$target}>{$username}</a>
 EOF;
 }
 

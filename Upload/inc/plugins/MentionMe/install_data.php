@@ -99,6 +99,15 @@ $settings = array(
 				"value" => '@',
 				"disporder" => '90'
 			),
+			"mention_open_link_in_new_window" => array(
+				"sid" => '0',
+				"name" => "mention_open_link_in_new_window",
+				"title" => $lang->mention_open_link_in_new_window_title,
+				"description" => $lang->mention_open_link_in_new_window_desc,
+				"optionscode" => "yesno",
+				"value" => '0',
+				"disporder" => '100'
+			),
 			"mention_cache_time" => array(
 				"sid" => '0',
 				"name" => "mention_cache_time",
@@ -106,7 +115,7 @@ $settings = array(
 				"description" => $lang->mention_cache_time_description,
 				"optionscode" => "text",
 				"value" => '7',
-				"disporder" => '100'
+				"disporder" => '110'
 			),
 			"mention_minify_js" => array(
 				"sid" => '0',
@@ -115,7 +124,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '110'
+				"disporder" => '120'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => '0',
@@ -124,7 +133,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '120'
+				"disporder" => '130'
 			),
 		)
 	)
