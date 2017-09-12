@@ -147,7 +147,7 @@ $templates = array(
 		),
 		"templates" => array(
 			"mentionme_postbit_button" => <<<EOF
-<a href="{\$js}" style="display: none;" id="multi_mention_link_{\$post['pid']}" title="{\$lang->mention_title}" class="postbit_multimention"><span>{\$lang->mention_title}</span></a>
+<a href="{\$js}" style="display: none;" id="multi_mention_link_{\$post['pid']}" title="{\$lang->mention_title}" class="postbit_multimention"><span>{\$lang->mention_button}</span></a>
 <script type="text/javascript">
     $('#multi_mention_link_{\$post['pid']}').show();
 </script>

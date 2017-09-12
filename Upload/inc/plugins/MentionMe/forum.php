@@ -42,7 +42,7 @@ function mentionMeParseMessage($message)
 	/**
 	 * unquoted
 	 */
-	$message = preg_replace_callback('#@(?P<unquoted>[\w.]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})#u', 'mentionDetect', $message);
+	$message = preg_replace_callback('#@(?P<unquoted>[\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})#u', 'mentionDetect', $message);
 
 	// now restore the email addresses
 	foreach ($emails as $email) {
@@ -326,11 +326,7 @@ function mentionTryName($username = '')
  */
 function mentionMeInitialize()
 {
-	global $mybb, $plugins, $lang, $templates, $mentionAutocomplete, $templatelist;
-
-	if (!$lang->mention) {
-		$lang->load('mention');
-	}
+	global $mybb, $plugins, $templatelist;
 
 	if (mentionGetMyAlertsStatus()) {
 		require_once MYBB_ROOT . 'inc/plugins/MentionMe/alerts.php';
@@ -339,32 +335,7 @@ function mentionMeInitialize()
 	$addTemplates = '';
 	if ($mybb->settings['mention_auto_complete']) {
 		$plugins->add_hook('global_intermediate', mentionMeBuildPopup);
-
 		$addTemplates .= ',mentionme_popup';
-		if ($mybb->settings['mention_minify_js']) {
-			$min = '.min';
-		}
-
-		$mentionAutocomplete = <<<EOF
-<!-- MentionMe Autocomplete Scripts -->
-<script type="text/javascript" src="{$mybb->asset_url}/jscripts/Caret.js/jquery.caret{$min}.js"></script>
-<script type="text/javascript" src="{$mybb->asset_url}/jscripts/MentionMe/autocomplete{$min}.js"></script>
-<script type="text/javascript">
-<!--
-	MentionMe.autoComplete.setup({
-		lang: {
-			instructions: '{$lang->mention_autocomplete_instructions}',
-		},
-		minLength: '{$mybb->settings['minnamelength']}',
-		maxLength: '{$mybb->settings['maxnamelength']}',
-		maxItems: '{$mybb->settings['mention_max_items']}',
-		tid: '{$mybb->input['tid']}',
-		fullText: '{$mybb->settings['mention_full_text_search']}',
-		showAvatars: '{$mybb->settings['mention_show_avatars']}',
-	});
-// -->
-</script>
-EOF;
 	}
 
 	// only add the showthread hook if we are there and we are adding a postbit multi-mention button
@@ -659,10 +630,38 @@ EOF;
  * @return void
  */
 function mentionMeBuildPopup() {
-	global $templates, $mentionAutocomplete;
+	global $mybb, $templates, $mentionAutocomplete, $lang, $templates;
 
-	eval("\$popup = \"" . $templates->get('mentionme_popup') . "\";");
-	$mentionAutocomplete .= $popup;
+	if (!$lang->mention) {
+		$lang->load('mention');
+	}
+
+	if ($mybb->settings['mention_minify_js']) {
+		$min = '.min';
+	}
+
+	$mentionAutocomplete = <<<EOF
+<!-- MentionMe Autocomplete Scripts -->
+<script type="text/javascript" src="{$mybb->asset_url}/jscripts/Caret.js/jquery.caret{$min}.js"></script>
+<script type="text/javascript" src="{$mybb->asset_url}/jscripts/MentionMe/autocomplete{$min}.js"></script>
+<script type="text/javascript">
+<!--
+	MentionMe.autoComplete.setup({
+		lang: {
+			instructions: '{$lang->mention_autocomplete_instructions}',
+		},
+		minLength: '{$mybb->settings['minnamelength']}',
+		maxLength: '{$mybb->settings['maxnamelength']}',
+		maxItems: '{$mybb->settings['mention_max_items']}',
+		tid: '{$mybb->input['tid']}',
+		fullText: '{$mybb->settings['mention_full_text_search']}',
+		showAvatars: '{$mybb->settings['mention_show_avatars']}',
+	});
+// -->
+</script>
+EOF;
+
+	eval("\$mentionAutocomplete .= \"" . $templates->get('mentionme_popup') . "\";");
 }
 
 ?>
