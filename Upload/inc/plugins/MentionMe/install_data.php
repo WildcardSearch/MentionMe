@@ -189,34 +189,35 @@ div.mentionme_popup {
 	background: white;
 	color: black;
 
-	border: 2px solid #dddddd;
+	border: 1px solid #dddddd;
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 
-	-moz-box-shadow: 3px 3px 3px #818181;
-	-webkit-box-shadow: 3px 3px 3px #818181;
-	box-shadow: 3px 3px 3px #818181;
-	-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=3, Direction=135, Color='#818181')";
-	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=3, Direction=135, Color='#818181');
+	-moz-box-shadow: 1px 1px 1px #818181;
+	-webkit-box-shadow: 1px 1px 1px #818181;
+	box-shadow: 1px 1px 1px #818181;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=1, Direction=135, Color='#818181')";
+	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=1, Direction=135, Color='#818181');
 }
 
 #mentionme_popup_body {
 	font-family: Arial, Helvetica, sans-serif;
-	font-size: 16px;
+	font-size: 15px;
 	overflow-y: scroll;
 	font-weight: normal !important;
+	min-width: 150px;
 }
 
-#mentionme_input_container {
-	/* style input container here */
+#mentionme_popup_input_container {
+	border-bottom: 1px solid lightgrey;
 }
 
 #mentionme_popup_input {
 	border: none;
 	width: 100%;
 	height: 25px;
-	font-size: 16px;
+	font-size: 15px;
 	padding-left: 3px;
 }
 
