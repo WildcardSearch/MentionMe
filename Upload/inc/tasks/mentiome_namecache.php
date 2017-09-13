@@ -56,7 +56,7 @@ function task_mentiome_namecache($task)
 	if ($db->num_rows($query) > 0) {
 		// if there are any results then build an array of data used for @mentions
 		while ($user = $db->fetch_array($query)) {
-			$nameCache[strtolower($user['username'])] = $user;
+			$nameCache[mb_strtolower($user['username'])] = $user;
 		}
 
         // get some stats
