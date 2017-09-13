@@ -470,12 +470,21 @@ function mentionMeMyAlertsIntegrate()
 	if (!$lang->mention) {
 		$lang->load('mention');
 	}
-
-	$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
-	$alertType = new MybbStuff_MyAlerts_Entity_AlertType();
-	$alertType->setCode("mention");
-	$alertType->setEnabled(true);
-	$alertTypeManager->add($alertType);
+	//Adding alert type.
+	if(function_exists("myalerts_info")){
+		$my_alerts_info = myalerts_info();
+		$verify = $my_alerts_info['version'];
+		if($verify >= "2.0.0"){
+			$myalerts_plugins = $cache->read('mybbstuff_myalerts_alert_types');
+			if($myalerts_plugins['mention']['code'] != 'mention'){
+				$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
+				$alertType = new MybbStuff_MyAlerts_Entity_AlertType();
+				$alertType->setCode("mention");
+				$alertType->setEnabled(true);
+				$alertTypeManager->add($alertType);
+			}
+		}
+	}
 }
 
 ?>

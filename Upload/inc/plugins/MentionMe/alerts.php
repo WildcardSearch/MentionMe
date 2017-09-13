@@ -107,9 +107,11 @@ $plugins->add_hook('newthread_do_newthread_end', 'mentionMeMyAlertsDoNewReplyEnd
 function mentionMeMyAlertsDoNewReplyEnd()
 {
 	global $mybb, $pid, $tid, $post, $thread, $fid;
-
-	$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
-    $alerts = array();
+	if($mybb->user['uid'])
+	{		
+		$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
+		$alerts = array();
+	}
 
     // if creating a new thread the message comes from $_POST
 	if ($mybb->input['action'] == "do_newthread" &&
@@ -154,22 +156,23 @@ function mentionMeMyAlertsDoNewReplyEnd()
 			$mentionedAlready[$uid]) {
             continue;
         }
-
-        $alert = new MybbStuff_MyAlerts_Entity_Alert((int) $uid, $alertType, $tid);
-        $alert->setExtraDetails(
-            array(
-                'thread_title' => $subject,
-                'pid' => $pid,
-                'tid' => $tid
-			)
-		);
-		$alert->setFromUserId($fromUser);
-        $alerts[] = $alert;
-
+		if($mybb->user['uid'])
+		{		
+			$alert = new MybbStuff_MyAlerts_Entity_Alert((int) $uid, $alertType, $tid);
+			$alert->setExtraDetails(
+				array(
+					'thread_title' => $subject,
+					'pid' => $pid,
+					'tid' => $tid
+				)
+			);
+			$alert->setFromUserId($fromUser);
+			$alerts[] = $alert;
+		}
         $mentionedAlready[$uid] = true;
 	}
-
-    if (!empty($alerts)) {
+	
+    if (!empty($alerts) && $mybb->user['uid']) {
         MybbStuff_MyAlerts_AlertManager::getInstance()->addAlerts($alerts);
     }
 }
