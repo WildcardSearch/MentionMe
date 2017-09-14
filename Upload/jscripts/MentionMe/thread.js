@@ -9,6 +9,29 @@
 var MentionMe = (function($, m) {
 	"use strict";
 
+	var useCkEditor = false,
+		editor = null,
+		$textarea = null;
+
+	/**
+	 * determine whether to use the standard editor or CKEDITOR/Rin
+	 *
+	 * @return void
+	 */
+	function init() {
+		if (typeof CKEDITOR !== "undefined" &&
+			typeof CKEDITOR.instances !== "undefined" &&
+			typeof CKEDITOR.instances["message"] === "object") {
+			editor = CKEDITOR.instances["message"];
+			useCkEditor = true;
+		} else {
+			if ($("#message").length) {
+				$textarea = $("#message");
+			}
+		}
+		return;
+	}
+
 	/**
 	 * insert the mention into the Quick Reply text area
 	 *
@@ -16,8 +39,8 @@ var MentionMe = (function($, m) {
 	 * @return void
 	 */
 	function insert(name) {
-		var $textarea = $("#message"),
-			quote = '';
+		var quote = '',
+			quotedName = '';
 
 		// find an appropriate quote character based on whether or not the
 		// mentioned name includes that character
@@ -29,17 +52,30 @@ var MentionMe = (function($, m) {
 			quote = "`";
 		}
 
-		$textarea.val($textarea.val() +
-			'@' +
+		quotedName = '@' +
 			quote +
 			name +
 			quote +
-			' ');
+			' ';
 
-		$textarea.focus();
+		if (useCkEditor) {
+			if (editor.getData()) {
+				quotedName = "\n" + quotedName;
+			}
+			editor.insertText(quotedName);
+			editor.focus();
+		} else {
+			if ($textarea.val()) {
+				$textarea.val($textarea.val() + "\n");
+			}
+			$textarea.val($textarea.val() + quotedName);
+			$textarea.focus();
+		}
 	}
 
 	m.insert = insert;
+
+	$(init);
 
 	return m;
 })(jQuery, MentionMe || {});
