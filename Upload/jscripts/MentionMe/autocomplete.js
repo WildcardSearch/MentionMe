@@ -105,7 +105,6 @@ var MentionMe = (function($, m) {
 			lastSelected = null,
 
 			width = 0,
-			inputHeight,
 			scrollWidthDiff = 0,
 			inputHeight,
 			lineHeight,
