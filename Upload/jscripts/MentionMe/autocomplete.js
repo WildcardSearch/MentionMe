@@ -530,7 +530,8 @@ var MentionMe = (function($, m) {
 				}
 			}
 
-			if (noScroll != true) {
+			if (noScroll != true &&
+				(nameCache.getItemsLength() - options.maxItems) > 0) {
 				$body.prop("scrollTop", parseInt(selectedItem.prop("offsetTop") - inputHeight));
 			}
 		}
