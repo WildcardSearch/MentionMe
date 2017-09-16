@@ -9,6 +9,10 @@
 var MentionMe = (function($, m) {
 	"use strict";
 
+	var useCkEditor = false,
+		editor = null,
+		$textarea = null;
+
 	/**
 	 * 'turn on' any previously selected multi-mention buttons and if
 	 * applicable, show the mention insert notice in Quick Reply
@@ -32,7 +36,18 @@ var MentionMe = (function($, m) {
 				$("#quickreply_multi_mention").show();
 			}
 		}
-		return true;
+
+		if (typeof CKEDITOR !== "undefined" &&
+			typeof CKEDITOR.instances !== "undefined" &&
+			typeof CKEDITOR.instances["message"] === "object") {
+			editor = CKEDITOR.instances["message"];
+			useCkEditor = true;
+		} else {
+			if ($("#message").length) {
+				$textarea = $("#message");
+			}
+		}
+		return;
 	}
 
 	/**
@@ -117,8 +132,7 @@ var MentionMe = (function($, m) {
 	 * @return void
 	 */
 	function insert(data) {
-		var $textarea = $("#message"),
-			message;
+		var message;
 
 		if (data.match(/<error>(.*)<\/error>/)) {
 			message = data.match(/<error>(.*)<\/error>/);
@@ -128,16 +142,28 @@ var MentionMe = (function($, m) {
 
 			$.jGrowl('There was an error fetching the posts.\n\n' + message[1], {theme:'jgrowl_error'});
 		} else if (data) {
-			if ($textarea.val()) {
-				$textarea.val($textarea.val() + "\n");
+			if (useCkEditor) {
+				if (editor.getData()) {
+					data = "\n" + data;
+				}
+				editor.insertText(data);
+			} else {
+				if ($textarea.val()) {
+					$textarea.val($textarea.val() + "\n");
+				}
+				$textarea.val($textarea.val() + data);
 			}
-			$textarea.val($textarea.val() + data);
 		}
 
 		clear();
 		$('#quickreply_multi_mention').hide();
 		$('#mentioned_ids').val('all');
-		$textarea.focus();
+
+		if (useCkEditor) {
+			editor.focus();
+		} else {
+			$textarea.focus();
+		}
 	}
 
 	/**

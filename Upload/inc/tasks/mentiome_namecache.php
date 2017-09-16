@@ -33,15 +33,30 @@ function task_mentiome_namecache($task)
 		$fieldList .= ', avatar';
 	}
 
+	// don't cache banned users
+	$bannedGroups = array();
+	$query = $db->simple_select("usergroups", "*", "isbannedgroup=1");
+	while ($gid = $db->fetch_field($query, 'gid')) {
+		$bannedGroups[] = $gid;
+	}
+
+	$bannedGroupCondition = '';
+	if (count($bannedGroups) > 1) {
+		$bannedList = explode(',', $bannedGroups);
+		$bannedGroupCondition = " AND usergroup NOT IN({$bannedList})";
+	} elseif (count($bannedGroups) == 1) {
+		$bannedGroupCondition = " AND usergroup !='{$bannedGroups[0]}'";
+	}
+
 	// find all users that have been active within the specified amount of days
 	$timesearch = TIME_NOW - (60 * 60 * 24 * $cacheDays);
-	$query = $db->simple_select('users', $fieldList, "lastvisit > {$timesearch}", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
+	$query = $db->simple_select('users', $fieldList, "lastvisit > {$timesearch}{$bannedGroupCondition}", array("order_by" => 'lastvisit', "order_dir" => 'DESC'));
 
     $nameCache = array();
 	if ($db->num_rows($query) > 0) {
 		// if there are any results then build an array of data used for @mentions
 		while ($user = $db->fetch_array($query)) {
-			$nameCache[strtolower($user['username'])] = $user;
+			$nameCache[mb_strtolower($user['username'])] = $user;
 		}
 
         // get some stats
