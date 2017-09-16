@@ -185,6 +185,7 @@ div.mentionme_popup {
 	position: absolute;
 	overflow: hidden;
 	z-index: 999;
+	min-width: 120px;
 
 	background: white;
 	color: black;
