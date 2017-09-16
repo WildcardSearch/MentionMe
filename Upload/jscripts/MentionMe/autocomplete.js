@@ -1360,8 +1360,6 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function init() {
-			var doc;
-
 			editor = MyBBEditor;
 			rangeHelper = editor.getRangeHelper();
 
@@ -1513,16 +1511,10 @@ var MentionMe = (function($, m) {
 	ckeditorCore = (function() {
 		var editor,
 
-			selection = {
-				start: 0,
-				end: 0,
-			},
-
 			$container,
 			$iFrame,
 			$doc,
-			$body,
-			$currentNode;
+			$body;
 
 		/**
 		 * see if there is a valid CKEditor instance
@@ -1580,8 +1572,6 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function onKeyUp(e) {
-			var proceed = true;
-
 			// open the popup when user types an @
 			if (!popup.isVisible()) {
 				if (checkKeyCode(e.keyCode) &&
@@ -1754,27 +1744,6 @@ var MentionMe = (function($, m) {
 			return;
 		}
 		core.init();
-	}
-
-	/**
-	 * This function is from quirksmode.org
-	 * Modified for use in MyBB
-	*/
-	function getPageScroll() {
-		var yScroll;
-
-		if (self.pageYOffset) {
-			yScroll = self.pageYOffset;
-		// Explorer 6 Strict
-		} else if (document.documentElement &&
-			document.documentElement.scrollTop) {
-			yScroll = document.documentElement.scrollTop;
-		// all other Explorers
-		} else if (document.body) {
-			yScroll = document.body.scrollTop;
-		}
-
-		return new Array("", yScroll);
 	}
 
 	/**
