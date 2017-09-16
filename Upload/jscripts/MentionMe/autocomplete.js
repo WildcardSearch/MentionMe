@@ -136,7 +136,7 @@ var MentionMe = (function($, m) {
 			$body = $("#mentionme_popup_body");
 
 			if (typeof container === "string" &&
-				$("#" + container)) {
+				$("#" + container).length) {
 				$container = $("#" + container);
 			} else if (typeof container === "object" &&
 				$(container).length) {
@@ -1258,13 +1258,14 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function setCaret(position) {
-			var temp = $textarea[0];
+			var temp = $textarea[0],
+				range;
 
 			if (temp.setSelectionRange) {
 				temp.focus();
 				temp.setSelectionRange(position, position);
 			} else if (temp.createTextRange) {
-				var range = temp.createTextRange();
+				range = temp.createTextRange();
 				range.collapse(true);
 				range.moveEnd("character", position);
 				range.moveStart("character", position);
@@ -1627,7 +1628,8 @@ var MentionMe = (function($, m) {
 		 */
 		function getPrevChar() {
 			var range = editor.getSelection().getRanges()[0],
-				startNode;
+				startNode,
+				walker;
 
 			if (!range ||
 				!range.startContainer) {
@@ -1645,7 +1647,7 @@ var MentionMe = (function($, m) {
 				range.setStartAt(editor.editable(), CKEDITOR.POSITION_AFTER_START);
 
 				// Let's use the walker to find the closes (previous) text node.
-				var walker = new CKEDITOR.dom.walker(range),
+				walker = new CKEDITOR.dom.walker(range),
 					node;
 
 				while ((node = walker.previous())) {
