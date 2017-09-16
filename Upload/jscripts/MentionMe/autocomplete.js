@@ -678,7 +678,7 @@ var MentionMe = (function($, m) {
 		 * @return Number the height in pixels
 		 */
 		function getCurrentHeight() {
-			return (lineHeight * Math.max(1, Math.min(options.maxItems, nameCache.getItemsLength()))) + core.heightModifier;
+			return (lineHeight * Math.max(1, Math.min(options.maxItems, nameCache.getItemsLength()))) + core.heightModifier + 4;
 		}
 
 		/**
@@ -1366,8 +1366,7 @@ var MentionMe = (function($, m) {
 
 			$iFrame = $("iframe");
 			$container = $iFrame.closest("div");
-			doc = ($iFrame[0].contentDocument) ? $iFrame[0].contentDocument : $iFrame[0].contentWindow.document;
-			$body = $(doc).find("body");
+			$body = editor.getBody();
 
 			editor.keyUp(onKeyUp);
 
@@ -1563,10 +1562,10 @@ var MentionMe = (function($, m) {
 		function finalize() {
 			$iFrame = $("iframe");
 			$container = $iFrame.closest("div");
-			$doc = $(($iFrame[0].contentDocument) ? $iFrame[0].contentDocument : $iFrame[0].contentWindow.document);
+			$doc = $(editor.document.$);
 			$body = $doc.find("body");
 
-			$(editor.document.$).keyup(onKeyUp);
+			$doc.keyup(onKeyUp);
 
 			// go ahead and build the popup
 			popup.init();
