@@ -60,7 +60,6 @@ var MentionMe = (function($, m) {
 			lineHeight,
 
 			items = [],
-			avatars = [],
 
 			$container,
 			$popup,
@@ -268,14 +267,15 @@ var MentionMe = (function($, m) {
 			var i,
 				text,
 				avatar,
+				avatarPath,
 				start,
 				cacheLength = nameCache.getItemsLength(),
+				data = nameCache.getData(),
 				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ?
 					"hand" :
 					"pointer";
 
 			items = nameCache.getItems();
-			avatars = nameCache.getAvatars();
 
 			// if we've got no matches and the spinner isn't up . . .
 			if (cacheLength === 0 &&
@@ -300,26 +300,27 @@ var MentionMe = (function($, m) {
 			clear();
 
 			for (i = 0; i < cacheLength; i++) {
-				text = items[i];
+				text = data[items[i]]["username"];
 				if (keyCache.getText()) {
-					start = items[i].toLowerCase().indexOf(keyCache.getText());
+					start = items[i].indexOf(keyCache.getText());
 
 					if ((options.fullText && start !== -1) ||
 						(!options.fullText && start === 0)) {
-						text = items[i].slice(0, start) +
+						text = text.slice(0, start) +
 						'<span class="mention_name_highlight">' +
-						items[i].slice(start, start + keyCache.getText().length) +
+						text.slice(start, start + keyCache.getText().length) +
 						'</span>' +
-						items[i].slice(start + keyCache.getText().length);
+						text.slice(start + keyCache.getText().length);
 					}
 				}
 
 				avatar = "";
 				if (options.showAvatars) {
-					if (!avatars[i]) {
-						avatars[i] = "images/default_avatar.png";
+					avatarPath = data[items[i]]["avatar"];
+					if (avatarPath.length == 0) {
+						avatarPath = "images/default_avatar.png";
 					}
-					avatar = '<img class="mention_user_avatar" src="' + avatars[i] + '" />';
+					avatar = '<img class="mention_user_avatar" src="' + avatarPath + '" />';
 				}
 				$body.append($("<div/>", {
 					id: "mentionme_popup_item_" + i,
@@ -764,7 +765,6 @@ var MentionMe = (function($, m) {
 			searching = false,
 			searched = [],
 			items = [],
-			avatars = [],
 			longestName = 5;
 
 		/**
@@ -824,13 +824,9 @@ var MentionMe = (function($, m) {
 			var property,
 				i = 0,
 				done = {},
-				threadItems = [],
-				allItems = [],
-				threadAvatars = [],
-				allAvatars = [];
+				allItems = [];
 
 			items = [];
-			avatars = [];
 			longestName = 5;
 
 			for (property in threadNames) {
@@ -841,19 +837,9 @@ var MentionMe = (function($, m) {
 				if (property.length > longestName) {
 					longestName = property.length;
 				}
-				threadItems.push(threadNames[property]["username"]);
-
-				if (options.showAvatars) {
-					threadAvatars.push(threadNames[property]["avatar"]);
-				}
+				items.push(property);
 				done[property] = true;
 				i++;
-			}
-
-			$.merge(items, threadItems);
-
-			if (options.showAvatars) {
-				$.merge(avatars, threadAvatars);
 			}
 
 			for (property in data) {
@@ -864,11 +850,7 @@ var MentionMe = (function($, m) {
 				if (property.length > longestName) {
 					longestName = property.length;
 				}
-				allItems.push(data[property]["username"]);
-
-				if (options.showAvatars) {
-					allAvatars.push(data[property]["avatar"]);
-				}
+				allItems.push(property);
 				done[property] = true;
 				i++;
 			}
@@ -876,10 +858,6 @@ var MentionMe = (function($, m) {
 			allItems = allItems.sort(sortNames);
 
 			$.merge(items, allItems);
-
-			if (options.showAvatars) {
-				$.merge(avatars, allAvatars);
-			}
 			return i;
 		}
 
@@ -1023,21 +1001,21 @@ var MentionMe = (function($, m) {
 		}
 
 		/**
+		 * getter for user data
+		 *
+		 * @return Object
+		 */
+		function getData() {
+			return data;
+		}
+
+		/**
 		 * getter for the item list
 		 *
 		 * @return array
 		 */
 		function getItems() {
 			return items;
-		}
-
-		/**
-		 * getter for the avatar list
-		 *
-		 * @return array
-		 */
-		function getAvatars() {
-			return avatars;
 		}
 
 		/**
@@ -1065,8 +1043,8 @@ var MentionMe = (function($, m) {
 			search: search,
 			isReady: isReady,
 			isLoading: isLoading,
+			getData: getData,
 			getItems: getItems,
-			getAvatars: getAvatars,
 			getItemsLength: getItemsLength,
 			getLongestName: getLongestName,
 		};
@@ -1579,7 +1557,8 @@ var MentionMe = (function($, m) {
 		function getPrevChar() {
 			var range = editor.getSelection().getRanges()[0],
 				startNode,
-				walker;
+				walker,
+				node;
 
 			if (!range ||
 				!range.startContainer) {
@@ -1597,10 +1576,9 @@ var MentionMe = (function($, m) {
 				range.setStartAt(editor.editable(), CKEDITOR.POSITION_AFTER_START);
 
 				// Let's use the walker to find the closes (previous) text node.
-				walker = new CKEDITOR.dom.walker(range),
-					node;
+				walker = new CKEDITOR.dom.walker(range);
 
-				while ((node = walker.previous())) {
+				while (node = walker.previous()) {
 					// If found, return the last character of the text node.
 					if (node.type == CKEDITOR.NODE_TEXT) {
 						return node.getText().slice( -1 );
