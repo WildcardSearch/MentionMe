@@ -45,56 +45,6 @@ var MentionMe = (function($, m) {
 		},
 
 	/**
-	 * for older browsers
-	 * From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
-	 */
-	getObjectKeys = (typeof Object.keys === "function") ?
-		Object.keys :
-		(function() {
-		"use strict";
-
-		var hasOwnProperty = Object.prototype.hasOwnProperty,
-			hasDontEnumBug = !({ toString: null }).propertyIsEnumerable("toString"),
-			dontEnums = [
-				"toString",
-				"toLocaleString",
-				"valueOf",
-				"hasOwnProperty",
-				"isPrototypeOf",
-				"propertyIsEnumerable",
-				"constructor"
-			],
-			dontEnumsLength = dontEnums.length;
-
-		return function(obj) {
-			if (typeof obj !== "object" &&
-				(typeof obj !== "function" ||
-				obj === null)) {
-				throw new TypeError("Object.keys called on non-object");
-			}
-
-			var result = [],
-				prop,
-				i;
-
-			for (prop in obj) {
-				if (hasOwnProperty.call(obj, prop)) {
-					result.push(prop);
-				}
-			}
-
-			if (hasDontEnumBug) {
-				for (i = 0; i < dontEnumsLength; i++) {
-					if (hasOwnProperty.call(obj, dontEnums[i])) {
-						result.push(dontEnums[i]);
-					}
-				}
-			}
-			return result;
-		};
-	}()),
-
-	/**
 	 * the popup object
 	 */
 	popup = (function() {
@@ -105,13 +55,11 @@ var MentionMe = (function($, m) {
 			lastSelected = null,
 
 			width = 0,
-			inputHeight,
 			scrollWidthDiff = 0,
 			inputHeight,
 			lineHeight,
 
 			items = [],
-			avatars = [],
 
 			$container,
 			$popup,
@@ -137,7 +85,7 @@ var MentionMe = (function($, m) {
 			$body = $("#mentionme_popup_body");
 
 			if (typeof container === "string" &&
-				$("#" + container)) {
+				$("#" + container).length) {
 				$container = $("#" + container);
 			} else if (typeof container === "object" &&
 				$(container).length) {
@@ -319,14 +267,15 @@ var MentionMe = (function($, m) {
 			var i,
 				text,
 				avatar,
+				avatarPath,
 				start,
 				cacheLength = nameCache.getItemsLength(),
+				data = nameCache.getData(),
 				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ?
 					"hand" :
 					"pointer";
 
 			items = nameCache.getItems();
-			avatars = nameCache.getAvatars();
 
 			// if we've got no matches and the spinner isn't up . . .
 			if (cacheLength === 0 &&
@@ -351,26 +300,27 @@ var MentionMe = (function($, m) {
 			clear();
 
 			for (i = 0; i < cacheLength; i++) {
-				text = items[i];
+				text = data[items[i]]["username"];
 				if (keyCache.getText()) {
-					start = items[i].toLowerCase().indexOf(keyCache.getText());
+					start = items[i].indexOf(keyCache.getText());
 
 					if ((options.fullText && start !== -1) ||
 						(!options.fullText && start === 0)) {
-						text = items[i].slice(0, start) +
+						text = text.slice(0, start) +
 						'<span class="mention_name_highlight">' +
-						items[i].slice(start, start + keyCache.getText().length) +
+						text.slice(start, start + keyCache.getText().length) +
 						'</span>' +
-						items[i].slice(start + keyCache.getText().length);
+						text.slice(start + keyCache.getText().length);
 					}
 				}
 
 				avatar = "";
 				if (options.showAvatars) {
-					if (!avatars[i]) {
-						avatars[i] = "images/default_avatar.png";
+					avatarPath = data[items[i]]["avatar"];
+					if (avatarPath.length == 0) {
+						avatarPath = "images/default_avatar.png";
 					}
-					avatar = '<img class="mention_user_avatar" src="' + avatars[i] + '" />';
+					avatar = '<img class="mention_user_avatar" src="' + avatarPath + '" />';
 				}
 				$body.append($("<div/>", {
 					id: "mentionme_popup_item_" + i,
@@ -530,7 +480,8 @@ var MentionMe = (function($, m) {
 				}
 			}
 
-			if (noScroll != true) {
+			if (noScroll != true &&
+				(nameCache.getItemsLength() - options.maxItems) > 0) {
 				$body.prop("scrollTop", parseInt(selectedItem.prop("offsetTop") - inputHeight));
 			}
 		}
@@ -678,7 +629,7 @@ var MentionMe = (function($, m) {
 		 * @return Number the height in pixels
 		 */
 		function getCurrentHeight() {
-			return (lineHeight * Math.max(1, Math.min(options.maxItems, nameCache.getItemsLength()))) + core.heightModifier;
+			return (lineHeight * Math.max(1, Math.min(options.maxItems, nameCache.getItemsLength()))) + core.heightModifier + 4;
 		}
 
 		/**
@@ -814,7 +765,6 @@ var MentionMe = (function($, m) {
 			searching = false,
 			searched = [],
 			items = [],
-			avatars = [],
 			longestName = 5;
 
 		/**
@@ -874,13 +824,9 @@ var MentionMe = (function($, m) {
 			var property,
 				i = 0,
 				done = {},
-				threadItems = [],
-				allItems = [],
-				threadAvatars = [],
-				allAvatars = [];
+				allItems = [];
 
 			items = [];
-			avatars = [];
 			longestName = 5;
 
 			for (property in threadNames) {
@@ -891,19 +837,9 @@ var MentionMe = (function($, m) {
 				if (property.length > longestName) {
 					longestName = property.length;
 				}
-				threadItems.push(threadNames[property]["username"]);
-
-				if (options.showAvatars) {
-					threadAvatars.push(threadNames[property]["avatar"]);
-				}
+				items.push(property);
 				done[property] = true;
 				i++;
-			}
-
-			$.merge(items, threadItems);
-
-			if (options.showAvatars) {
-				$.merge(avatars, threadAvatars);
 			}
 
 			for (property in data) {
@@ -914,11 +850,7 @@ var MentionMe = (function($, m) {
 				if (property.length > longestName) {
 					longestName = property.length;
 				}
-				allItems.push(data[property]["username"]);
-
-				if (options.showAvatars) {
-					allAvatars.push(data[property]["avatar"]);
-				}
+				allItems.push(property);
 				done[property] = true;
 				i++;
 			}
@@ -926,10 +858,6 @@ var MentionMe = (function($, m) {
 			allItems = allItems.sort(sortNames);
 
 			$.merge(items, allItems);
-
-			if (options.showAvatars) {
-				$.merge(avatars, allAvatars);
-			}
 			return i;
 		}
 
@@ -1073,21 +1001,21 @@ var MentionMe = (function($, m) {
 		}
 
 		/**
+		 * getter for user data
+		 *
+		 * @return Object
+		 */
+		function getData() {
+			return data;
+		}
+
+		/**
 		 * getter for the item list
 		 *
 		 * @return array
 		 */
 		function getItems() {
 			return items;
-		}
-
-		/**
-		 * getter for the avatar list
-		 *
-		 * @return array
-		 */
-		function getAvatars() {
-			return avatars;
 		}
 
 		/**
@@ -1115,8 +1043,8 @@ var MentionMe = (function($, m) {
 			search: search,
 			isReady: isReady,
 			isLoading: isLoading,
+			getData: getData,
 			getItems: getItems,
-			getAvatars: getAvatars,
 			getItemsLength: getItemsLength,
 			getLongestName: getLongestName,
 		};
@@ -1258,13 +1186,14 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function setCaret(position) {
-			var temp = $textarea[0];
+			var temp = $textarea[0],
+				range;
 
 			if (temp.setSelectionRange) {
 				temp.focus();
 				temp.setSelectionRange(position, position);
 			} else if (temp.createTextRange) {
-				var range = temp.createTextRange();
+				range = temp.createTextRange();
 				range.collapse(true);
 				range.moveEnd("character", position);
 				range.moveStart("character", position);
@@ -1359,15 +1288,12 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function init() {
-			var doc;
-
 			editor = MyBBEditor;
 			rangeHelper = editor.getRangeHelper();
 
 			$iFrame = $("iframe");
 			$container = $iFrame.closest("div");
-			doc = ($iFrame[0].contentDocument) ? $iFrame[0].contentDocument : $iFrame[0].contentWindow.document;
-			$body = $(doc).find("body");
+			$body = editor.getBody();
 
 			editor.keyUp(onKeyUp);
 
@@ -1513,16 +1439,10 @@ var MentionMe = (function($, m) {
 	ckeditorCore = (function() {
 		var editor,
 
-			selection = {
-				start: 0,
-				end: 0,
-			},
-
 			$container,
 			$iFrame,
 			$doc,
-			$body,
-			$currentNode;
+			$body;
 
 		/**
 		 * see if there is a valid CKEditor instance
@@ -1544,7 +1464,7 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function init() {
-			var key = getObjectKeys(CKEDITOR.instances)[0];
+			var key = $.map(CKEDITOR.instances, function(i, k) { return k })[0];
 
 			if (typeof CKEDITOR.instances[key] !== "object") {
 				return false;
@@ -1563,10 +1483,10 @@ var MentionMe = (function($, m) {
 		function finalize() {
 			$iFrame = $("iframe");
 			$container = $iFrame.closest("div");
-			$doc = $(($iFrame[0].contentDocument) ? $iFrame[0].contentDocument : $iFrame[0].contentWindow.document);
+			$doc = $(editor.document.$);
 			$body = $doc.find("body");
 
-			$(editor.document.$).keyup(onKeyUp);
+			$doc.keyup(onKeyUp);
 
 			// go ahead and build the popup
 			popup.init();
@@ -1580,8 +1500,6 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function onKeyUp(e) {
-			var proceed = true;
-
 			// open the popup when user types an @
 			if (!popup.isVisible()) {
 				if (checkKeyCode(e.keyCode) &&
@@ -1638,7 +1556,9 @@ var MentionMe = (function($, m) {
 		 */
 		function getPrevChar() {
 			var range = editor.getSelection().getRanges()[0],
-				startNode;
+				startNode,
+				walker,
+				node;
 
 			if (!range ||
 				!range.startContainer) {
@@ -1656,10 +1576,9 @@ var MentionMe = (function($, m) {
 				range.setStartAt(editor.editable(), CKEDITOR.POSITION_AFTER_START);
 
 				// Let's use the walker to find the closes (previous) text node.
-				var walker = new CKEDITOR.dom.walker(range),
-					node;
+				walker = new CKEDITOR.dom.walker(range);
 
-				while ((node = walker.previous())) {
+				while (node = walker.previous()) {
 					// If found, return the last character of the text node.
 					if (node.type == CKEDITOR.NODE_TEXT) {
 						return node.getText().slice( -1 );
@@ -1754,27 +1673,6 @@ var MentionMe = (function($, m) {
 			return;
 		}
 		core.init();
-	}
-
-	/**
-	 * This function is from quirksmode.org
-	 * Modified for use in MyBB
-	*/
-	function getPageScroll() {
-		var yScroll;
-
-		if (self.pageYOffset) {
-			yScroll = self.pageYOffset;
-		// Explorer 6 Strict
-		} else if (document.documentElement &&
-			document.documentElement.scrollTop) {
-			yScroll = document.documentElement.scrollTop;
-		// all other Explorers
-		} else if (document.body) {
-			yScroll = document.body.scrollTop;
-		}
-
-		return new Array("", yScroll);
 	}
 
 	/**

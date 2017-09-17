@@ -154,10 +154,12 @@ EditableCaret = (function() {
     } else if (oDocument.selection) {
       offset = this.getOldIEOffset();
     }
-    if (offset) {
+    /*
+	 * removed to address https://github.com/ichord/Caret.js/issues/56
+	  if (offset) {
       offset.top += $(oWindow).scrollTop();
       offset.left += $(oWindow).scrollLeft();
-    }
+    } */
     return offset;
   };
 
