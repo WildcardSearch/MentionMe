@@ -98,7 +98,8 @@ EOF;
         'version' => MENTIONME_VERSION,
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
-		'compatibility' => '18*'
+		'compatibility' => '18*',
+		'codename' => 'mention',
     );
 }
 
