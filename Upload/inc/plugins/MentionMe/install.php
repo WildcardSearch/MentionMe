@@ -472,6 +472,12 @@ function mentionMeMyAlertsIntegrate()
 		$lang->load('mention');
 	}
 
+	if (!function_exists("myalerts_info") ||
+		myalerts_info()['version'] < "2.0.0" ||
+		$cache->read('mybbstuff_myalerts_alert_types')['mention']['code'] == 'mention') {
+		return;
+	}
+
 	$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
 	$alertType = new MybbStuff_MyAlerts_Entity_AlertType();
 	$alertType->setCode("mention");
