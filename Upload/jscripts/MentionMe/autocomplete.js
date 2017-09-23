@@ -1292,7 +1292,7 @@ var MentionMe = (function($, m) {
 			rangeHelper = editor.getRangeHelper();
 
 			$iFrame = $("iframe");
-			$container = $iFrame.closest("div");
+			$container = $iFrame.closest("td");
 			$body = editor.getBody();
 
 			editor.keyUp(onKeyUp);
@@ -1339,8 +1339,13 @@ var MentionMe = (function($, m) {
 			var coords = $body.caret("offset", {
 					iframe: $iFrame[0],
 				}),
-				left = parseInt(coords.left) + 7,
-				top = parseInt(coords.top + $container.find("div.sceditor-toolbar").height()) + 2;
+				containerOffset = $container.offset(),
+				toolBarHeight = $container.find("div.sceditor-toolbar").height(),
+				fontSize = parseInt($currentNode.closest("div").css("fontSize").replace("px", "") / 2),
+				paddingLeft = parseInt($container.css("paddingLeft").replace("px", ""), 10),
+				paddingTop = parseInt($container.css("paddingTop").replace("px", ""), 10),
+				left = parseInt(coords.left, 10) + containerOffset.left + paddingLeft + fontSize + 2,
+				top = parseInt(coords.top + toolBarHeight) + containerOffset.top + paddingTop + 3;
 
 			popup.show(left, top);
 		}
