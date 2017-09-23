@@ -1473,6 +1473,17 @@ var MentionMe = (function($, m) {
 			editor = CKEDITOR.instances[key];
 
 			editor.on("instanceReady", finalize);
+
+			if ($('#quick_reply_submit').length) {
+				$('#quick_reply_submit').click(function(e) {
+					if ($doc.length) {
+						$doc.unbind('keyup', onKeyUp);
+					}
+					setTimeout(function() {
+						$doc.keyup(onKeyUp);
+					}, 500);
+				});
+			}
 		}
 
 		/**
