@@ -482,7 +482,7 @@ function mentionMeXMLHTTPgetNameCache()
 		"cached" => array(),
 		"inThread" => array(),
 	);
-	foreach ($nameCache as $key => $data) {
+	foreach ((array) $nameCache as $key => $data) {
 		$names['cached'][$key] = $data;
 	}
 

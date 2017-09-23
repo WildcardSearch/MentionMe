@@ -98,7 +98,8 @@ EOF;
         'version' => MENTIONME_VERSION,
         'author' => $author,
         'authorsite' => 'http://www.rantcentralforums.com/',
-		'compatibility' => '18*'
+		'compatibility' => '18*',
+		'codename' => 'mention',
     );
 }
 
@@ -469,6 +470,12 @@ function mentionMeMyAlertsIntegrate()
 
 	if (!$lang->mention) {
 		$lang->load('mention');
+	}
+
+	if (!function_exists("myalerts_info") ||
+		myalerts_info()['version'] < "2.0.0" ||
+		$cache->read('mybbstuff_myalerts_alert_types')['mention']['code'] == 'mention') {
+		return;
 	}
 
 	$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
