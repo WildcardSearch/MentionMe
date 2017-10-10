@@ -195,9 +195,9 @@ div.mentionme_popup {
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 
-	-moz-box-shadow: 1px 1px 1px #818181;
-	-webkit-box-shadow: 1px 1px 1px #818181;
-	box-shadow: 1px 1px 1px #818181;
+	-moz-box-shadow: 0 0 5px rgba(0,0,0,.1);
+	-webkit-box-shadow: 0 0 5px rgba(0,0,0,.1);
+	box-shadow: 0 0 5px rgba(0,0,0,.1);
 	-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=1, Direction=135, Color='#818181')";
 	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=1, Direction=135, Color='#818181');
 }
@@ -211,7 +211,7 @@ div.mentionme_popup {
 }
 
 #mentionme_popup_input_container {
-	border-bottom: 1px solid lightgrey;
+	border-bottom: 1px solid #DDD;
 }
 
 #mentionme_popup_input {
@@ -224,7 +224,7 @@ div.mentionme_popup {
 
 div.mentionme_popup_item {
 	padding: 2px 3px 2px 3px !important;
-	border-bottom: 1px solid lightgrey;
+	border-bottom: 1px solid #DDD;
 }
 
 div.mentionme_popup_item_on {
@@ -247,9 +247,9 @@ img.mention_user_avatar {
 	vertical-align: middle;
 	height: 30px;
 	width: 30px;
-
 	margin: 2px 10px 2px 5px;
 
+	border: 1px solid #DDD;
 	-webkit-border-radius: 50%;
 	-moz-border-radius: 50%;
 	border-radius: 50%;

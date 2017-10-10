@@ -620,7 +620,7 @@ var MentionMe = (function($, m) {
 				return;
 			}
 
-			return items[selected];
+			return nameCache.getData()[items[selected]]["username"];
 		}
 
 		/**
