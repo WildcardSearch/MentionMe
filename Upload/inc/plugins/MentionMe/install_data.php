@@ -162,15 +162,15 @@ EOF
 EOF
 			,
 			"mentionme_popup" => <<<EOF
-<div id="mentionme_popup" class="mentionme_popup" style="display: none;">
-	<div id="mentionme_spinner" class="mentionme_spinner">
+<div id="mentionme_master_popup" class="mentionme_popup" style="display: none;">
+	<div class="mentionme_spinner">
 		<img src="images/spinner.gif" />
 		<span>{\$lang->mention_autocomplete_loading}</span>
 	</div>
-	<div id="mentionme_popup_input_container">
-		<input id="mentionme_popup_input" type="text" autocomplete="off" />
+	<div class="mentionme_popup_input_container">
+		<input class="mentionme_popup_input" type="text" autocomplete="off" />
 	</div>
-	<div id="mentionme_popup_body"></div>
+	<div class="mentionme_popup_body"></div>
 </div>
 EOF
 		),
@@ -202,7 +202,7 @@ div.mentionme_popup {
 	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=1, Direction=135, Color='#818181');
 }
 
-#mentionme_popup_body {
+div.mentionme_popup_body {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 15px;
 	overflow-y: scroll;
@@ -210,11 +210,11 @@ div.mentionme_popup {
 	min-width: 150px;
 }
 
-#mentionme_popup_input_container {
+div.mentionme_popup_input_container {
 	border-bottom: 1px solid #DDD;
 }
 
-#mentionme_popup_input {
+input.mentionme_popup_input {
 	border: none;
 	width: 100%;
 	height: 25px;
