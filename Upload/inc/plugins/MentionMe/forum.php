@@ -639,7 +639,7 @@ EOF;
  * @return void
  */
 function mentionMeBuildPopup() {
-	global $mybb, $templates, $mentionAutocomplete, $lang, $templates;
+	global $mybb, $lang, $theme, $templates, $mentionAutocomplete;
 
 	if (!$lang->mention) {
 		$lang->load('mention');
@@ -665,6 +665,7 @@ function mentionMeBuildPopup() {
 		tid: '{$mybb->input['tid']}',
 		fullText: '{$mybb->settings['mention_full_text_search']}',
 		showAvatars: '{$mybb->settings['mention_show_avatars']}',
+		imageDirectory: '{$theme['imgdir']}',
 	});
 // -->
 </script>

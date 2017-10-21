@@ -16,6 +16,7 @@ var MentionMe = (function($, m) {
 			tid: "",
 			fullText: 0,
 			showAvatars: 1,
+			imageDirectory: "images",
 		},
 
 		lang = {
@@ -88,7 +89,7 @@ var MentionMe = (function($, m) {
 			if (options.showAvatars) {
 				$testAvatar = $("<img/>", {
 					"class": "mention_user_avatar",
-					src: "images/default_avatar.png",
+					src: options.defaultAvatar,
 				}).appendTo($testDiv);
 			}
 
@@ -177,7 +178,7 @@ var MentionMe = (function($, m) {
 			if (options.showAvatars) {
 				$testAvatar = $("<img/>", {
 					"class": "mention_user_avatar",
-					src: "images/default_avatar.png",
+					src: options.defaultAvatar,
 				}).css({
 					left: "-1000px",
 					top: "-1000px",
@@ -291,13 +292,13 @@ var MentionMe = (function($, m) {
 				if (options.showAvatars) {
 					avatarPath = data[this.items[i]]["avatar"];
 					if (avatarPath.length == 0) {
-						avatarPath = "images/default_avatar.png";
+						avatarPath = options.defaultAvatar;
 					}
 					avatar = $("<img/>", {
 						"class": "mention_user_avatar",
 						src: avatarPath,
 					}).one("error", function() {
-						this.src = "images/default_avatar.png";
+						this.src = options.defaultAvatar;
 					});
 				}
 
@@ -1656,6 +1657,8 @@ var MentionMe = (function($, m) {
 		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars"]).each(function() {
 			options[this] = pi(options[this]);
 		});
+
+		options.defaultAvatar = options.imageDirectory + "/default_avatar.png";
 	}
 
 	/**
