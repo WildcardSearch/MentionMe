@@ -27,6 +27,11 @@ function mentionMeParseMessage($message)
 {
 	global $mybb;
 
+	$sp = ' ';
+	if ($mybb->settings['mention_advanced_matching']) {
+		$sp = '';
+	}
+
 	// emails addresses cause issues, strip them before matching
 	$emailRegex = "#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i";
 	preg_match_all($emailRegex, $message, $emails, PREG_SET_ORDER);
@@ -37,12 +42,16 @@ function mentionMeParseMessage($message)
 	 *
 	 * quoted
 	 */
-	$message = preg_replace_callback('#@([\'|"|`])(?P<quoted>[^<\n]+?)\1#u', 'mentionDetect', $message);
+	$message = preg_replace_callback('#@([\'|"|`])(?P<quoted>[^<>&\\\;,\n]+?)\1#u', 'mentionDetect', $message);
 
 	/**
 	 * unquoted
 	 */
-	$message = preg_replace_callback('#@(?P<unquoted>[\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})#u', 'mentionDetect', $message);
+	$pattern = <<<EOF
+#@(?P<unquoted>[^<>&\\\;,{$sp}.?\n]{{$mybb->settings['minnamelength']},{$mybb->settings['maxnamelength']}})#u
+EOF;
+
+	$message = preg_replace_callback($pattern, 'mentionDetect', $message);
 
 	// now restore the email addresses
 	foreach ($emails as $email) {
