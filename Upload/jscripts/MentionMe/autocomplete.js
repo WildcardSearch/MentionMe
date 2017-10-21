@@ -293,11 +293,17 @@ var MentionMe = (function($, m) {
 					if (avatarPath.length == 0) {
 						avatarPath = "images/default_avatar.png";
 					}
-					avatar = '<img class="mention_user_avatar" src="' + avatarPath + '" />';
+					avatar = $("<img/>", {
+						"class": "mention_user_avatar",
+						src: avatarPath,
+					}).one("error", function() {
+						this.src = "images/default_avatar.png";
+					});
 				}
+
 				this.$body.append($("<div/>", {
 					"class": "mentionme_popup_item mentionme_popup_item_" + i,
-				}).html(avatar + text).css({
+				}).append(avatar).append(text).css({
 					cursor: c,
 				}));
 			}
