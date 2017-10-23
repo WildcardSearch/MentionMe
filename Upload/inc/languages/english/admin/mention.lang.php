@@ -13,8 +13,8 @@ $l['mentionme_logo'] = 'MentionMe Logo';
 
 // task
 $l['mention_task_name'] = 'MentionMe Name Caching';
-$l['mention_task_description'] = 'Caches active user names mention links to conserve queries during daily use';
-$l['mention_task_success'] = 'The MentionMe name cache task ran successfully. Going back {1} days, {2} users were stored at a total cache size of {3}';
+$l['mention_task_description'] = 'Caches active user names mention links to conserve queries during daily use.';
+$l['mention_task_success'] = 'The MentionMe name cache task ran successfully. Going back {1} days, {2} users were stored at a total cache size of {3}.';
 $l['mention_task_fail'] = 'MentionMe found no users to cache information for.';
 
 // settings
@@ -27,7 +27,7 @@ $l['mention_auto_complete_title'] = 'Auto-Complete Mentions?';
 $l['mention_auto_complete_description'] = 'YES (default) to autocomplete mentions as they are typed on showthread in Quick Reply and full post/edit pages';
 
 $l['mention_max_items_title'] = 'Maximum Items In Popup';
-$l['mention_max_items_description'] = 'if autocomplete is used, this setting will limit the size of the popup';
+$l['mention_max_items_description'] = 'If autocomplete is used, this setting will limit the size of the popup';
 
 $l['mention_cache_time_title'] = 'Cache Cut-off Time';
 $l['mention_cache_time_description'] = 'The task caches usernames based on when they were last active. In days, specify how far back to go. (Large forums should stick with low numbers to reduce the size of the namecache)';
@@ -53,7 +53,7 @@ $l['mention_format_names_desc'] = 'YES (default) to format user names according 
 $l['mention_display_symbol_title'] = 'Display Symbol';
 $l['mention_display_symbol_desc'] = 'Set this to @ or another symbol to use to prefix mentions, leave blank for no prefix';
 
-$l['mention_open_link_in_new_window_title'] = 'Open Mentions In a New Window/Tab';
+$l['mention_open_link_in_new_window_title'] = 'Open Mentions In a New Window/Tab?';
 $l['mention_open_link_in_new_window_desc'] = 'YES to add open mention links in a new window or tab, NO (default) to open mention links in the same window or tab';
 
 $l['mention_minify_js_title'] = 'Minify JavaScript?';
