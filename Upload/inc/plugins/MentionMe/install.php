@@ -40,23 +40,22 @@ function mention_info()
 				</li>
 EOF;
 		// check for MyAlerts
-		if ($db->table_exists('alerts') &&
-			mentionGetMyAlertsStatus()) {
-			// if so give them a success message
-			$myAlertsReport = <<<EOF
+		if ($db->table_exists('alerts')) {
+			if (mentionGetMyAlertsStatus()) {
+				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/success.png)">
 					{$lang->mention_myalerts_successfully_integrated}
 				</li>
 EOF;
-		} else {
-			// if not, warn them and provide a link for integration
-			$myAlertsReport = <<<EOF
+			} else {
+				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">{$lang->mention_myalerts_integration_message}
 				</li>
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/group.png)">
 					<a href="index.php?module=config-plugins&amp;action=mentionme&amp;mode=myalerts_integrate">{$lang->mention_myalerts_integrate_link}</a>
 				</li>
 EOF;
+			}
 		}
 
 		$buttonPic = "styles/{$cp_style}/images/MentionMe/donate.gif";
