@@ -68,4 +68,10 @@ $l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed 
 $l['mention_myalerts_integrate_link'] = 'Integrate With MyAlerts';
 $l['mention_myalerts_successfully_integrated'] = 'MentionMe has been successfully integrated with MyAlerts';
 
+// rebuild name cache
+$l['mention_rebuild_name_cache_description'] = 'rebuild the cached user data when users change names/display groups';
+$l['mention_rebuild_name_cache_title'] = 'Rebuild Name Cache';
+$l['mention_rebuild_name_cache_success'] = 'Successfully updated the name cache information.';
+$l['mention_rebuild_name_cache_error'] = 'Could not successfully rebuild the name cache.';
+
 ?>
