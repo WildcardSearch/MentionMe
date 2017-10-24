@@ -232,6 +232,11 @@ div.mentionme_popup_item_on {
 	color: white;
 }
 
+span.mentionme_popup_instructions {
+	color: grey;
+	font-style: italic;
+}
+
 span.mention_name_highlight {
 	color: #3366FF;
 	font-weight: bolder;

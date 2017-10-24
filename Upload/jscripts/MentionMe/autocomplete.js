@@ -104,6 +104,10 @@ var MentionMe = (function($, m) {
 				pi($testDiv.css("paddingTop").replace("px", "")) +
 				pi($testDiv.css("paddingBottom").replace("px", ""));
 
+			this.$instructions = $("<span/>", {
+				"class": "mentionme_popup_instructions",
+			}).html(lang.instructions);
+
 			this.scrollWidthDiff = this.$body.width() - this.$body[0].scrollWidth;
 
 			this.keyCache = new KeyCache(this);
@@ -354,9 +358,7 @@ var MentionMe = (function($, m) {
 		 */
 		function showInstructions() {
 			this.clear();
-			this.$body.html('<span style="color: grey; font-style: italic;">'
-				+ lang.instructions +
-				"</span>");
+			this.$body.html(this.$instructions);
 		}
 
 		/**
