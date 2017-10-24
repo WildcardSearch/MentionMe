@@ -805,7 +805,7 @@ var MentionMe = (function($, m) {
 
 			$.extend(this.data, this.threadNames, this.allNames);
 
-			if (this.data.length === 0) {
+			if ($.isEmptyObject(this.data)) {
 				this.data = {};
 				this.popup.showInstructions();
 				// resize the popup
