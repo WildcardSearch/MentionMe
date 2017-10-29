@@ -128,10 +128,6 @@ function mention_install()
 		$lang->load('mention');
 	}
 
-	// do it all :D
-	if (!class_exists('WildcardPluginInstaller')) {
-		require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php';
-	}
 	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->install();
 
@@ -261,10 +257,6 @@ function mention_uninstall()
 {
 	global $db, $cache;
 
-	// remove all changes
-	if (!class_exists('WildcardPluginInstaller')) {
-		require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php';
-	}
 	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->uninstall();
 

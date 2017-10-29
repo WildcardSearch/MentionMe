@@ -187,7 +187,6 @@ function mentionMeMyAlertsDisplay() {
 		return;
     }
 
-	require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/MentionMeFormatter.php';
 	$formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
 	$formatterManager->registerFormatter(new MentionMeFormatter($mybb, $lang, 'mention'));
 }

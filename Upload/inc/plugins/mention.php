@@ -16,9 +16,8 @@ if (!defined('IN_MYBB')) {
 define('IN_MENTIONME', true);
 define('MENTIONME_VERSION', '3.1.4');
 
-if (!class_exists('MentionMeCache')) {
-	require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/MentionMeCache.php';
-}
+// register custom class autoloader
+spl_autoload_register('mentionMeClassAutoLoad');
 
 // load install routines only if in ACP
 if (defined('IN_ADMINCP')) {
@@ -53,6 +52,19 @@ function mentionGetMyAlertsStatus()
 		return true;
     }
 	return false;
+}
+
+/**
+ * class autoloader
+ *
+ * @param string the name of the class to load
+ */
+function mentionMeClassAutoLoad($className) {
+	$path = MYBB_ROOT . "inc/plugins/MentionMe/classes/{$className}.php";
+
+	if (file_exists($path)) {
+		require_once $path;
+	}
 }
 
 ?>
