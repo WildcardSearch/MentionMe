@@ -4,8 +4,7 @@
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
- * this file contains data used by
- * classes/WildcardPluginInstaller.php
+ * this file contains data used by WildcardPluginInstaller
  */
 
 $settings = array(

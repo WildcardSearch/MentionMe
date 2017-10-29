@@ -7,7 +7,7 @@
  * this file defines a wrapper class for the caching functions
  */
 
-abstract class WildcardPluginCache
+abstract class WildcardPluginCache010100 implements WildcardPluginCacheInterface010000
 {
 	/**
 	 * @const version

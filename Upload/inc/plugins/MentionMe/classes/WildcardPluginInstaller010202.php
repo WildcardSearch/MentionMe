@@ -1,6 +1,6 @@
 <?php
 /**
- * Wildcard Helper Classes - Plug-in Installer
+ * Wildcard Helper Classes - Plugin Installer
  *
  * a generic installer for MyBB Plugins that accepts
  * a data file and performs installation functions
@@ -9,17 +9,17 @@
  *
  */
 
-class WildcardPluginInstaller
+class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface010000
 {
 	/**
 	 * @const version
 	 */
-	const VERSION = '1.2.1';
+	const VERSION = '1.2.2';
 
 	/**
 	 * @var object a copy of the MyBB db object
 	 */
-	private $db;
+	protected $db;
 
 	/**
 	 * @var array the table data
@@ -97,7 +97,7 @@ class WildcardPluginInstaller
 	 * @param  string path to the install data
 	 * @return void
 	 */
-	public function __construct($path)
+	public function __construct($path = '')
 	{
 		if (!trim($path) ||
 			!file_exists($path)) {
@@ -190,7 +190,7 @@ class WildcardPluginInstaller
 	 * @param  array the columns
 	 * @return void
 	 */
-	private function addTable($table, $columns)
+	protected function addTable($table, $columns)
 	{
 		static $collation;
 		if (!isset($collation) ||
@@ -219,7 +219,7 @@ class WildcardPluginInstaller
 	 * @param  array database tables and their columns
 	 * @return void
 	 */
-	public function addTables()
+	protected function addTables()
 	{
 		if (!is_array($this->tables) ||
 			empty($this->tables)) {
@@ -241,7 +241,7 @@ class WildcardPluginInstaller
 	 *
 	 * @return void
 	 */
-	public function removeTables()
+	protected function removeTables()
 	{
 		if (!is_array($this->tableNames) ||
 			empty($this->tableNames)) {
@@ -258,7 +258,7 @@ class WildcardPluginInstaller
 	 * @param  array tables and columns
 	 * @return void
 	 */
-	public function addColumns($columns = '')
+	protected function addColumns($columns = '')
 	{
 		if (!is_array($columns) ||
 			empty($columns)) {
@@ -286,7 +286,7 @@ class WildcardPluginInstaller
 	 * @param  array an associative array of tables and columns
 	 * @return void
 	 */
-	public function removeColumns()
+	protected function removeColumns()
 	{
 		if (!is_array($this->columns) ||
 			empty($this->columns)) {
@@ -314,7 +314,7 @@ class WildcardPluginInstaller
 	 * @param  array an associative array of setting groups
 	 * @return array setting groups and gids
 	 */
-	private function addSettingGroups($groups)
+	protected function addSettingGroups($groups)
 	{
 		if (!is_array($groups) ||
 			empty($groups)) {
@@ -342,7 +342,7 @@ class WildcardPluginInstaller
 	 * @param  array an associative array of groups and settings
 	 * @return void
 	 */
-	public function addSettings()
+	protected function addSettings()
 	{
 		if (!is_array($this->settings) ||
 			empty($this->settings)) {
@@ -361,7 +361,7 @@ class WildcardPluginInstaller
 				if ($this->db->num_rows($query) > 0) {
 					$setting['sid'] = (int) $this->db->fetch_field($query, 'sid');
 
-					// if so update the info (but leave the value alone)
+					// update the info (but leave the value alone)
 					unset($setting['value']);
 					$this->db->update_query('settings', $setting, "name='{$name}'");
 				} else {
@@ -380,7 +380,7 @@ class WildcardPluginInstaller
 	 *
 	 * @return void
 	 */
-	public function addTemplateGroups()
+	protected function addTemplateGroups()
 	{
 		if (!is_array($this->templates) ||
 			empty($this->templates)) {
@@ -409,7 +409,7 @@ class WildcardPluginInstaller
 	 *
 	 * @return void
 	 */
-	public function addTemplates()
+	protected function addTemplates()
 	{
 		if (!is_array($this->templates) ||
 			empty($this->templates)) {
@@ -451,7 +451,7 @@ class WildcardPluginInstaller
 	 *
 	 * @return void
 	 */
-	public function addStyleSheets()
+	protected function addStyleSheets()
 	{
 		if (!is_array($this->styleSheets) ||
 			empty($this->styleSheets)) {
@@ -520,7 +520,7 @@ class WildcardPluginInstaller
 	 *
 	 * @return void
 	 */
-	public function removeStyleSheets()
+	protected function removeStyleSheets()
 	{
 		if (empty($this->styleSheetNames) ||
 			!is_array($this->styleSheetNames)) {
@@ -558,7 +558,7 @@ class WildcardPluginInstaller
 	 *
 	 * @return void
 	 */
-	public function addImages()
+	protected function addImages()
 	{
 		if (!is_array($this->images) ||
 		   empty($this->images) ||
@@ -664,7 +664,7 @@ class WildcardPluginInstaller
 	 * @param  array string values
 	 * @return void
 	 */
-	private function remove($table, $field, $list)
+	protected function remove($table, $field, $list)
 	{
 		if (!is_array($list)) {
 			$list = array($list);
@@ -687,7 +687,7 @@ class WildcardPluginInstaller
 	 * @param  string table name without prefix
 	 * @return bool true if it exists, false if not
 	 */
-	public function tableExists($table)
+	protected function tableExists($table)
 	{
 		static $tableList;
 
@@ -702,7 +702,7 @@ class WildcardPluginInstaller
 	 *
 	 * @return array keys for the table names and 1 for the values
 	 */
-	private function buildTableList()
+	protected function buildTableList()
 	{
 		global $config;
 
@@ -725,7 +725,7 @@ class WildcardPluginInstaller
 	 * @param  string field name
 	 * @return bool true if it exists/false if not
 	 */
-	public function fieldExists($table, $field)
+	protected function fieldExists($table, $field)
 	{
 		static $fieldList;
 
@@ -741,7 +741,7 @@ class WildcardPluginInstaller
 	 * @param  string table name without prefix
 	 * @return array keys for the field names and 1 for the values
 	 */
-	private function buildFieldList($table)
+	protected function buildFieldList($table)
 	{
 		$fieldList = array();
 

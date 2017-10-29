@@ -7,7 +7,7 @@
  * wrapper to handle our plugin's cache
  */
 
-class MentionMeCache extends WildcardPluginCache
+class MentionMeCache extends WildcardPluginCache010100
 {
 	/**
 	 * @var  string cache key

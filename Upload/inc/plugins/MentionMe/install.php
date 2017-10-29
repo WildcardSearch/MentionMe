@@ -128,7 +128,7 @@ function mention_install()
 		$lang->load('mention');
 	}
 
-	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
+	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->install();
 
 	if ($db->table_exists('alerts')) {
@@ -169,6 +169,11 @@ function mention_activate()
 			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.min.js');
 
 			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/installer.php');
+		}
+
+		if (version_compare($oldVersion, '3.2', '<')) {
+			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php');
+			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginCache.php');
 		}
 
 		// check everything and upgrade if necessary
@@ -257,7 +262,7 @@ function mention_uninstall()
 {
 	global $db, $cache;
 
-	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
+	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->uninstall();
 
 	// remove the task entry
