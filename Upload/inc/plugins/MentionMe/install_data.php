@@ -63,6 +63,15 @@ $settings = array(
 				"value" => '1',
 				"disporder" => '50'
 			),
+			"mention_lock_selection" => array(
+				"sid" => '0',
+				"name" => "mention_lock_selection",
+				"title" => $lang->mention_lock_selection_title,
+				"description" => $lang->mention_lock_selection_description,
+				"optionscode" => "yesno",
+				"value" => '1',
+				"disporder" => '60'
+			),
 			"mention_add_postbit_button" => array(
 				"sid" => '0',
 				"name" => "mention_add_postbit_button",
@@ -70,7 +79,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '60'
+				"disporder" => '70'
 			),
 			"mention_multiple" => array(
 				"sid" => '0',
@@ -79,7 +88,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '70'
+				"disporder" => '80'
 			),
 			"mention_format_names" => array(
 				"sid" => '0',
@@ -88,7 +97,7 @@ $settings = array(
 				"description" => $lang->mention_format_names_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '80'
+				"disporder" => '90'
 			),
 			"mention_display_symbol" => array(
 				"sid" => '0',
@@ -97,7 +106,7 @@ $settings = array(
 				"description" => $lang->mention_display_symbol_desc,
 				"optionscode" => "text",
 				"value" => '@',
-				"disporder" => '90'
+				"disporder" => '100'
 			),
 			"mention_open_link_in_new_window" => array(
 				"sid" => '0',
@@ -106,7 +115,7 @@ $settings = array(
 				"description" => $lang->mention_open_link_in_new_window_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '100'
+				"disporder" => '110'
 			),
 			"mention_cache_time" => array(
 				"sid" => '0',
@@ -115,7 +124,7 @@ $settings = array(
 				"description" => $lang->mention_cache_time_description,
 				"optionscode" => "text",
 				"value" => '7',
-				"disporder" => '110'
+				"disporder" => '120'
 			),
 			"mention_minify_js" => array(
 				"sid" => '0',
@@ -124,7 +133,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '120'
+				"disporder" => '130'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => '0',
@@ -133,7 +142,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '130'
+				"disporder" => '140'
 			),
 		)
 	)

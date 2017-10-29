@@ -666,6 +666,7 @@ function mentionMeBuildPopup() {
 		fullText: '{$mybb->settings['mention_full_text_search']}',
 		showAvatars: '{$mybb->settings['mention_show_avatars']}',
 		imageDirectory: '{$theme['imgdir']}',
+		lockSelection: '{$mybb->settings['mention_lock_selection']}',
 	});
 // -->
 </script>

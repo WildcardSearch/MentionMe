@@ -17,6 +17,7 @@ var MentionMe = (function($, m) {
 			fullText: 0,
 			showAvatars: 1,
 			imageDirectory: "images",
+			lockSelection: 1,
 		},
 
 		lang = {
@@ -427,7 +428,8 @@ var MentionMe = (function($, m) {
 		function highlightSelected(noScroll) {
 			var $selectedItem = this.$popup.find(".mentionme_popup_item_" + this.selected),
 				$lastSelectedItem = this.$popup.find(".mentionme_popup_item_" + this.lastSelected),
-				$highlightSpan = $lastSelectedItem.find("span.mention_name_highlight_on");
+				$highlightSpan = $lastSelectedItem.find("span.mention_name_highlight_on"),
+				offset = this.itemInView($selectedItem);
 
 			if (this.lastSelected == this.selected ||
 				$selectedItem.length == 0) {
@@ -456,10 +458,45 @@ var MentionMe = (function($, m) {
 				}
 			}
 
-			if (noScroll != true &&
-				(this.nameCache.getItemsLength() - options.maxItems) > 0) {
-				this.$body.prop("scrollTop", pi($selectedItem.prop("offsetTop") - this.inputHeight));
+			if (noScroll ||
+				(options.lockSelection !== 1 &&
+				offset === true)) {
+				return;
 			}
+
+			if (options.lockSelection) {
+				if (this.nameCache.getItemsLength() - options.maxItems > 0) {
+					this.$body.prop("scrollTop", pi($selectedItem.prop("offsetTop") - this.inputHeight));
+				}
+				return;
+			}
+
+			if (this.selected == 0) {
+				this.$body.prop("scrollTop", -this.inputHeight);
+				return;
+			}
+
+			if (offset > 0) {
+				this.$body.prop("scrollTop", pi($selectedItem.prop("offsetTop") - (this.getCurrentHeight() - this.lineHeight) - this.inputHeight));
+				return;
+			}
+
+			this.$body.prop("scrollTop", pi($selectedItem.prop("offsetTop") - this.inputHeight));
+		}
+
+		/**
+		 * determines whether an item is in view
+		 *
+		 * @param  jQuery element
+		 * @return boolean|int
+		 */
+		function itemInView($el) {
+			var offset = $el.prop("offsetTop") - this.$body.prop("scrollTop");
+			if (offset > 0 &&
+				(offset + this.lineHeight) < this.getCurrentHeight()) {
+				return true;
+			}
+			return offset;
 		}
 
 		/**
@@ -665,6 +702,7 @@ var MentionMe = (function($, m) {
 			updateCheck: updateCheck,
 			select: select,
 			highlightSelected: highlightSelected,
+			itemInView: itemInView,
 			onKeyDown: onKeyDown,
 			onMouseMove: onMouseMove,
 			onClick: onClick,
@@ -1656,7 +1694,7 @@ var MentionMe = (function($, m) {
 		delete opt.lang;
 		$.extend(options, opt || {});
 
-		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars"]).each(function() {
+		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
 			options[this] = pi(options[this]);
 		});
 

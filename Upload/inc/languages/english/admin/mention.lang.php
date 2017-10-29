@@ -41,6 +41,9 @@ $l['mention_full_text_search_description'] = 'YES to match characters in the aut
 $l['mention_show_avatars_title'] = 'Show User Avatars?';
 $l['mention_show_avatars_description'] = 'YES (default) to show user avatars in the autocomplete popup, NO to show usernames only';
 
+$l['mention_lock_selection_title'] = 'Lock Selection To Top?';
+$l['mention_lock_selection_description'] = 'YES (default) to keep the selcted item on top when possible in the autocomplete popup, NO to scroll freely';
+
 $l['mention_add_postbit_button_title'] = 'Add a Postbit Button?';
 $l['mention_add_postbit_button_description'] = 'YES to add a button to each post allowing users to tag multiple members to mention (NO by default)';
 
