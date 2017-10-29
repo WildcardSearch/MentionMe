@@ -246,6 +246,10 @@ span.mentionme_popup_instructions {
 	font-style: italic;
 }
 
+span.mentionme_typed_text {
+	padding-left: 3px;
+}
+
 span.mention_name_highlight {
 	color: #3366FF;
 	font-weight: bolder;

@@ -262,7 +262,9 @@ var MentionMe = (function($, m) {
 				if (this.keyCache.getLength() > 0) {
 					// . . . show them what they've typed
 					this.clear();
-					this.$body.html(this.keyCache.getText());
+					this.$body.html($("<span/>", {
+						"class": "mentionme_typed_text",
+					}).html(this.keyCache.getText()));
 				} else {
 					// . . . otherwise, instruct them (this should rarely, if ever, be seen)
 					this.showInstructions();
