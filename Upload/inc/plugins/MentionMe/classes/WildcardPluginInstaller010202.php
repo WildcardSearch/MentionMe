@@ -115,9 +115,17 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 			$this->$key = $$key;
 			switch ($key) {
 			case 'styleSheets':
-				// stylesheets need the extension appended
-				foreach (array_keys($styleSheets) as $name) {
-					$this->styleSheetNames[] = $name . '.css';
+				foreach (array('acp', 'forum') as $key) {
+					if (!is_array($styleSheets[$key]) ||
+						empty($styleSheets[$key])) {
+						$this->styleSheetNames[$key] = array();
+						continue;
+					}
+
+					foreach (array_keys($styleSheets[$key]) as $name) {
+						// stylesheets need the extension appended
+						$this->styleSheetNames[$key][] = $name . '.css';
+					}
 				}
 				break;
 			case 'settings':
@@ -283,7 +291,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 	/**
 	 * drop multiple listed columns
 	 *
-	 * @param  array an associative array of tables and columns
+	 * @param  array tables and columns
 	 * @return void
 	 */
 	protected function removeColumns()
@@ -311,7 +319,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 	/**
 	 * create multiple setting groups
 	 *
-	 * @param  array an associative array of setting groups
+	 * @param  array setting groups
 	 * @return array setting groups and gids
 	 */
 	protected function addSettingGroups($groups)
@@ -339,7 +347,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 	/**
 	 * create settings from an array
 	 *
-	 * @param  array an associative array of groups and settings
+	 * @param  array groups and settings
 	 * @return void
 	 */
 	protected function addSettings()
@@ -454,12 +462,50 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 	protected function addStyleSheets()
 	{
 		if (!is_array($this->styleSheets) ||
-			empty($this->styleSheets)) {
+			empty($this->styleSheets) ||
+			(empty($this->styleSheets['acp']) &&
+			empty($this->styleSheets['forum']))) {
 			return;
 		}
 
 		global $config;
-		foreach ($this->styleSheets as $name => $data) {
+
+		if (!empty($this->styleSheets['acp'])) {
+			// if there is a sub-folder for images, make sure it starts with a slash
+			$mainFolder = $this->styleSheets['folder'];
+			if ($mainFolder &&
+			   !substr($mainFolder, 1, 1) !== '/') {
+				$mainFolder = "/{$mainFolder}";
+			}
+
+			foreach ($this->buildThemeList(true) as $folder) {
+				// set up a path and make sure we can write to it
+				$path = MYBB_ADMIN_DIR . "styles/{$folder}";
+
+				if ($mainFolder &&
+				    !is_dir("{$path}{$mainFolder}") &&
+				    !mkdir("{$path}{$mainFolder}", 0777, true)) {
+					continue;
+				}
+
+				foreach ($this->styleSheets['acp'] as $filename => $details) {
+					// if there is a sub-folder make sure it has a trailing slash
+					if ($details['folder'] &&
+						substr($details['folder'], strlen($details['folder']) - 1, 1) != '/') {
+						$details['folder'] .= '/';
+					}
+
+					$fullPath = "{$path}{$mainFolder}/{$details['folder']}{$filename}.css";
+					file_put_contents($fullPath, $details['stylesheet']);
+				}
+			}
+		}
+
+		if (empty($this->styleSheets['forum'])) {
+			return;
+		}
+
+		foreach ($this->styleSheets['forum'] as $name => $data) {
 			$attachedto = $data['attachedto'];
 			if (is_array($data['attachedto'])) {
 				$attachedto = array();
@@ -523,16 +569,49 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 	protected function removeStyleSheets()
 	{
 		if (empty($this->styleSheetNames) ||
-			!is_array($this->styleSheetNames)) {
+			!is_array($this->styleSheetNames) ||
+			(empty($this->styleSheets['acp']) &&
+			empty($this->styleSheets['forum']))) {
 			return;
 		}
 
-		global $config;
+		if (!empty($this->styleSheets['acp'])) {
+			// if there is a sub-folder for images, make sure it starts with a slash
+			$mainFolder = $this->styleSheets['folder'];
+			if ($mainFolder &&
+			   !substr($mainFolder, 1, 1) !== '/') {
+				$mainFolder = "/{$mainFolder}";
+			}
+
+			foreach ($this->buildThemeList(true) as $folder) {
+				// set up a path and make sure we can write to it
+				$path = MYBB_ADMIN_DIR . "styles/{$folder}";
+
+				if ($mainFolder &&
+				    !is_dir("{$path}{$mainFolder}")) {
+					continue;
+				}
+
+				foreach ($this->styleSheetNames['acp'] as $filename) {
+					// if there is a sub-folder make sure it has a trailing slash
+					if ($details['folder'] &&
+						substr($details['folder'], strlen($details['folder']) - 1, 1) != '/') {
+						$details['folder'] .= '/';
+					}
+
+					@unlink(MYBB_ADMIN_DIR . "styles/{$folder}{$mainFolder}/{$details['folder']}{$filename}");
+				}
+			}
+		}
+
+		if (empty($this->styleSheets['forum'])) {
+			return;
+		}
 
 		// get a list and form the WHERE clause
-		$styleSheetList = "'" . implode("','", $this->styleSheetNames) . "'";
+		$styleSheetList = "'" . implode("','", $this->styleSheetNames['forum']) . "'";
 		$where = "name={$styleSheetList}";
-		if (count($this->styleSheetNames) > 1) {
+		if (count($this->styleSheetNames['forum']) > 1) {
 			$where = "name IN({$styleSheetList})";
 		}
 
@@ -549,7 +628,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 		$this->db->delete_query('themestylesheets', $where);
 
 		// now remove them from the CSS file list
-		require_once MYBB_ROOT . "{$config['admin_dir']}/inc/functions_themes.php";
+		require_once MYBB_ADMIN_DIR . "inc/functions_themes.php";
 		update_theme_stylesheet_list(1, false, true);
 	}
 
@@ -576,18 +655,11 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 		// handle ACP images
 		if (is_array($this->images['acp'])) {
 			// load all detected themes
-			foreach (new DirectoryIterator(MYBB_ADMIN_DIR . '/styles') as $folder) {
-				if ($folder->isDot() ||
-				   !$folder->isDir()) {
-					continue;
-				}
-
-				$foldername = $folder->getFilename();
-
+			foreach ($this->buildThemeList(true) as $foldername) {
 				// set up a path and make sure we can write to it
-				$path = MYBB_ADMIN_DIR . "/styles/{$foldername}";
-				if (@!file_exists("{$path}/main.css") ||
-				   (!is_dir("{$path}/images") &&
+				$path = MYBB_ADMIN_DIR . "styles/{$foldername}";
+
+				if ((!is_dir("{$path}/images") &&
 				   !mkdir("{$path}/images", 0777, true)) ||
 				   ($mainFolder &&
 				    !is_dir("{$path}/images{$mainFolder}") &&
@@ -603,7 +675,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 					}
 
 					// don't overwrite or upgrades will kill custom images
-					$fullPath = MYBB_ADMIN_DIR . "/styles/{$foldername}/images{$mainFolder}/{$details['folder']}{$filename}";
+					$fullPath = MYBB_ADMIN_DIR . "styles/{$foldername}/images{$mainFolder}/{$details['folder']}{$filename}";
 					if (!file_exists($fullPath)) {
 						file_put_contents($fullPath, base64_decode($details['image']));
 					}
@@ -613,17 +685,9 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 
 		// handle the forum side images if any
 		if (is_array($this->images['forum'])) {
-			global $mybb, $db;
+			global $mybb;
 
-			// get all the theme folders
-			$allDirectories = array();
-			$query = $db->simple_select('themes', 'pid, properties');
-			while ($theme = $db->fetch_array($query)) {
-				$properties = unserialize($theme['properties']);
-				$allDirectories[$properties['imgdir']] = $properties['imgdir'];
-			}
-
-			foreach ($allDirectories as $dir) {
+			foreach ($this->buildThemeList() as $dir) {
 				// make sure our folders exist
 				$path = MYBB_ROOT . $dir;
 				if (!is_dir($path) ||
@@ -750,6 +814,58 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 			$fieldList[$info['Field']] = 1;
 		}
 		return $fieldList;
+	}
+
+	/**
+	 * build an array of all the installed themes
+	 *
+	 * @param  bool acp or forum
+	 * @return array keys of folder names
+	 */
+	private function buildThemeList($acp = false)
+	{
+		static $cache;
+		$folderList = array();
+
+		if ($acp === true) {
+			if (isset($cache['acp'])) {
+				return $cache['acp'];
+			}
+
+			foreach (new DirectoryIterator(MYBB_ADMIN_DIR . 'styles') as $di) {
+				$folder = $di->getFilename();
+
+				if ($di->isDot() ||
+					!$di->isDir() ||
+					@!file_exists(MYBB_ADMIN_DIR . "styles/{$folder}/main.css")) {
+					continue;
+				}
+
+				$folderList[] = $folder;
+			}
+
+			$cache['acp'] = $folderList;
+		} else {
+			if (isset($cache['forum'])) {
+				return $cache['forum'];
+			}
+
+			$duplicates = array();
+			$query = $this->db->simple_select('themes', 'pid, properties');
+			while ($theme = $this->db->fetch_array($query)) {
+				$properties = unserialize($theme['properties']);
+				$folder = $properties['imgdir'];
+
+				if (!isset($duplicates[$folder])) {
+					$duplicates[$folder] = 1;
+					$folderList[] = $folder;
+				}
+			}
+
+			$cache['forum'] = $folderList;
+		}
+
+		return $folderList;
 	}
 }
 

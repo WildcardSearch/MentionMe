@@ -186,9 +186,10 @@ EOF
 );
 
 $styleSheets = array(
-	"mentionme" => array(
-		"attachedto" => '',
-		"stylesheet" => <<<EOF
+	"forum" => array(
+		"mentionme" => array(
+			"attachedto" => '',
+			"stylesheet" => <<<EOF
 div.mentionme_popup {
 	position: absolute;
 	overflow: hidden;
@@ -296,6 +297,7 @@ a.mentionme_mention {
 	/* style mention links here */
 }
 EOF
+		),
 	),
 );
 
