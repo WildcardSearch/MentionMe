@@ -249,9 +249,14 @@ function mentionBuild($user)
 		return false;
 	}
 
-	global $mybb;
+	global $mybb, $lang;
+
+	if (!$lang->mention) {
+		$lang->load('mention');
+	}
 
 	$username = htmlspecialchars_uni($user['username']);
+	$title = $lang->sprintf($lang->mention_link_title, $username);
 	if ($mybb->settings['mention_format_names']) {
 		// set up the user name link so that it displays correctly for the display group of the user
 		$username = format_name($username, $user['usergroup'], $user['displaygroup']);
@@ -265,7 +270,7 @@ function mentionBuild($user)
 
 	// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
 	return <<<EOF
-{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}" class="mentionme_mention"{$target}>{$username}</a>
+{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}" class="mentionme_mention" title="{$title}"{$target}>{$username}</a>
 EOF;
 }
 
