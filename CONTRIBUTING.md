@@ -1,4 +1,4 @@
-First of all, thanks for your interest in contributing to Advanced Sidebox. This document is intended to ease the process for first time contributors and long-time contributors alike.
+First of all, thanks for your interest in contributing to this project. This document is intended to ease the process for first time contributors and long-time contributors alike.
 
 ## Reporting Bugs/Requesting Features
 
