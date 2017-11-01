@@ -293,7 +293,7 @@ function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
 
     // if there are no restrictions on the forum then anyone can view it
     if (empty($forum_permissions[$fid]) ||
-		$forum_permissions[$fid] = 0) {
+		$forum_permissions[$fid] == 0) {
         return true;
     }
 
