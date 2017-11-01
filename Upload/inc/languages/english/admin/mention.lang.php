@@ -35,6 +35,9 @@ $l['mention_cache_time_description'] = 'The task caches usernames based on when 
 $l['mention_get_thread_participants_title'] = 'Retrieve Thread Participants?';
 $l['mention_get_thread_participants_description'] = 'YES (default) to include and proritize highly names of users who have participated in the current thread';
 
+$l['mention_max_thread_participants_title'] = 'Maximun Thread Participants?';
+$l['mention_max_thread_participants_description'] = 'The maximum amount of recent posters to prioritize in the autocomplete popup';
+
 $l['mention_full_text_search_title'] = 'Full Text Search?';
 $l['mention_full_text_search_description'] = 'YES to match characters in the autocomplete popup anywhere in the username, NO (default) to search for usernames that start with the typed characters';
 

@@ -501,8 +501,10 @@ function mentionMeXMLHTTPgetNameCache()
 	}
 
 	$tid = (int) $mybb->input['tid'];
+	$limit = (int) $mybb->settings['mention_max_thread_participants'];
 	if ($tid &&
-		$mybb->settings['mention_get_thread_participants']) {
+		$mybb->settings['mention_get_thread_participants'] &&
+		$limit > 0) {
 		if ($mybb->settings['mention_show_avatars']) {
 			$query = $db->write_query("
 				SELECT p.username, u.avatar
@@ -511,9 +513,10 @@ function mentionMeXMLHTTPgetNameCache()
 				WHERE p.tid='{$tid}'
 				GROUP BY p.username
 				ORDER BY p.dateline DESC
+				LIMIT {$limit}
 			");
 		} else {
-			$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'dateline', "order_dir" => 'DESC', "group_by" => 'username'));
+			$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'dateline', "order_dir" => 'DESC', "group_by" => 'username', "limit" => $limit));
 		}
 
 		if ($db->num_rows($query) > 0) {
