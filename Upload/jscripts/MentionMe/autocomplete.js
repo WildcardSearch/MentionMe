@@ -281,6 +281,13 @@ var MentionMe = (function($, m) {
 			this.clear();
 
 			for (i = 0; i < cacheLength; i++) {
+				if (typeof this.items[i] === "undefined" ||
+					typeof data[this.items[i]] === "undefined" ||
+					typeof data[this.items[i]]["username"] === "undefined" ||
+					typeof data[this.items[i]]["avatar"] === "undefined") {
+					continue;
+				}
+
 				text = data[this.items[i]]["username"];
 				if (this.keyCache.getText()) {
 					start = this.items[i].indexOf(this.keyCache.getText());
