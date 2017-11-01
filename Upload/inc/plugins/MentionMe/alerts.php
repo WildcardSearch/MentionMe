@@ -20,15 +20,15 @@ if (!defined('IN_MYBB') ||
  * @return void
  */
 $plugins->add_hook("datahandler_post_update", "mentionMeMyAlertsDatahandlerPostUpdate");
-function mentionMeMyAlertsDatahandlerPostUpdate($this_post)
+function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
 {
 	global $db, $mybb, $post;
 
 	// grab the post data
-	$message = $this_post->data['message'];
-	$fid = (int) $this_post->data['fid'];
-	$tid = (int) $this_post->data['tid'];
-	$pid = (int) $this_post->data['pid'];
+	$message = $thisPost->data['message'];
+	$fid = (int) $thisPost->data['fid'];
+	$tid = (int) $thisPost->data['tid'];
+	$pid = (int) $thisPost->data['pid'];
 	$postUID = (int) $post['uid'];
 	$editUID = (int) $mybb->user['uid'];
 	$subject = $post['subject'];
@@ -76,18 +76,17 @@ function mentionMeMyAlertsDatahandlerPostUpdate($this_post)
         // do not create a duplicate
         $mentionedAlready[$uid] = true;
 
-        if (!mentionMeCheckPermissions($username, $to_uid, $fromUID, $fid)) {
+        if (!mentionMeCheckPermissions($username, $uid, $editUID, $fid)) {
 			continue;
 		}
 
-		$alert = new MybbStuff_MyAlerts_Entity_Alert((int) $postUID, $alertType, $tid);
-        $alert->setExtraDetails(
-            array(
-                'thread_title' => $subject,
-                'pid' => $pid,
-                'tid' => $tid
-			)
-		);
+		$alert = new MybbStuff_MyAlerts_Entity_Alert((int) $uid, $alertType, $tid);
+        $alert->setExtraDetails(array(
+			'thread_title' => $subject,
+			'pid' => $pid,
+			'tid' => $tid
+		));
+		$alert->setFromUserId($editUID);
         $alerts[] = $alert;
 	}
 
@@ -150,19 +149,21 @@ function mentionMeMyAlertsDoNewReplyEnd()
         $username = $val[3];
 
         // create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
-        if ($mybb->user['uid'] == $uid ||
+        if ($fromUser == $uid ||
 			$mentionedAlready[$uid]) {
             continue;
         }
 
-        $alert = new MybbStuff_MyAlerts_Entity_Alert((int) $uid, $alertType, $tid);
-        $alert->setExtraDetails(
-            array(
-                'thread_title' => $subject,
-                'pid' => $pid,
-                'tid' => $tid
-			)
-		);
+        if (!mentionMeCheckPermissions($username, $uid, $fromUser, $fid)) {
+			continue;
+		}
+
+		$alert = new MybbStuff_MyAlerts_Entity_Alert((int) $uid, $alertType, $tid);
+        $alert->setExtraDetails(array(
+			'thread_title' => $subject,
+			'pid' => $pid,
+			'tid' => $tid
+		));
 		$alert->setFromUserId($fromUser);
         $alerts[] = $alert;
 
