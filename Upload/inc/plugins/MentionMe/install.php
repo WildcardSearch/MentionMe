@@ -35,24 +35,24 @@ function mention_info()
 				<li style="list-style-image: url(styles/{$cp_style}/images/MentionMe/settings.gif); margin-top: 10px;">
 					{$settingsLink}
 				</li>
+				<li style="list-style-image: url(styles/{$cp_style}/images/icons/run_task.png); margin-top: 10px;">
+					<a href="index.php?module=config-plugins&amp;action=mentionme&amp;mode=rebuild_namecache">{$lang->mention_rebuild_name_cache_title}</a> &mdash; <span class="smalltext">{$lang->mention_rebuild_name_cache_description}</span>
+				</li>
 EOF;
 		// check for MyAlerts
 		if ($db->table_exists('alerts')) {
-			// check MyAlerts integration
 			if (mentionGetMyAlertsStatus()) {
-				// if so give them a success message
 				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/success.png)">
 					{$lang->mention_myalerts_successfully_integrated}
 				</li>
 EOF;
 			} else {
-				// if not, warn them and provide a link for integration
 				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">{$lang->mention_myalerts_integration_message}
 				</li>
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/group.png)">
-					<a href="index.php?module=config-plugins&amp;action=mention_myalerts_integrate">{$lang->mention_myalerts_integrate_link}</a>
+					<a href="index.php?module=config-plugins&amp;action=mentionme&amp;mode=myalerts_integrate">{$lang->mention_myalerts_integrate_link}</a>
 				</li>
 EOF;
 			}
@@ -128,11 +128,7 @@ function mention_install()
 		$lang->load('mention');
 	}
 
-	// do it all :D
-	if (!class_exists('WildcardPluginInstaller')) {
-		require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php';
-	}
-	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
+	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->install();
 
 	if ($db->table_exists('alerts')) {
@@ -175,6 +171,11 @@ function mention_activate()
 			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/installer.php');
 		}
 
+		if (version_compare($oldVersion, '3.2', '<')) {
+			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php');
+			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginCache.php');
+		}
+
 		// check everything and upgrade if necessary
 		mention_install();
     }
@@ -190,12 +191,10 @@ function mention_activate()
 	find_replace_templatesets('postbit_classic', "#" . preg_quote('{$post[\'button_multiquote\']}') . "#i", '{$post[\'button_multiquote\']}{$post[\'button_mention\']}');
 	find_replace_templatesets('footer', '#^(.*?)$#s', '$1{$mentionAutocomplete}');
 
+	require_once MYBB_ROOT.'/inc/functions_task.php';
 	// have we already added our name caching task?
 	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
     if ($db->num_rows($query) == 0) {
-        // if not then do so
-		require_once MYBB_ROOT.'/inc/functions_task.php';
-
         $thisTask = array(
             "title" => $lang->mention_task_name,
             "file" => 'mentiome_namecache',
@@ -221,9 +220,7 @@ function mention_activate()
         // we've already made the task, just get the id
 		$tid = (int) $db->fetch_field($query, 'tid');
 
-		// update the next run and then run the task
-		require_once MYBB_ROOT.'/inc/functions_task.php';
-        $db->update_query('tasks', array('enabled' => 1, 'nextrun' => TIME_NOW + 3600), "file='mentiome_namecache'");
+		$db->update_query('tasks', array('enabled' => 1, 'nextrun' => TIME_NOW + 3600), "file='mentiome_namecache'");
     }
 
 	// run the task immediately so there is data to work with
@@ -265,11 +262,7 @@ function mention_uninstall()
 {
 	global $db, $cache;
 
-	// remove all changes
-	if (!class_exists('WildcardPluginInstaller')) {
-		require_once MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php';
-	}
-	$installer = new WildcardPluginInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
+	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
 	$installer->uninstall();
 
 	// remove the task entry
@@ -310,9 +303,11 @@ function mentionMeAddPeekers($peekers)
 		return;
 	}
 
-	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_get_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars"), 1, true)';
+	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_get_thread_participants, #row_setting_mention_max_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars, #row_setting_mention_lock_selection"), 1, true)';
 
 	$peekers[] = 'new Peeker($(".setting_mention_add_postbit_button"), $("#row_setting_mention_multiple"), 1, true)';
+
+	$peekers[] = 'new Peeker($(".setting_mention_get_thread_participants"), $("#row_setting_mention_max_thread_participants"), 1, true)';
 
 	return $peekers;
 }
@@ -448,15 +443,34 @@ function mentionMeUnsetCacheVersion()
 $plugins->add_hook('admin_load', 'mentionMeAdminLoad');
 function mentionMeAdminLoad()
 {
-	global $mybb, $page, $lang;
-	if($page->active_action == 'plugins' && $mybb->input['action'] == 'mention_myalerts_integrate')
-	{
+	global $mybb, $db, $page, $lang;
+	if ($page->active_action != 'plugins' ||
+		$mybb->input['action'] != 'mentionme') {
+		return;
+	}
+
+	if ($mybb->input['mode'] == 'myalerts_integrate') {
 		// if it is our time
 		mentionMeMyAlertsIntegrate();
 		flash_message($lang->mention_myalerts_successfully_integrated, 'success');
 		admin_redirect('index.php?module=config-plugins');
-		exit;
+	} elseif ($mybb->input['mode'] == 'rebuild_namecache') {
+		require_once MYBB_ROOT.'/inc/functions_task.php';
+		$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
+		if ($db->num_rows($query) == 0) {
+			flash_message($lang->mention_rebuild_name_cache_error, 'error');
+			admin_redirect('index.php?module=config-plugins');
+		}
+
+		$tid = $db->fetch_field($query, 'tid');
+		if (run_task($tid)) {
+			flash_message($lang->mention_rebuild_name_cache_success, 'success');
+		} else {
+			flash_message($lang->mention_rebuild_name_cache_error, 'error');
+		}
+		admin_redirect('index.php?module=config-plugins');
 	}
+	exit;
 }
 
 /*

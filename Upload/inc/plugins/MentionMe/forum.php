@@ -27,6 +27,11 @@ function mentionMeParseMessage($message)
 {
 	global $mybb;
 
+	$sp = ' ';
+	if ($mybb->settings['mention_advanced_matching']) {
+		$sp = '';
+	}
+
 	// emails addresses cause issues, strip them before matching
 	$emailRegex = "#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i";
 	preg_match_all($emailRegex, $message, $emails, PREG_SET_ORDER);
@@ -37,12 +42,16 @@ function mentionMeParseMessage($message)
 	 *
 	 * quoted
 	 */
-	$message = preg_replace_callback('#@([\'|"|`])(?P<quoted>[^<\n]+?)\1#u', 'mentionDetect', $message);
+	$message = preg_replace_callback('#@([\'|"|`])(?P<quoted>[^<>&\\\;,\n]+?)\1#u', 'mentionDetect', $message);
 
 	/**
 	 * unquoted
 	 */
-	$message = preg_replace_callback('#@(?P<unquoted>[\w .]{' . (int) $mybb->settings['minnamelength'] . ',' . (int) $mybb->settings['maxnamelength'] . '})#u', 'mentionDetect', $message);
+	$pattern = <<<EOF
+#@(?P<unquoted>[^<>&\\\;,{$sp}.?\n]{{$mybb->settings['minnamelength']},{$mybb->settings['maxnamelength']}})#u
+EOF;
+
+	$message = preg_replace_callback($pattern, 'mentionDetect', $message);
 
 	// now restore the email addresses
 	foreach ($emails as $email) {
@@ -240,9 +249,14 @@ function mentionBuild($user)
 		return false;
 	}
 
-	global $mybb;
+	global $mybb, $lang;
+
+	if (!$lang->mention) {
+		$lang->load('mention');
+	}
 
 	$username = htmlspecialchars_uni($user['username']);
+	$title = $lang->sprintf($lang->mention_link_title, $username);
 	if ($mybb->settings['mention_format_names']) {
 		// set up the user name link so that it displays correctly for the display group of the user
 		$username = format_name($username, $user['usergroup'], $user['displaygroup']);
@@ -256,7 +270,7 @@ function mentionBuild($user)
 
 	// the HTML id property is used to store the uid of the mentioned user for MyAlerts (if installed)
 	return <<<EOF
-{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}" class="mentionme_mention"{$target}>{$username}</a>
+{$mybb->settings['mention_display_symbol']}<a id="mention_{$user['uid']}" href="{$url}" class="mentionme_mention" title="{$title}"{$target}>{$username}</a>
 EOF;
 }
 
@@ -487,19 +501,31 @@ function mentionMeXMLHTTPgetNameCache()
 	}
 
 	$tid = (int) $mybb->input['tid'];
+	$limit = (int) $mybb->settings['mention_max_thread_participants'];
 	if ($tid &&
-		$mybb->settings['mention_get_thread_participants']) {
+		$mybb->settings['mention_get_thread_participants'] &&
+		$limit > 0) {
 		if ($mybb->settings['mention_show_avatars']) {
 			$query = $db->write_query("
 				SELECT p.username, u.avatar
 				FROM {$db->table_prefix}posts p
 				LEFT JOIN {$db->table_prefix}users u ON (p.uid=u.uid)
-				WHERE p.tid='{$tid}'
-				GROUP BY p.username
-				ORDER BY p.dateline DESC
+				WHERE p.pid IN (
+					SELECT MAX(pid)
+					FROM {$db->table_prefix}posts
+					WHERE tid='{$tid}'
+					GROUP BY username
+				)
+				ORDER BY p.pid DESC
+				LIMIT {$limit}
 			");
 		} else {
-			$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'dateline', "order_dir" => 'DESC', "group_by" => 'username'));
+			$query = $db->simple_select('posts', 'username', "pid IN (
+				SELECT MAX(pid)
+				FROM {$db->table_prefix}posts
+				WHERE tid='{$tid}'
+				GROUP BY username
+			)", array("order_by" => 'pid', "order_dir" => 'DESC', "limit" => $limit));
 		}
 
 		if ($db->num_rows($query) > 0) {
@@ -630,7 +656,7 @@ EOF;
  * @return void
  */
 function mentionMeBuildPopup() {
-	global $mybb, $templates, $mentionAutocomplete, $lang, $templates;
+	global $mybb, $lang, $theme, $templates, $mentionAutocomplete;
 
 	if (!$lang->mention) {
 		$lang->load('mention');
@@ -656,6 +682,8 @@ function mentionMeBuildPopup() {
 		tid: '{$mybb->input['tid']}',
 		fullText: '{$mybb->settings['mention_full_text_search']}',
 		showAvatars: '{$mybb->settings['mention_show_avatars']}',
+		imageDirectory: '{$theme['imgdir']}',
+		lockSelection: '{$mybb->settings['mention_lock_selection']}',
 	});
 // -->
 </script>

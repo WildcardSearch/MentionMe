@@ -4,8 +4,7 @@
  * Copyright 2014 WildcardSearch
  * http://www.rantcentralforums.com
  *
- * this file contains data used by
- * classes/WildcardPluginInstaller.php
+ * this file contains data used by WildcardPluginInstaller
  */
 
 $settings = array(
@@ -45,6 +44,15 @@ $settings = array(
 				"value" => '1',
 				"disporder" => '30'
 			),
+			"mention_max_thread_participants" => array(
+				"sid" => '0',
+				"name" => "mention_max_thread_participants",
+				"title" => $lang->mention_max_thread_participants_title,
+				"description" => $lang->mention_max_thread_participants_description,
+				"optionscode" => "text",
+				"value" => '5',
+				"disporder" => '40'
+			),
 			"mention_full_text_search" => array(
 				"sid" => '0',
 				"name" => "mention_full_text_search",
@@ -52,7 +60,7 @@ $settings = array(
 				"description" => $lang->mention_full_text_search_description,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '40'
+				"disporder" => '50'
 			),
 			"mention_show_avatars" => array(
 				"sid" => '0',
@@ -61,7 +69,16 @@ $settings = array(
 				"description" => $lang->mention_show_avatars_description,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '50'
+				"disporder" => '60'
+			),
+			"mention_lock_selection" => array(
+				"sid" => '0',
+				"name" => "mention_lock_selection",
+				"title" => $lang->mention_lock_selection_title,
+				"description" => $lang->mention_lock_selection_description,
+				"optionscode" => "yesno",
+				"value" => '1',
+				"disporder" => '70'
 			),
 			"mention_add_postbit_button" => array(
 				"sid" => '0',
@@ -70,7 +87,7 @@ $settings = array(
 				"description" => $lang->mention_add_postbit_button_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '60'
+				"disporder" => '80'
 			),
 			"mention_multiple" => array(
 				"sid" => '0',
@@ -79,7 +96,7 @@ $settings = array(
 				"description" => $lang->mention_multiple_description,
 				"optionscode" => 'yesno',
 				"value" => '0',
-				"disporder" => '70'
+				"disporder" => '90'
 			),
 			"mention_format_names" => array(
 				"sid" => '0',
@@ -88,7 +105,7 @@ $settings = array(
 				"description" => $lang->mention_format_names_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '80'
+				"disporder" => '100'
 			),
 			"mention_display_symbol" => array(
 				"sid" => '0',
@@ -97,7 +114,7 @@ $settings = array(
 				"description" => $lang->mention_display_symbol_desc,
 				"optionscode" => "text",
 				"value" => '@',
-				"disporder" => '90'
+				"disporder" => '110'
 			),
 			"mention_open_link_in_new_window" => array(
 				"sid" => '0',
@@ -106,7 +123,7 @@ $settings = array(
 				"description" => $lang->mention_open_link_in_new_window_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '100'
+				"disporder" => '120'
 			),
 			"mention_cache_time" => array(
 				"sid" => '0',
@@ -115,7 +132,7 @@ $settings = array(
 				"description" => $lang->mention_cache_time_description,
 				"optionscode" => "text",
 				"value" => '7',
-				"disporder" => '110'
+				"disporder" => '130'
 			),
 			"mention_minify_js" => array(
 				"sid" => '0',
@@ -124,7 +141,7 @@ $settings = array(
 				"description" => $lang->mention_minify_js_desc,
 				"optionscode" => "yesno",
 				"value" => '1',
-				"disporder" => '120'
+				"disporder" => '140'
 			),
 			"mention_advanced_matching" => array(
 				"sid" => '0',
@@ -133,7 +150,7 @@ $settings = array(
 				"description" => $lang->mention_advanced_matching_desc,
 				"optionscode" => "yesno",
 				"value" => '0',
-				"disporder" => '130'
+				"disporder" => '150'
 			),
 		)
 	)
@@ -162,15 +179,15 @@ EOF
 EOF
 			,
 			"mentionme_popup" => <<<EOF
-<div id="mentionme_popup" class="mentionme_popup" style="display: none;">
-	<div id="mentionme_spinner" class="mentionme_spinner">
+<div id="mentionme_master_popup" class="mentionme_popup" style="display: none;">
+	<div class="mentionme_spinner">
 		<img src="images/spinner.gif" />
 		<span>{\$lang->mention_autocomplete_loading}</span>
 	</div>
-	<div id="mentionme_popup_input_container">
-		<input id="mentionme_popup_input" type="text" autocomplete="off" />
+	<div class="mentionme_popup_input_container">
+		<input class="mentionme_popup_input" type="text" autocomplete="off" />
 	</div>
-	<div id="mentionme_popup_body"></div>
+	<div class="mentionme_popup_body"></div>
 </div>
 EOF
 		),
@@ -178,9 +195,10 @@ EOF
 );
 
 $styleSheets = array(
-	"mentionme" => array(
-		"attachedto" => '',
-		"stylesheet" => <<<EOF
+	"forum" => array(
+		"mentionme" => array(
+			"attachedto" => '',
+			"stylesheet" => <<<EOF
 div.mentionme_popup {
 	position: absolute;
 	overflow: hidden;
@@ -202,7 +220,7 @@ div.mentionme_popup {
 	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=1, Direction=135, Color='#818181');
 }
 
-#mentionme_popup_body {
+div.mentionme_popup_body {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 15px;
 	overflow-y: scroll;
@@ -210,11 +228,11 @@ div.mentionme_popup {
 	min-width: 150px;
 }
 
-#mentionme_popup_input_container {
+div.mentionme_popup_input_container {
 	border-bottom: 1px solid #DDD;
 }
 
-#mentionme_popup_input {
+input.mentionme_popup_input {
 	border: none;
 	width: 100%;
 	height: 25px;
@@ -230,6 +248,15 @@ div.mentionme_popup_item {
 div.mentionme_popup_item_on {
 	background: #3366FF;
 	color: white;
+}
+
+span.mentionme_popup_instructions {
+	color: grey;
+	font-style: italic;
+}
+
+span.mentionme_typed_text {
+	padding-left: 3px;
 }
 
 span.mention_name_highlight {
@@ -279,6 +306,7 @@ a.mentionme_mention {
 	/* style mention links here */
 }
 EOF
+		),
 	),
 );
 

@@ -16,6 +16,8 @@ var MentionMe = (function($, m) {
 			tid: "",
 			fullText: 0,
 			showAvatars: 1,
+			imageDirectory: "images",
+			lockSelection: 1,
 		},
 
 		lang = {
@@ -24,13 +26,11 @@ var MentionMe = (function($, m) {
 
 		key = {
 			BACKSPACE: 8,
-			NEWLINE: 10,
 			ENTER: 13,
 			SHIFT: 16,
 			CTRL: 17,
 			ALT: 18,
 			ESC: 27,
-			SPACE: 32,
 			PAGE_UP: 33,
 			PAGE_DOWN: 34,
 			END: 35,
@@ -47,119 +47,104 @@ var MentionMe = (function($, m) {
 	/**
 	 * the popup object
 	 */
-	popup = (function() {
-		var visible = false,
-			spinnerVisible = false,
-
-			selected = 0,
-			lastSelected = null,
-
-			width = 0,
-			scrollWidthDiff = 0,
-			inputHeight,
-			lineHeight,
-
-			items = [],
-
-			$container,
-			$popup,
-			$spinner,
-			$input,
-			$inputDiv,
-			$body;
-
+	Popup = (function() {
 		/**
-		 * ready the popup
+		 * constructor
 		 *
+		 * @param  function editor interface
 		 * @return void
 		 */
-		function init() {
-			var $testDiv,
-				$testAvatar,
-				container = core.getContainer();
+		function MentionMeAutoCompletePopup(editorInterface) {
+			var $testDiv, $testAvatar, container;
 
-			$popup = $("#mentionme_popup");
-			$spinner = $("#mentionme_spinner").hide();
-			$input = $("#mentionme_popup_input");
-			$inputDiv = $("#mentionme_popup_input_container");
-			$body = $("#mentionme_popup_body");
+			this.editorInterface = editorInterface;
+			container = this.editorInterface.getContainer();
+
+			// clone the master popup and get linked up to the copy
+			this.$popup = $("#mentionme_master_popup").clone().attr("id", "");
+			this.$spinner = this.$popup.find("div.mentionme_spinner").hide();
+			this.$input = this.$popup.find("input.mentionme_popup_input");
+			this.$inputDiv = this.$popup.find("div.mentionme_popup_input_container");
+			this.$body = this.$popup.find("div.mentionme_popup_body");
 
 			if (typeof container === "string" &&
 				$("#" + container).length) {
-				$container = $("#" + container);
+				this.$container = $("#" + container);
 			} else if (typeof container === "object" &&
 				$(container).length) {
-				$container = $(container);
+				this.$container = $(container);
 			} else {
 				return false;
 			}
 
-			$container.append($popup);
-			$popup.css({
+			this.$container.append(this.$popup);
+			this.$popup.css({
 				left: "-1000px",
 				top: "-1000px",
 			}).show();
 
-			inputHeight = $inputDiv.height();
+			this.inputHeight = this.$inputDiv.height();
 
 			$testDiv = $("<div/>");
 
 			if (options.showAvatars) {
 				$testAvatar = $("<img/>", {
 					"class": "mention_user_avatar",
-					src: "images/default_avatar.png",
+					src: options.defaultAvatar,
 				}).appendTo($testDiv);
 			}
 
-			$testDiv.append(Array(options.maxLength + 1)
-						.join("M"))
-					.addClass("mentionme_popup_item");
+			$testDiv.append(Array(options.maxLength + 1).join("M"))
+				.addClass("mentionme_popup_item");
 
-			$body.html($testDiv);
+			this.$body.html($testDiv);
 
 			// figure the line height for later use
-			lineHeight = parseInt($testDiv.height()) +
-				core.lineHeightModifier +
-				parseInt($testDiv.css("paddingTop").replace("px", "")) +
-				parseInt($testDiv.css("paddingBottom").replace("px", ""));
+			this.lineHeight = pi($testDiv.height()) +
+				this.editorInterface.lineHeightModifier +
+				pi($testDiv.css("paddingTop").replace("px", "")) +
+				pi($testDiv.css("paddingBottom").replace("px", ""));
 
-			scrollWidthDiff = $body.width() - $body[0].scrollWidth;
+			this.$instructions = $("<span/>", {
+				"class": "mentionme_popup_instructions",
+			}).html(lang.instructions);
+
+			this.scrollWidthDiff = this.$body.width() - this.$body[0].scrollWidth;
+
+			this.keyCache = new KeyCache(this);
+			this.nameCache = new NameCache(this);
 		}
 
 		/**
 		 * display the popup where the user was typing (hopefully)
 		 *
+		 * @param  int
+		 * @param  int
 		 * @return void
 		 */
 		function show(left, top) {
-			// load the name cache if necessary
-			if (!nameCache.isReady() &&
-				!nameCache.isLoading()) {
-				nameCache.init();
-			}
-
-			keyCache.init();
+			this.keyCache.clear();
 
 			// go ahead and fill the popup with suggestions from the name cache
-			update();
+			this.update();
 
 			// resize, locate and show the popup, selecting the first item
-			move(left, top);
-			$popup.show();
-			lastSelected = null;
-			select();
-			visible = true;
+			this.move(left, top);
+			this.$popup.show();
+			this.lastSelected = null;
+			this.select();
+			this.visible = true;
 
 			// for highlighting, selecting and dismissing the popup and items
-			$body.mouseover(onMouseMove);
-			$body.click(onClick);
-			$(document).click(hide);
-			core.bindClick(hide);
-			$input.keydown(onKeyDown);
-			$input.keyup(updateCheck);
-			$input.click(onInputClick);
+			this.$body.mouseover($.proxy(this.onMouseMove, this));
+			this.$body.click($.proxy(this.onClick, this));
+			$(document).click($.proxy(this.hide, this));
+			this.editorInterface.bindClick($.proxy(this.hide, this));
+			this.$input.keydown($.proxy(this.onKeyDown, this));
+			this.$input.keyup($.proxy(this.updateCheck, this));
+			this.$input.click($.proxy(this.onInputClick, this));
 
-			$input.focus();
+			this.$input.focus();
 		}
 
 		/**
@@ -168,51 +153,50 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function hide() {
-			$popup.hide();
+			this.$popup.hide();
 
-			$body.unbind("mouseover", onMouseMove);
-			$body.unbind("click", onClick);
-			$(document).unbind("click", hide);
-			core.unBindClick(hide);
-			$input.unbind("keydown", onKeyDown);
-			$input.unbind("keyup", updateCheck);
-			$input.unbind("click", onInputClick);
+			this.$body.off("mouseover", this.onMouseMove);
+			this.$body.off("click", this.onClick);
+			$(document).off("click", this.hide);
+			this.editorInterface.unbindClick(this.hide);
+			this.$input.off("keydown", this.onKeyDown);
+			this.$input.off("keyup", this.updateCheck);
+			this.$input.off("click", this.onInputClick);
 
-			visible = false;
-			$input.val("");
-			core.focus();
+			this.visible = false;
+			this.$input.val("");
 		}
 
 		/**
-		 * resize and (optionally) reposition the popup
+		 * resize and/or reposition the popup
 		 *
-		 * @param  left (Number) the left-most x coordinate
-		 * @param  top (Number) the top-most y coordinate
+		 * @param  int x1
+		 * @param  int y1
 		 * @return void
 		 */
 		function move(left, top) {
 			var style,
-				longestName = nameCache.getLongestName(),
+				longestName = this.nameCache.getLongestName(),
 				$testAvatar;
 
-			width = 0;
+			this.width = 0;
 			if (options.showAvatars) {
 				$testAvatar = $("<img/>", {
 					"class": "mention_user_avatar",
-					src: "images/default_avatar.png",
+					src: options.defaultAvatar,
 				}).css({
 					left: "-1000px",
 					top: "-1000px",
-				}).appendTo($container);
-				width += $testAvatar.width();
+				}).appendTo(this.$container);
+				this.width += $testAvatar.width();
 				$testAvatar.remove();
 			}
 
-			width += parseInt($body.css("fontSize").replace("px", "") * longestName);
+			this.width += pi(this.$body.css("fontSize").replace("px", "") * longestName);
 
 			style = {
-				height: getCurrentHeight() + inputHeight + "px",
-				width: parseInt(width - scrollWidthDiff) + "px",
+				height: this.getCurrentHeight() + this.inputHeight + "px",
+				width: pi(this.width - this.scrollWidthDiff) + "px",
 			};
 
 			if (typeof left != "undefined") {
@@ -222,11 +206,11 @@ var MentionMe = (function($, m) {
 				style.top = top + "px";
 			}
 
-			$popup.css(style);
+			this.$popup.css(style);
 
-			$body.css({
-				height: getCurrentHeight() + "px",
-				width: width,
+			this.$body.css({
+				height: this.getCurrentHeight() + "px",
+				width: this.width,
 			});
 		}
 
@@ -238,23 +222,23 @@ var MentionMe = (function($, m) {
 		 */
 		function update() {
 			// if we get here too early, back off
-			if (!nameCache.isReady()) {
-				showSpinner();
+			if (!this.nameCache.isReady()) {
+				this.showSpinner();
 				return;
 			}
 
 			// get matching names and insert them into the list, selecting the first
-			nameCache.match();
-			buildItems();
-			lastSelected = null;
-			select();
+			this.nameCache.match();
+			this.buildItems();
+			this.lastSelected = null;
+			this.select();
 
 			/**
 			 * if we have at least {minLength} chars,
 			 * search to augment the (incomplete) name cache
 			 */
-			if (keyCache.getLength() >= options.minLength) {
-				nameCache.search();
+			if (this.keyCache.getLength() >= options.minLength) {
+				this.nameCache.search();
 			}
 		}
 
@@ -264,75 +248,78 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function buildItems() {
-			var i,
-				text,
-				avatar,
-				avatarPath,
-				start,
-				cacheLength = nameCache.getItemsLength(),
-				data = nameCache.getData(),
-				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ?
-					"hand" :
-					"pointer";
+			var i, text, avatar, avatarPath, start, user,
+				cacheLength = this.nameCache.getItemsLength(),
+				data = this.nameCache.getData(),
+				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ? "hand" : "pointer";
 
-			items = nameCache.getItems();
+			this.items = this.nameCache.getItems();
 
 			// if we've got no matches and the spinner isn't up . . .
 			if (cacheLength === 0 &&
-				spinnerVisible == false) {
+				this.spinnerVisible == false) {
 				// . . . and there are typed chars . . .
-				if (keyCache.getLength() > 0) {
+				if (this.keyCache.getLength() > 0) {
 					// . . . show them what they've typed
-					clear();
-					$body.html(keyCache.getText());
+					this.clear();
+					this.$body.html($("<span/>", {
+						"class": "mentionme_typed_text",
+					}).html(this.keyCache.getText()));
 				} else {
 					// . . . otherwise, instruct them (this should rarely, if ever, be seen)
-					showInstructions();
+					this.showInstructions();
 				}
+
 				// resize the popup
-				if (isVisible()) {
-					move();
+				if (this.isVisible()) {
+					this.move();
 				}
 				return;
 			}
 
 			// if we have content, clear out and get ready to build items
-			clear();
+			this.clear();
 
 			for (i = 0; i < cacheLength; i++) {
-				text = data[items[i]]["username"];
-				if (keyCache.getText()) {
-					start = items[i].indexOf(keyCache.getText());
+				user = this.items[i];
+				text = data[user]["username"];
+				if (this.keyCache.getText()) {
+					start = user.indexOf(this.keyCache.getText());
 
 					if ((options.fullText && start !== -1) ||
 						(!options.fullText && start === 0)) {
 						text = text.slice(0, start) +
 						'<span class="mention_name_highlight">' +
-						text.slice(start, start + keyCache.getText().length) +
-						'</span>' +
-						text.slice(start + keyCache.getText().length);
+						text.slice(start, start + this.keyCache.getLength()) +
+						"</span>" +
+						text.slice(start + this.keyCache.getLength());
 					}
 				}
 
 				avatar = "";
 				if (options.showAvatars) {
-					avatarPath = data[items[i]]["avatar"];
+					avatarPath = data[user]["avatar"];
 					if (avatarPath.length == 0) {
-						avatarPath = "images/default_avatar.png";
+						avatarPath = options.defaultAvatar;
 					}
-					avatar = '<img class="mention_user_avatar" src="' + avatarPath + '" />';
+					avatar = $("<img/>", {
+						"class": "mention_user_avatar",
+						src: avatarPath,
+					}).one("error", function() {
+						this.src = options.defaultAvatar;
+					});
 				}
-				$body.append($("<div/>", {
-					id: "mentionme_popup_item_" + i,
-					"class": "mentionme_popup_item"
-				}).html(avatar + text).css({
+
+				this.$body.append($("<div/>", {
+					"class": "mentionme_popup_item mentionme_popup_item_" + i,
+				}).append(avatar).append(text).css({
 					cursor: c,
 				}));
 			}
 
 			// resize the popup
-			if (isVisible()) {
-				move();
+			if (this.isVisible()) {
+				this.move();
 			}
 		}
 
@@ -342,13 +329,13 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function clear() {
-			$body.html("");
-			lastSelected = null;
-			spinnerVisible = false;
+			this.$body.html("");
+			this.lastSelected = null;
+			this.spinnerVisible = false;
 
 			// resize the popup
-			if (isVisible()) {
-				move();
+			if (this.isVisible()) {
+				this.move();
 			}
 		}
 
@@ -358,13 +345,13 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function showSpinner() {
-			clear();
-			$body.html($spinner);
-			spinnerVisible = true;
+			this.clear();
+			this.$body.html(this.$spinner);
+			this.spinnerVisible = true;
 
 			// resize the popup
-			if (isVisible()) {
-				move();
+			if (this.isVisible()) {
+				this.move();
 			}
 		}
 
@@ -374,153 +361,183 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function showInstructions() {
-			clear();
-			$body.html('<span style="color: grey; font-style: italic;">'
-				+ lang.instructions +
-				"</span>");
+			this.clear();
+			this.$body.html(this.$instructions);
 		}
 
 		/**
 		 * update the popup if necessary
 		 *
-		 * @param  object event
 		 * @return void
 		 */
 		function updateCheck() {
-			if (keyCache.update()) {
-				update();
+			if (this.keyCache.update()) {
+				this.update();
 			}
 		}
 
 		/**
 		 * highlight an item in the name list
 		 *
-		 * @param  selection (String) the position label
+		 * @param  string position alias
 		 * @return void
 		 */
 		function select(selection) {
-			var lastItem = nameCache.getItemsLength() - 1;
+			var lastItem = this.nameCache.getItemsLength() - 1;
 
 			switch (selection) {
 			case "last":
-				selected = lastItem;
+				this.selected = lastItem;
 				break;
 			case "next":
-				selected++;
-				if (selected > lastItem) {
-					selected = 0;
+				this.selected++;
+				if (this.selected > lastItem) {
+					this.selected = 0;
 				}
 				break;
 			case "previous":
-				selected--;
-				if (selected < 0) {
-					selected = lastItem;
+				this.selected--;
+				if (this.selected < 0) {
+					this.selected = lastItem;
 				}
 				break;
 			case "nextPage":
-				selected  += options.maxItems;
-				if (selected > lastItem) {
-					selected = lastItem;
+				this.selected  += options.maxItems;
+				if (this.selected > lastItem) {
+					this.selected = lastItem;
 				}
 				break;
 			case "previousPage":
-				selected  -= options.maxItems;
-				if (selected < 0) {
-					selected = 0;
+				this.selected  -= options.maxItems;
+				if (this.selected < 0) {
+					this.selected = 0;
 				}
 				break;
 			default:
-				selected = 0;
+				this.selected = 0;
 				break;
 			}
 
-			highlightSelected();
+			this.highlightSelected();
 		}
 
 		/**
 		 * assign the "on" class to the currently
 		 * selected list item
 		 *
-		 * @param  noScroll (Boolean) true to highlight
-		 * without scrolling the item into view
-		 * (for the mouse to prevent weirdness) or
-		 * false to scroll to the newly highlighted item
-		 *
-		 * @return  void
+		 * @param  bool true to highlight without scrolling the item into view
+		 * @return void
 		 */
 		function highlightSelected(noScroll) {
-			if (lastSelected == selected ||
-				$("#mentionme_popup_item_" + selected).length === 0) {
+			var $selectedItem = this.$popup.find(".mentionme_popup_item_" + this.selected),
+				$lastSelectedItem = this.$popup.find(".mentionme_popup_item_" + this.lastSelected),
+				$highlightSpan = $lastSelectedItem.find("span.mention_name_highlight_on"),
+				offset = this.itemInView($selectedItem);
+
+			if (this.lastSelected == this.selected ||
+				$selectedItem.length == 0) {
 				return;
 			}
 
-			var selectedItem = $("#mentionme_popup_item_" + selected),
-				lastSelectedItem = $("#mentionme_popup_item_" + lastSelected),
-				highlightSpan = lastSelectedItem.find("span.mention_name_highlight_on");
+			if ($lastSelectedItem.length) {
+				$lastSelectedItem.removeClass("mentionme_popup_item_on");
 
-			if (lastSelectedItem.length) {
-				lastSelectedItem.removeClass("mentionme_popup_item_on");
-
-				if (highlightSpan.length) {
-					highlightSpan.removeClass("mention_name_highlight_on");
-					highlightSpan.addClass("mention_name_highlight");
+				if ($highlightSpan.length) {
+					$highlightSpan.removeClass("mention_name_highlight_on");
+					$highlightSpan.addClass("mention_name_highlight");
 				}
 			}
-			lastSelected = selected;
+			this.lastSelected = this.selected;
 
-			if (selectedItem) {
-				if (!selectedItem.hasClass("mentionme_popup_item_on")) {
-					selectedItem.addClass("mentionme_popup_item_on");
+			if ($selectedItem) {
+				if (!$selectedItem.hasClass("mentionme_popup_item_on")) {
+					$selectedItem.addClass("mentionme_popup_item_on");
 				}
 
-				highlightSpan = selectedItem.find("span.mention_name_highlight");
-				if (highlightSpan.length) {
-					highlightSpan.removeClass("mention_name_highlight");
-					highlightSpan.addClass("mention_name_highlight_on");
+				$highlightSpan = $selectedItem.find("span.mention_name_highlight");
+				if ($highlightSpan.length) {
+					$highlightSpan.removeClass("mention_name_highlight");
+					$highlightSpan.addClass("mention_name_highlight_on");
 				}
 			}
 
-			if (noScroll != true &&
-				(nameCache.getItemsLength() - options.maxItems) > 0) {
-				$body.prop("scrollTop", parseInt(selectedItem.prop("offsetTop") - inputHeight));
+			if (noScroll ||
+				(options.lockSelection !== 1 &&
+				offset === true)) {
+				return;
 			}
+
+			if (options.lockSelection) {
+				if (this.nameCache.getItemsLength() - options.maxItems > 0) {
+					this.$body.prop("scrollTop", pi($selectedItem.prop("offsetTop") - this.inputHeight));
+				}
+				return;
+			}
+
+			if (this.selected == 0) {
+				this.$body.prop("scrollTop", -this.inputHeight);
+				return;
+			}
+
+			if (offset > 0) {
+				this.$body.prop("scrollTop", pi($selectedItem.prop("offsetTop") - (this.getCurrentHeight() - this.lineHeight) - this.inputHeight));
+				return;
+			}
+
+			this.$body.prop("scrollTop", pi($selectedItem.prop("offsetTop") - this.inputHeight));
+		}
+
+		/**
+		 * determines whether an item is in view
+		 *
+		 * @param  jQuery element
+		 * @return boolean|int
+		 */
+		function itemInView($el) {
+			var offset = $el.prop("offsetTop") - this.$body.prop("scrollTop");
+			if (offset > 0 &&
+				(offset + this.lineHeight) < this.getCurrentHeight()) {
+				return true;
+			}
+			return offset;
 		}
 
 		/**
 		 * basic navigation for when the popup is open
 		 *
-		 * @param  event (Object)
+		 * @param  event
 		 * @return void
 		 */
 		function onKeyDown(e) {
 			switch (e.keyCode) {
 			case key.ENTER:
-				core.insert();
+				this.editorInterface.insert();
 				break;
 			case key.UP:
-				select("previous");
+				this.select("previous");
 				break;
 			case key.DOWN:
-				select("next");
+				this.select("next");
 				break;
 			case key.END:
-				select("last");
+				this.select("last");
 				break;
 			case key.HOME:
-				select();
+				this.select();
 				break;
 			case key.PAGE_UP:
-				select("previousPage");
+				this.select("previousPage");
 				break;
 			case key.PAGE_DOWN:
-				select("nextPage");
+				this.select("nextPage");
 				break;
 			case key.ESC:
-				hide();
+				this.hide();
 				break;
 			case key.BACKSPACE:
-				if ($input.val() === "") {
-					hide();
+				if (this.$input.val() === "") {
+					this.hide();
+					this.editorInterface.focus();
 				}
 				return;
 				break;
@@ -542,20 +559,20 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function onMouseMove(e) {
-			if (selectEventTarget(e)) {
-				highlightSelected(true);
+			if (this.selectEventTarget(e)) {
+				this.highlightSelected(true);
 			}
 		}
 
 		/**
 		 * trigger mention insertion on click
 		 *
-		 * @param  event (Object)
+		 * @param  event
 		 * @return void
 		 */
 		function onClick(e) {
-			if (selectEventTarget(e)) {
-				core.insert();
+			if (this.selectEventTarget(e)) {
+				this.editorInterface.insert();
 			} else {
 				e.preventDefault();
 			}
@@ -564,6 +581,7 @@ var MentionMe = (function($, m) {
 		/**
 		 * prevent event bubbling for clicks in input
 		 *
+		 * @param  event
 		 * @return void
 		 */
 		function onInputClick(e) {
@@ -581,31 +599,37 @@ var MentionMe = (function($, m) {
 				return false;
 			}
 
-			var idParts,
-				target = e.target;
+			var $target = $(e.target),
+				classes,
+				className,
+				classNameParts,
+				gotClassName = false;
 
-			// IE wigs out when the mouse hovers the scroll bar or border
-			try {
-				if (!target ||
-				    !target.id ||
-					target.id == "mentionme_popup" ||
-					target.id == "mentionme_spinner") {
-					return false;
-				}
-			} catch(e) {
-				return false;
+			if ($target.length == 0 ||
+				!$target.hasClass("mentionme_popup_item")) {
+				return;
 			}
 
-			// get the item # from the id
-			idParts = target.id.split("_");
-			if (!idParts ||
-				idParts.length == 0 ||
-				!idParts[idParts.length - 1]) {
+			classes = $target.prop("class").split(" ");
+			while (className = classes.shift()) {
+				if (typeof className !== "undefined" &&
+					["mentionme_popup_item", "mentionme_popup_item_on"].indexOf(className) === -1 &&
+					className.indexOf("mentionme_popup_item_") === 0) {
+					gotClassName = true;
+					break;
+				}
+			}
+
+			classNameParts = className.split("_");
+			if (!gotClassName ||
+				!classNameParts ||
+				classNameParts.length == 0 ||
+				!classNameParts[classNameParts.length - 1]) {
 				return false;
 			}
 
 			// if all is good, select it
-			selected = idParts[idParts.length - 1];
+			this.selected = classNameParts[classNameParts.length - 1];
 			return true;
 		}
 
@@ -615,21 +639,21 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function getSelectedName() {
-			if (nameCache.getItemsLength() === 0 ||
-				!items[selected]) {
+			if (this.nameCache.getItemsLength() === 0 ||
+				!this.items[this.selected]) {
 				return;
 			}
 
-			return nameCache.getData()[items[selected]]["username"];
+			return this.nameCache.getData()[this.items[this.selected]]["username"];
 		}
 
 		/**
 		 * approximate height based on initial line measurements
 		 *
-		 * @return Number the height in pixels
+		 * @return int the height in pixels
 		 */
 		function getCurrentHeight() {
-			return (lineHeight * Math.max(1, Math.min(options.maxItems, nameCache.getItemsLength()))) + core.heightModifier + 4;
+			return (this.lineHeight * Math.max(1, Math.min(options.maxItems, this.nameCache.getItemsLength()))) + this.editorInterface.heightModifier + 4;
 		}
 
 		/**
@@ -638,142 +662,164 @@ var MentionMe = (function($, m) {
 		 * @return string
 		 */
 		function getInputValue() {
-			return $input.val();
+			return this.$input.val();
 		}
 
 		/**
 		 * getter for line height
 		 *
-		 * @return number
+		 * @return int
 		 */
 		function getLineHeight() {
-			return lineHeight;
+			return this.lineHeight;
 		}
 
 		/**
 		 * getter for spinner visibility
 		 *
-		 * @return Boolean true if visible, false if not
+		 * @return bool true if visible, false if not
 		 */
 		function spinnerIsVisible() {
-			return spinnerVisible;
+			return this.spinnerVisible;
 		}
 
 		/**
 		 * getter for popup visibility
 		 *
-		 * @return Boolean true if visible, false if not
+		 * @return bool true if visible, false if not
 		 */
 		function isVisible() {
-			return visible;
+			return this.visible;
 		}
 
-		// the public methods
-		return {
-			init: init,
+		// extend the prototype
+		$.extend(MentionMeAutoCompletePopup.prototype, {
 			show: show,
 			hide: hide,
 			move: move,
 			update: update,
 			buildItems: buildItems,
+			clear: clear,
 			showSpinner: showSpinner,
 			showInstructions: showInstructions,
+			updateCheck: updateCheck,
 			select: select,
+			highlightSelected: highlightSelected,
+			itemInView: itemInView,
+			onKeyDown: onKeyDown,
+			onMouseMove: onMouseMove,
+			onClick: onClick,
+			onInputClick: onInputClick,
+			selectEventTarget: selectEventTarget,
 			getSelectedName: getSelectedName,
 			getCurrentHeight: getCurrentHeight,
 			getInputValue: getInputValue,
 			getLineHeight: getLineHeight,
 			spinnerIsVisible: spinnerIsVisible,
 			isVisible: isVisible,
-		};
+		});
+
+		return MentionMeAutoCompletePopup;
 	})(),
 
 	/**
 	 * this object manages the chars typed since the @ symbol
 	 */
-	keyCache = (function() {
-		var data = "",
-			mirror = "";
-
+	KeyCache = (function() {
 		/**
-		 * ready the typeahead cache
+		 * constructor
 		 *
-		 * @return  void
+		 * @param  MentionMeAutoCompletePopup
+		 * @return void
 		 */
-		function init() {
-			data = "";
-			mirror = "";
+		function MentionMeKeyCache(popup) {
+			this.popup = popup;
+			this.clear();
 		}
 
 		/**
-		 * mirror the currently typed characters in our key cache
+		 * reset the key cache
 		 *
-		 * @return (Boolean) true if a character was added, false if not
+		 * @return void
+		 */
+		function clear() {
+			this.data = "";
+			this.mirror = "";
+		}
+
+		/**
+		 * get change state
+		 *
+		 * @return bool true if changed
 		 */
 		function update() {
 			var ret = false,
-				inputVal = popup.getInputValue();
-			if (data !== inputVal) {
+				inputVal = this.popup.getInputValue();
+			if (this.data !== inputVal) {
 				ret = true;
 			}
 
-			data = inputVal;
+			this.data = inputVal;
 			return ret;
 		}
 
 		/**
-		 * getter for keyCache data length
+		 * getter for data length
 		 *
-		 * @return (Number) the length of the currently typed text
+		 * @return int
 		 */
 		function getLength() {
-			return data.length;
+			return this.data.length;
 		}
 
 		/**
-		 * getter for keyCache data
+		 * getter for data
 		 *
-		 * @param  Boolean true to return the cache as-is,
-		 * 	false to return lowercase
-		 * @return String the currently typed text
+		 * @param  bool false forces lowercase
+		 * @return string
 		 */
 		function getText(natural) {
 			if (natural != true) {
-				return data.toLowerCase();
+				return this.data.toLowerCase();
 			}
-			return data;
+			return this.data;
 		}
 
-		// the public methods
-		return {
-			init: init,
+		// extend the prototype
+		$.extend(MentionMeKeyCache.prototype, {
+			clear: clear,
 			update: update,
 			getLength: getLength,
 			getText: getText,
-		};
+		});
+
+		return MentionMeKeyCache;
 	})(),
 
 	/**
 	 * the user name cache object
 	 */
-	nameCache = (function() {
-		var data = {},
-			threadNames = {},
-			allNames = {},
-			ready = false,
-			loading = false,
-			searching = false,
-			searched = [],
-			items = [],
-			longestName = 5;
-
+	NameCache = (function() {
 		/**
-		 * ready the name cache
+		 * constructor
 		 *
-		 * @return  void
+		 * @param  MentionMeAutoCompletePopup
+		 * @return void
 		 */
-		function init() {
-			loading = true;
+		function MentionMeNameCache(popup) {
+			this.data = {};
+			this.threadNames = {};
+			this.allNames = {};
+			this.ready = false;
+			this.loading = true;
+			this.searching = false;
+			this.searched = [];
+			this.items = [];
+			this.longestName = 5;
+			this.popup = popup;
+			this.editorInterface = this.popup.editorInterface;
+			this.keyCache = popup.keyCache;
+
 			$.ajax({
 				type: "post",
 				url: "xmlhttp.php",
@@ -782,43 +828,43 @@ var MentionMe = (function($, m) {
 					mode: "getNameCache",
 					tid: options.tid,
 				},
-				success: loadNameCache,
+				success: this.loadNameCache.bind(this),
 			});
 		}
 
 		/**
 		 * deal with the server response and store the data
 		 *
-		 * @param  transport (Object) the XMLHTTP transport
-		 * @return  void
+		 * @param  object XMLHTTP response JSON
+		 * @return void
 		 */
 		function loadNameCache(response) {
-			ready = true;
-			loading = false;
-			threadNames = response.inThread;
-			allNames = response.cached;
+			this.ready = true;
+			this.loading = false;
+			this.threadNames = response.inThread;
+			this.allNames = response.cached;
 
-			$.extend(data, threadNames, allNames);
+			$.extend(this.data, this.threadNames, this.allNames);
 
-			if (data.length === 0) {
-				data = {};
-				popup.showInstructions();
+			if ($.isEmptyObject(this.data)) {
+				this.data = {};
+				this.popup.showInstructions();
 				// resize the popup
-				if (popup.isVisible()) {
-					popup.move();
+				if (this.popup.isVisible()) {
+					this.popup.move();
 				}
 				return;
 			}
 
-			if (popup.isVisible()) {
-				popup.update();
+			if (this.popup.isVisible()) {
+				this.popup.update();
 			}
 		}
 
 		/**
 		 * list names that match the keyCache (currently typed string)
 		 *
-		 * @return Number total items matched
+		 * @return int total items matched
 		 */
 		function match() {
 			var property,
@@ -826,54 +872,34 @@ var MentionMe = (function($, m) {
 				done = {},
 				allItems = [];
 
-			items = [];
-			longestName = 5;
+			this.items = [];
+			this.longestName = 5;
 
-			for (property in threadNames) {
-				if (!checkEntry(property, threadNames, done)) {
+			// thread participants
+			for (property in this.threadNames) {
+				if (!this.checkEntry(property, this.threadNames, done)) {
 					continue;
 				}
 
-				if (property.length > longestName) {
-					longestName = property.length;
-				}
-				items.push(property);
+				this.items.push(property);
 				done[property] = true;
 				i++;
 			}
 
-			for (property in data) {
-				if (!checkEntry(property, data, done)) {
+			// standard name cache
+			for (property in this.data) {
+				if (!this.checkEntry(property, this.data, done)) {
 					continue;
 				}
 
-				if (property.length > longestName) {
-					longestName = property.length;
-				}
 				allItems.push(property);
 				done[property] = true;
 				i++;
 			}
+			allItems = allItems.sort(sortByLength);
 
-			allItems = allItems.sort(sortNames);
-
-			$.merge(items, allItems);
+			$.merge(this.items, allItems);
 			return i;
-		}
-
-		/**
-		 * sort names by length
-		 *
-		 * @return number
-		 */
-		function sortNames(a, b) {
-			if (a.length < b.length) {
-				return -1;
-			} else if (a.length > b.length) {
-				return 1;
-			} else {
-				return 0;
-			}
 		}
 
 		/**
@@ -885,12 +911,16 @@ var MentionMe = (function($, m) {
 			if (!data.hasOwnProperty(property) ||
 				!data[property] ||
 				done[property] ||
-				(keyCache.getLength() &&
+				(this.keyCache.getLength() &&
 				((!options.fullText &&
-				property.slice(0, keyCache.getLength()) !== keyCache.getText()) ||
+				property.slice(0, this.keyCache.getLength()) !== this.keyCache.getText()) ||
 				(options.fullText &&
-				property.indexOf(keyCache.getText()) === -1)))) {
+				property.indexOf(this.keyCache.getText()) === -1)))) {
 				return false;
+			}
+
+			if (property.length > this.longestName) {
+				this.longestName = property.length;
 			}
 			return true;
 		}
@@ -902,29 +932,30 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function search() {
-			var search = keyCache.getText().slice(0, options.minLength);
+			var search = this.keyCache.getText().slice(0, options.minLength);
 
 			/**
 			 * if we're already searching or we've
 			 * already searched this minimum-length
 			 * name prefix, there is nothing to do
 			 */
-			if (searching ||
-				searched.indexOf(search) !== -1) {
+			if (this.searching ||
+				this.searched.indexOf(search) !== -1) {
 				// if the spinner is up then we found nothing
-				if (popup.spinnerIsVisible()) {
+				if (this.popup.spinnerIsVisible()) {
 					// so get out
-					popup.hide();
+					this.popup.hide();
+					this.editorInterface.focus();
 				}
 				return;
 			}
 
 			// store this search so we don't repeat
-			searched.push(search);
-			searching = true;
+			this.searched.push(search);
+			this.searching = true;
 
-			if (items.length === 0) {
-				popup.showSpinner();
+			if (this.items.length === 0) {
+				this.popup.showSpinner();
 			}
 
 			$.ajax({
@@ -935,27 +966,28 @@ var MentionMe = (function($, m) {
 					mode: "nameSearch",
 					search: search,
 				},
-				success: load,
+				success: load.bind(this),
 			});
 		}
 
 		/**
 		 * handle the response solicited by search()
 		 *
-		 * @param  transport (Object) the XMLHTTP transport
+		 * @param  object XMLHTTP response JSON
 		 * @return void
 		 */
 		function load(names) {
 			var n = 0, property;
 
-			searching = false;
+			this.searching = false;
 
 			// if we have nothing
 			if (!names) {
 				// . . . and we had nothing before we searched . . .
-				if (popup.spinnerIsVisible()) {
+				if (this.popup.spinnerIsVisible()) {
 					// get out
-					popup.hide();
+					this.popup.hide();
+					this.editorInterface.focus();
 				}
 				return;
 			}
@@ -963,50 +995,50 @@ var MentionMe = (function($, m) {
 			// add all the found names to the cache (will overwrite, not duplicate)
 			for (property in names) {
 				if (!names.hasOwnProperty(property) ||
-					data[property]) {
+					this.data[property]) {
 					continue;
 				}
 
-				data[property] = names[property];
+				this.data[property] = names[property];
 				n++;
 			}
 
 			if (!n ||
-				!popup.isVisible()) {
+				!this.popup.isVisible()) {
 				return;
 			}
 
 			// reset everything and rebuild the list
-			match();
-			popup.buildItems();
-			popup.select();
+			this.match();
+			this.popup.buildItems();
+			this.popup.select();
 		}
 
 		/**
 		 * getter for ready state
 		 *
-		 * @return Boolean true if cache loaded, false if not
+		 * @return bool true if cache loaded
 		 */
 		function isReady() {
-			return ready;
+			return this.ready;
 		}
 
 		/**
 		 * getter for loading state
 		 *
-		 * @return Boolean true if cache loaded, false if not
+		 * @return bool true if cache loaded
 		 */
 		function isLoading() {
-			return loading;
+			return this.loading;
 		}
 
 		/**
 		 * getter for user data
 		 *
-		 * @return Object
+		 * @return object
 		 */
 		function getData() {
-			return data;
+			return this.data;
 		}
 
 		/**
@@ -1015,116 +1047,87 @@ var MentionMe = (function($, m) {
 		 * @return array
 		 */
 		function getItems() {
-			return items;
+			return this.items;
 		}
 
 		/**
 		 * getter for items length
 		 *
-		 * @return number
+		 * @return int
 		 */
 		function getItemsLength() {
-			return items.length;
+			return this.items.length;
 		}
 
 		/**
 		 * getter for longest name length
 		 *
-		 * @return number
+		 * @return int
 		 */
 		function getLongestName() {
-			return longestName;
+			return this.longestName;
 		}
 
-		// the public methods
-		return {
-			init: init,
+		// extend the prototype
+		$.extend(MentionMeNameCache.prototype, {
+			loadNameCache: loadNameCache,
 			match: match,
+			checkEntry: checkEntry,
 			search: search,
+			load: load,
 			isReady: isReady,
 			isLoading: isLoading,
 			getData: getData,
 			getItems: getItems,
 			getItemsLength: getItemsLength,
 			getLongestName: getLongestName,
-		};
+		});
+
+		return MentionMeNameCache;
 	})(),
 
 	/**
 	 * interface for textarea element
 	 */
-	textareaCore = (function() {
-		var $textarea,
-			$container,
+	TextareaInterface = (function() {
+		/**
+		 * constructor
+		 *
+		 * @param  string
+		 * @return void
+		 */
+		function AutoCompleteTextareaInterface(textareaId) {
+			this.$textarea = $("#" + textareaId);
+			this.$container = this.$textarea.closest("div");
 
-			selection = {
+			this.selection = {
 				start: 0,
 				end: 0,
 			};
 
-		/**
-		 * see if there is a valid textarea
-		 *
-		 * @return bool
-		 */
-		function check() {
-			if ($("#message").length == 0 &&
-				$("#signature").length == 0) {
-				return false;
-			}
-			return true;
-		}
-
-		/**
-		 * prepare to auto-complete
-		 *
-		 * @return void
-		 */
-		function init() {
-			//  look for a text area
-			var id;
-
-			// almost every page uses this id
-			if ($("#message").length) {
-				id = "message";
-			// usercp.php and modcp.php use this id
-			} else if ($("#signature").length) {
-				id = "signature";
-			}
-
-			// if no suitable text area is present, get out
-			if (!id ||
-				!$("#" + id).length) {
-				return false;
-			}
-
-			// store our elements
-			$textarea = $("#" + id);
-			$container = $textarea.closest("div");
-
 			// go ahead and build the popup
-			popup.init();
+			this.popup = new Popup(this);
 
 			// poll for the @ char
-			$textarea.keyup(onKeyUp);
+			this.bindKeyup();
 		}
 
 		/**
-		 * polling for the @ character when uninitiated and
-		 * some navigation and editing for our key cache
+		 * polling for the @ character when uninitiated
 		 *
 		 * @param  event
 		 * @return void
 		 */
 		function onKeyUp(e) {
-			getCaret();
+			if (this.popup.isVisible()) {
+				return;
+			}
 
 			// open the popup when user types an @
-			if (!popup.isVisible()) {
-				if (checkKeyCode(e.keyCode) &&
-					$textarea.val().slice(selection.start - 1, selection.end) == "@") {
-					showPopup();
-				}
+			this.getCaret();
+			if (checkKeyCode(e.keyCode) &&
+				this.$textarea.val().slice(this.selection.start - 1, this.selection.end) == "@") {
+				this.showPopup();
 			}
 		}
 
@@ -1134,11 +1137,11 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function showPopup() {
-			var coords = $textarea.caret("offset"),
+			var coords = this.$textarea.caret("offset"),
 				left = coords.left + 3,
 				top = coords.top - 5;
 
-			popup.show(left, top);
+			this.popup.show(left, top);
 		}
 
 		/**
@@ -1147,24 +1150,24 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function insertMention() {
-			var mention = prepMention();
+			var mention = prepMention(this.popup);
 
 			if (!mention) {
-				if (!popup.spinnerIsVisible()) {
-					popup.hide();
+				if (!this.popup.spinnerIsVisible()) {
+					this.popup.hide();
 				}
 				return;
 			}
 
-			getCaret();
+			this.getCaret();
 
-			$textarea.val($textarea.val().slice(0, selection.start) +
+			this.$textarea.val(this.$textarea.val().slice(0, this.selection.start) +
 				mention +
-				$textarea.val().slice(selection.start));
-			setCaret(selection.start + mention.length);
+				this.$textarea.val().slice(this.selection.start));
+			this.setCaret(this.selection.start + mention.length);
 
 			// and we're done here (for now)
-			popup.hide();
+			this.popup.hide();
 		}
 
 		/**
@@ -1173,20 +1176,20 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function getCaret() {
-			var range = $textarea.caret("pos");
+			var range = this.$textarea.caret("pos");
 
-			selection.start = range;
-			selection.end = range;
+			this.selection.start = range;
+			this.selection.end = range;
 		}
 
 		/**
 		 * position the caret
 		 *
-		 * @param  Number
+		 * @param  int
 		 * @return void
 		 */
 		function setCaret(position) {
-			var temp = $textarea[0],
+			var temp = this.$textarea[0],
 				range;
 
 			if (temp.setSelectionRange) {
@@ -1204,112 +1207,114 @@ var MentionMe = (function($, m) {
 		/**
 		 * API for popup to attach event listener
 		 *
-		 * @return bool
+		 * @return void
 		 */
 		function bindClick(f) {
-			$textarea.click(f);
+			this.$textarea.click(f);
 		}
 
 		/**
 		 * API for popup to detach event listener
 		 *
-		 * @return bool
+		 * @return void
 		 */
-		function unBindClick(f) {
-			$textarea.unbind("click", f);
+		function unbindClick(f) {
+			this.$textarea.off("click", f);
+		}
+
+		/**
+		 * API for popup to attach event listener
+		 *
+		 * @return void
+		 */
+		function bindKeyup() {
+			this.$textarea.keyup($.proxy(this.onKeyUp,this));
+		}
+
+		/**
+		 * API for popup to detach event listener
+		 *
+		 * @return void
+		 */
+		function unbindKeyup() {
+			this.$textarea.off("keyup");
 		}
 
 		/**
 		 * API for popup to focus editor
 		 *
-		 * @return bool
+		 * @return void
 		 */
 		function focus() {
-			$textarea.focus();
+			this.$textarea.focus();
 		}
 
 		/**
 		 * getter for the container element
 		 *
-		 * @return mixed
+		 * @return string|object
 		 */
 		function getContainer() {
-			return $container;
+			return this.$container;
 		}
 
-		return {
-			init: init,
-			check: check,
+		// extend the prototype
+		$.extend(AutoCompleteTextareaInterface.prototype, {
 			heightModifier: 0,
 			lineHeightModifier: 0,
+			onKeyUp: onKeyUp,
+			showPopup: showPopup,
 			insert: insertMention,
+			getCaret: getCaret,
+			setCaret: setCaret,
 			bindClick: bindClick,
-			unBindClick: unBindClick,
+			unbindClick: unbindClick,
+			bindKeyup: bindKeyup,
+			unbindKeyup: unbindKeyup,
 			focus: focus,
 			getContainer: getContainer,
-		};
+		});
+
+		return AutoCompleteTextareaInterface;
 	})(),
 
 	/**
 	 * interface for SCEditor
 	 */
-	sceditorCore = (function() {
-		var editor,
-			rangeHelper,
-
-			selection = {
-				start: 0,
-				end: 0,
-			},
-
-			$container,
-			$iFrame,
-			$body,
-			$currentNode;
-
+	SCEditorInterface = (function() {
 		/**
-		 * see if there is a valid SCEditor instance
-		 *
-		 * @return bool
-		 */
-		function check() {
-			if (MyBBEditor === null ||
-				typeof MyBBEditor !== "object" ||
-				!MyBBEditor.getRangeHelper ||
-				typeof MyBBEditor.getRangeHelper !== "function") {
-				return false;
-			}
-			return true;
-		}
-
-		/**
-		 * prepare to auto-complete
+		 * constructor
 		 *
 		 * @return void
 		 */
-		function init() {
-			editor = MyBBEditor;
-			rangeHelper = editor.getRangeHelper();
+		function AutoCompleteSCEditorInterface() {
+			this.editor = MyBBEditor;
+			this.rangeHelper = this.editor.getRangeHelper();
 
-			$iFrame = $("iframe");
-			$container = $iFrame.closest("td");
-			$body = editor.getBody();
+			this.$iFrame = $("iframe");
+			this.$container = this.$iFrame.closest("td");
+			this.$body = this.editor.getBody();
 
-			editor.keyUp(onKeyUp);
+			this.selection = {
+				start: 0,
+				end: 0,
+			};
 
 			// go ahead and build the popup
-			popup.init();
+			this.popup = new Popup(this);
+
+			this.editor.keyUp(this.onKeyUp.bind(this));
 		}
 
 		/**
 		 * polling for the @ character when uninitiated and
 		 * some navigation and editing for our key cache
 		 *
-		 * @param  event (Object)
+		 * @param  event
 		 * @return void
 		 */
 		function onKeyUp(e) {
-			getCaret();
+			this.getCaret();
 
 			if (!e.keyCode) {
 				if (e.originalEvent &&
@@ -1321,10 +1326,10 @@ var MentionMe = (function($, m) {
 			}
 
 			// open the popup when user types an @
-			if (!popup.isVisible()) {
+			if (!this.popup.isVisible()) {
 				if (checkKeyCode(e.keyCode) &&
-					$currentNode.text().slice(selection.start - 1, selection.end) == "@") {
-					showPopup();
+					this.$currentNode.text().slice(this.selection.start - 1, this.selection.end) == "@") {
+					this.showPopup();
 				}
 				return;
 			}
@@ -1336,18 +1341,22 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function showPopup() {
-			var coords = $body.caret("offset", {
-					iframe: $iFrame[0],
+			var fontSize, left, top,
+				coords = this.$body.caret("offset", {
+					iframe: this.$iFrame[0],
 				}),
-				containerOffset = $container.offset(),
-				toolBarHeight = $container.find("div.sceditor-toolbar").height(),
-				fontSize = parseInt($currentNode.closest("div").css("fontSize").replace("px", "") / 2),
-				paddingLeft = parseInt($container.css("paddingLeft").replace("px", ""), 10),
-				paddingTop = parseInt($container.css("paddingTop").replace("px", ""), 10),
-				left = parseInt(coords.left, 10) + containerOffset.left + paddingLeft + fontSize + 2,
-				top = parseInt(coords.top + toolBarHeight) + containerOffset.top + paddingTop + 3;
+				containerOffset = this.$container.offset();
 
-			popup.show(left, top);
+			fontSize = 7;
+			if (this.$currentNode.closest("div").length &&
+				typeof this.$currentNode.closest("div").css === "function") {
+				fontSize = pi(this.$currentNode.closest("div").css("fontSize").replace("px", "") / 2);
+			}
+
+			left = pi(coords.left) + containerOffset.left + pi(this.$container.css("paddingLeft").replace("px", "")) + fontSize + 2;
+			top = pi(coords.top + this.$container.find("div.sceditor-toolbar").height()) + containerOffset.top + pi(this.$container.css("paddingTop").replace("px", "")) + 3;
+
+			this.popup.show(left, top);
 		}
 
 		/**
@@ -1356,19 +1365,19 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function insertMention() {
-			var mention = prepMention();
+			var mention = prepMention(this.popup);
 
 			if (!mention) {
-				if (!popup.spinnerIsVisible()) {
-					popup.hide();
+				if (!this.popup.spinnerIsVisible()) {
+					this.popup.hide();
 				}
 				return;
 			}
 
-			editor.insert(mention);
+			this.editor.insert(mention);
 
 			// and we're done here (for now)
-			popup.hide();
+			this.popup.hide();
 		}
 
 		/**
@@ -1377,118 +1386,98 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function getCaret() {
-			var range = rangeHelper.selectedRange();
+			var range = this.rangeHelper.selectedRange();
 
 			if (range.startContainer) {
-				$currentNode = $(range.startContainer);
+				this.$currentNode = $(range.startContainer);
 			} else {
-				$currentNode = $(editor.currentNode());
+				this.$currentNode = $(editor.currentNode());
 			}
 
-			selection.start = range.startOffset;
-			selection.end = range.endOffset;
+			this.selection.start = range.startOffset;
+			this.selection.end = range.endOffset;
 		}
 
 		/**
 		 * API for popup to attach event listener
 		 *
-		 * @return bool
+		 * @return void
 		 */
 		function bindClick(f) {
-			$body.click(f);
+			this.$body.click(f);
 		}
 
 		/**
 		 * API for popup to detach event listener
 		 *
-		 * @return bool
+		 * @return void
 		 */
-		function unBindClick(f) {
-			$body.unbind("click", f);
+		function unbindClick(f) {
+			this.$body.off("click", f);
 		}
 
 		/**
 		 * API for popup to focus editor
 		 *
-		 * @return bool
+		 * @return void
 		 */
 		function focus() {
-			$iFrame.focus();
+			this.$iFrame.focus();
 		}
 
 		/**
 		 * getter for the container element
 		 *
-		 * @return mixed
+		 * @return string|object
 		 */
 		function getContainer() {
-			return $container;
+			return this.$container;
 		}
 
-		return {
-			init: init,
-			check: check,
+		// extend the prototype
+		$.extend(AutoCompleteSCEditorInterface.prototype, {
 			heightModifier: 0,
 			lineHeightModifier: 0,
+			onKeyUp: onKeyUp,
+			showPopup: showPopup,
 			insert: insertMention,
+			getCaret: getCaret,
 			bindClick: bindClick,
-			unBindClick: unBindClick,
+			unbindClick: unbindClick,
 			focus: focus,
 			getContainer: getContainer,
-		};
+		});
+
+		return AutoCompleteSCEditorInterface;
 	})(),
 
 	/**
 	 * interface for CKEditor
 	 */
-	ckeditorCore = (function() {
-		var editor,
-
-			$container,
-			$iFrame,
-			$doc,
-			$body;
-
+	CKEditorInterface = (function() {
 		/**
-		 * see if there is a valid CKEditor instance
+		 * constructor
 		 *
-		 * @return bool
-		 */
-		function check() {
-			if (typeof CKEDITOR === "undefined" ||
-				typeof CKEDITOR.instances === "undefined" ||
-				CKEDITOR.instances.length == 0) {
-				return false;
-			}
-			return true;
-		}
-
-		/**
-		 * prepare to auto-complete
-		 *
+		 * @param  string
 		 * @return void
 		 */
-		function init() {
-			var key = $.map(CKEDITOR.instances, function(i, k) { return k })[0];
-
-			if (typeof CKEDITOR.instances[key] !== "object") {
-				return false;
+		function AutoCompleteCKEditorInterface(textareaId) {
+			if ($("#" + textareaId).length === 0 ||
+				typeof CKEDITOR.instances[textareaId] === "undefined") {
+				return;
 			}
 
-			editor = CKEDITOR.instances[key];
+			this.id = textareaId;
+			this.editor = CKEDITOR.instances[this.id];
 
-			editor.on("instanceReady", finalize);
-
-			if ($('#quick_reply_submit').length) {
-				$('#quick_reply_submit').click(function(e) {
-					if ($doc.length) {
-						$doc.unbind('keyup', onKeyUp);
-					}
-					setTimeout(function() {
-						$doc.keyup(onKeyUp);
-					}, 500);
-				});
+			if (textareaId === "message" ||
+				textareaId === "signature") {
+				this.editor.on("instanceReady", $.proxy(this.finalize, this));
+			} else {
+				this.finalize();
 			}
+
+			$("#quick_reply_submit").click($.proxy(this.quickReplyPosted, this));
 		}
 
 		/**
@@ -1497,33 +1486,49 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function finalize() {
-			$iFrame = $("iframe");
-			$container = $iFrame.closest("div");
-			$doc = $(editor.document.$);
-			$body = $doc.find("body");
+			this.$iFrame = $("#cke_" + this.id).find("iframe");
+			this.$container = this.$iFrame.closest("div");
+			this.$doc = $(this.editor.document.$);
+			this.$body = this.$doc.find("body");
 
-			$doc.keyup(onKeyUp);
+			this.bindKeyup();
 
 			// go ahead and build the popup
-			popup.init();
+			this.popup = new Popup(this);
 		}
 
 		/**
 		 * polling for the @ character when uninitiated and
 		 * some navigation and editing for our key cache
 		 *
-		 * @param  event (Object)
+		 * @param  event
 		 * @return void
 		 */
 		function onKeyUp(e) {
 			// open the popup when user types an @
-			if (!popup.isVisible()) {
+			if (!this.popup.isVisible()) {
 				if (checkKeyCode(e.keyCode) &&
-					getPrevChar() == "@") {
-					showPopup();
+					this.getPrevChar() == "@") {
+					this.showPopup();
 				}
 				return;
 			}
+		}
+
+		/**
+		 * reinstate observation on AJAX post
+		 *
+		 * @return void
+		 */
+		function quickReplyPosted() {
+			if (typeof this.$doc !== "undefined" &&
+				this.$doc.length) {
+				this.$doc.off("keyup", this.onKeyUp);
+			}
+
+			setTimeout($.proxy(function() {
+				this.$doc.keyup($.proxy(this.onKeyUp, this));
+			}, this), 500);
 		}
 
 		/**
@@ -1532,14 +1537,14 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function showPopup() {
-			var coords = $body.caret("offset", {
-					iframe: $iFrame[0],
+			var coords = this.$body.caret("offset", {
+					iframe: this.$iFrame[0],
 				}),
-				iFrameOffset = $iFrame.offset(),
-				left = parseInt(coords.left + iFrameOffset.left) + 2,
-				top = parseInt(coords.top + iFrameOffset.top) - 5;
+				iFrameOffset = this.$iFrame.offset(),
+				left = pi(coords.left + iFrameOffset.left) + 2,
+				top = pi(coords.top + iFrameOffset.top) - 5;
 
-			popup.show(left, top);
+			this.popup.show(left, top);
 		}
 
 		/**
@@ -1548,19 +1553,19 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function insertMention() {
-			var mention = prepMention();
+			var mention = prepMention(this.popup);
 
 			if (!mention) {
-				if (!popup.spinnerIsVisible()) {
-					popup.hide();
+				if (!this.popup.spinnerIsVisible()) {
+					this.popup.hide();
 				}
 				return;
 			}
 
-			editor.insertText(mention);
+			this.editor.insertText(mention);
 
 			// and we're done here (for now)
-			popup.hide();
+			this.popup.hide();
 		}
 
 		/**
@@ -1571,10 +1576,8 @@ var MentionMe = (function($, m) {
 		 * @return mixed
 		 */
 		function getPrevChar() {
-			var range = editor.getSelection().getRanges()[0],
-				startNode,
-				walker,
-				node;
+			var startNode, walker, node,
+				range = this.editor.getSelection().getRanges()[0];
 
 			if (!range ||
 				!range.startContainer) {
@@ -1589,15 +1592,15 @@ var MentionMe = (function($, m) {
 			} else {
 				// Expand the range to the beginning of editable.
 				range.collapse(true);
-				range.setStartAt(editor.editable(), CKEDITOR.POSITION_AFTER_START);
+				range.setStartAt(this.editor.editable(), CKEDITOR.POSITION_AFTER_START);
 
-				// Let's use the walker to find the closes (previous) text node.
+				// use the walker to find the closest previous text node.
 				walker = new CKEDITOR.dom.walker(range);
 
 				while (node = walker.previous()) {
 					// If found, return the last character of the text node.
 					if (node.type == CKEDITOR.NODE_TEXT) {
-						return node.getText().slice( -1 );
+						return node.getText().slice(-1);
 					}
 				}
 			}
@@ -1609,58 +1612,84 @@ var MentionMe = (function($, m) {
 		/**
 		 * API for popup to attach event listener
 		 *
-		 * @return bool
+		 * @param  function
+		 * @return void
 		 */
 		function bindClick(f) {
-			$doc.click(f);
+			this.$doc.click(f);
 		}
 
 		/**
 		 * API for popup to detach event listener
 		 *
-		 * @return bool
+		 * @param  function
+		 * @return void
 		 */
-		function unBindClick(f) {
-			$doc.unbind("click", f);
+		function unbindClick(f) {
+			this.$doc.off("click", f);
+		}
+
+		/**
+		 * API for popup to attach event listener
+		 *
+		 * @return void
+		 */
+		function bindKeyup() {
+			this.$doc.keyup($.proxy(this.onKeyUp, this));
+		}
+
+		/**
+		 * API for popup to detach event listener
+		 *
+		 * @return void
+		 */
+		function unbindKeyup() {
+			this.$doc.off("keyup", this.onKeyUp);
 		}
 
 		/**
 		 * API for popup to focus editor
 		 *
-		 * @return bool
+		 * @return void
 		 */
 		function focus() {
-			editor.focus();
+			this.editor.focus();
 		}
 
 		/**
 		 * getter for the container element
 		 *
-		 * @return mixed
+		 * @return string|object
 		 */
 		function getContainer() {
-			return $container;
+			return this.$container;
 		}
 
-		return {
-			init: init,
-			check: check,
+		// extend the prototype
+		$.extend(AutoCompleteCKEditorInterface.prototype, {
 			heightModifier: 0,
 			lineHeightModifier: 0,
+			finalize: finalize,
+			onKeyUp: onKeyUp,
+			quickReplyPosted: quickReplyPosted,
+			showPopup: showPopup,
 			insert: insertMention,
+			getPrevChar: getPrevChar,
 			bindClick: bindClick,
-			unBindClick: unBindClick,
+			unbindClick: unbindClick,
+			bindKeyup: bindKeyup,
+			unbindKeyup: unbindKeyup,
 			focus: focus,
 			getContainer: getContainer,
-		};
-	})(),
+		});
 
-	core = null;
+		return AutoCompleteCKEditorInterface;
+	})();
 
 	/**
 	 * load options and language (used externally)
 	 *
-	 * @param  object options
+	 * @param  object
 	 * @return void
 	 */
 	function setup(opt) {
@@ -1668,9 +1697,11 @@ var MentionMe = (function($, m) {
 		delete opt.lang;
 		$.extend(options, opt || {});
 
-		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars"]).each(function() {
-			options[this] = parseInt(options[this], 10);
+		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
+			options[this] = pi(options[this]);
 		});
+
+		options.defaultAvatar = options.imageDirectory + "/default_avatar.png";
 	}
 
 	/**
@@ -1679,24 +1710,96 @@ var MentionMe = (function($, m) {
 	 * @return void
 	 */
 	function init() {
-		if (ckeditorCore.check()) {
-			core = ckeditorCore;
-		} else if (sceditorCore.check()) {
-			core = sceditorCore;
-		} else if (textareaCore.check()) {
-			core = textareaCore;
-		} else {
+		var id, key;
+
+		if (typeof CKEDITOR !== "undefined" &&
+			typeof CKEDITOR.instances !== "undefined") {
+			key = $.map(CKEDITOR.instances, function(i, k) { return k })[0];
+
+			if (typeof CKEDITOR.instances[key] !== "object") {
+				return false;
+			}
+			new CKEditorInterface(key);
+		} else if (MyBBEditor !== null &&
+			typeof MyBBEditor === "object" &&
+			MyBBEditor.getRangeHelper &&
+			typeof MyBBEditor.getRangeHelper === "function") {
+			new SCEditorInterface();
+		} else if ($("#message").length > 0 ||
+			$("#signature").length > 0) {
+			// almost every page uses this id
+			if ($("#message").length) {
+				id = "message";
+			// usercp.php and modcp.php use this id
+			} else if ($("#signature").length) {
+				id = "signature";
+			}
+
+			// if no suitable text area is present, get out
+			if (!id ||
+				!$("#" + id).length) {
+				return false;
+			}
+
+			new TextareaInterface(id);
+		}
+
+		// quick edit
+		$(".quick_edit_button").click(doQuickEdit);
+		$("#quick_reply_submit").click(doQuickReply);
+	}
+
+	/**
+	 * create a new instance when quick edit is invoked
+	 *
+	 * @param  event
+	 * @return void
+	 */
+	function doQuickEdit(e) {
+		var pid = this.id.split("_").slice(-1)[0],
+			id = "quickedit_" + pid,
+			i;
+
+		if ($("#" + id).length == 0) {
 			return;
 		}
-		core.init();
+
+		if (typeof CKEDITOR === "undefined") {
+			i = new TextareaInterface(id);
+		} else {
+			setTimeout(function() {
+				i = new CKEditorInterface(id);
+			}, 1100);
+		}
+
+		setTimeout(function() {
+			$("#quicksub_" + pid)
+				.add($("#quicksub_" + pid).next("button"))
+				.click(function() {
+				i.unbindKeyup();
+			});
+		}, 1100);
+	}
+
+	/**
+	 * attach event listeners after a new AJAX post
+	 *
+	 * @param  event
+	 * @return void
+	 */
+	function doQuickReply(e) {
+		$(".quick_edit_button").off("click", doQuickEdit);
+		setTimeout(function() {
+			$(".quick_edit_button").click(doQuickEdit);
+		}, 500);
 	}
 
 	/**
 	 * quote a name and return it
 	 *
-	 * @return mixed
+	 * @return string
 	 */
-	function prepMention() {
+	function prepMention(popup) {
 		var name = popup.getSelectedName(),
 			quote = "";
 
@@ -1723,11 +1826,38 @@ var MentionMe = (function($, m) {
 	/**
 	 * check key code against a bad list
 	 *
-	 * @param  number e.keyCode
-	 * @return bool success
+	 * @param  int
+	 * @return bool
 	 */
 	function checkKeyCode(keyCode) {
 		return [key.LEFT, key.RIGHT, key.UP, key.DOWN, key.BACKSPACE, key.ESC, key.SHIFT, key.CTRL, key.ALT, key.ENTER, key.DELETE, key.INSERT, key.END, key.NUMLOCK].indexOf(keyCode) === -1;
+	}
+
+	/**
+	 * sort strings by length
+	 *
+	 * @param  string
+	 * @param  string
+	 * @return int
+	 */
+	function sortByLength(a, b) {
+		if (a.length < b.length) {
+			return -1;
+		} else if (a.length > b.length) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+
+	/**
+	 * alias for parseInt
+	 *
+	 * @param  number
+	 * @return int
+	 */
+	function pi(i) {
+		return parseInt(i, 10);
 	}
 
 	$(init);
