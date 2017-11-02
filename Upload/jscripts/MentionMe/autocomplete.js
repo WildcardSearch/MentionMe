@@ -248,7 +248,7 @@ var MentionMe = (function($, m) {
 		 * @return  void
 		 */
 		function buildItems() {
-			var i, text, avatar, avatarPath, start,
+			var i, text, avatar, avatarPath, start, user,
 				cacheLength = this.nameCache.getItemsLength(),
 				data = this.nameCache.getData(),
 				c = (navigator.userAgent.toLowerCase().indexOf("msie") !== -1) ? "hand" : "pointer";
@@ -281,16 +281,10 @@ var MentionMe = (function($, m) {
 			this.clear();
 
 			for (i = 0; i < cacheLength; i++) {
-				if (typeof this.items[i] === "undefined" ||
-					typeof data[this.items[i]] === "undefined" ||
-					typeof data[this.items[i]]["username"] === "undefined" ||
-					typeof data[this.items[i]]["avatar"] === "undefined") {
-					continue;
-				}
-
-				text = data[this.items[i]]["username"];
+				user = this.items[i];
+				text = data[user]["username"];
 				if (this.keyCache.getText()) {
-					start = this.items[i].indexOf(this.keyCache.getText());
+					start = user.indexOf(this.keyCache.getText());
 
 					if ((options.fullText && start !== -1) ||
 						(!options.fullText && start === 0)) {
@@ -304,7 +298,7 @@ var MentionMe = (function($, m) {
 
 				avatar = "";
 				if (options.showAvatars) {
-					avatarPath = data[this.items[i]]["avatar"];
+					avatarPath = data[user]["avatar"];
 					if (avatarPath.length == 0) {
 						avatarPath = options.defaultAvatar;
 					}
