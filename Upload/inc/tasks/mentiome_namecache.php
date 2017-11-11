@@ -41,11 +41,14 @@ function task_mentiome_namecache($task)
 	}
 
 	$bannedGroupCondition = '';
-	if (count($bannedGroups) > 1) {
-		$bannedList = explode(',', $bannedGroups);
-		$bannedGroupCondition = " AND usergroup NOT IN({$bannedList})";
-	} elseif (count($bannedGroups) == 1) {
-		$bannedGroupCondition = " AND usergroup !='{$bannedGroups[0]}'";
+	if (is_array($bannedGroups) &&
+		!empty($bannedGroups)) {
+		if (count($bannedGroups) > 1) {
+			$bannedList = implode(',', $bannedGroups);
+			$bannedGroupCondition = " AND usergroup NOT IN({$bannedList})";
+		} elseif (count($bannedGroups) == 1) {
+			$bannedGroupCondition = " AND usergroup !='{$bannedGroups[0]}'";
+		}
 	}
 
 	// find all users that have been active within the specified amount of days
