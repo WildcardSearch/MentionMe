@@ -128,8 +128,7 @@ function mention_install()
 		$lang->load('mention');
 	}
 
-	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
-	$installer->install();
+	MentionMeInstaller::getInstance()->install();
 
 	if ($db->table_exists('alerts')) {
 		mentionMeMyAlertsIntegrate();
@@ -262,8 +261,7 @@ function mention_uninstall()
 {
 	global $db, $cache;
 
-	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
-	$installer->uninstall();
+	MentionMeInstaller::getInstance()->uninstall();
 
 	// remove the task entry
 	$db->delete_query('tasks', "file='mentiome_namecache'");
@@ -447,6 +445,10 @@ function mentionMeAdminLoad()
 	if ($page->active_action != 'plugins' ||
 		$mybb->input['action'] != 'mentionme') {
 		return;
+	}
+
+	if (!$lang->mention) {
+		$lang->load('mention');
 	}
 
 	if ($mybb->input['mode'] == 'myalerts_integrate') {
