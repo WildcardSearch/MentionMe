@@ -488,9 +488,14 @@ function mentionMeMyAlertsIntegrate()
 		$lang->load('mention');
 	}
 
-	if (!function_exists("myalerts_info") ||
-		myalerts_info()['version'] < "2.0.0" ||
-		$cache->read('mybbstuff_myalerts_alert_types')['mention']['code'] == 'mention') {
+	if (!function_exists("myalerts_info")) {
+		return;
+	}
+
+	$myAlertsVersion = myalerts_info()['version'];
+	if ((int) $myAlertsVersion === 0 ||
+		version_compare($myAlertsVersion, '2.0.0', '<') ||
+		isset($cache->read('mybbstuff_myalerts_alert_types')['mention']['code'])) {
 		return;
 	}
 
