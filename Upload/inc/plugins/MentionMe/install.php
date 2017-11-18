@@ -128,8 +128,7 @@ function mention_install()
 		$lang->load('mention');
 	}
 
-	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
-	$installer->install();
+	MentionMeInstaller::getInstance()->install();
 
 	if ($db->table_exists('alerts')) {
 		mentionMeMyAlertsIntegrate();
@@ -154,7 +153,7 @@ function mention_activate()
 
 	// version check
 	$info = mention_info();
-	$oldVersion = mentionMeGetCacheVersion();
+	$oldVersion = MentionMeCache::getInstance()->getVersion();
 	if (version_compare($oldVersion, $info['version'], '<') &&
 		$oldVersion != '' &&
 		$oldVersion != 0) {
@@ -181,7 +180,7 @@ function mention_activate()
     }
 
 	// update the version (so we don't try to upgrade next round)
-	mentionMeSetCacheVersion();
+	MentionMeCache::getInstance()->setVersion(MENTIONME_VERSION);
 
 	// edit the templates
 	find_replace_templatesets('showthread', "#" . preg_quote('</head>') . "#i", '{$mentionScript}</head>');
@@ -262,8 +261,7 @@ function mention_uninstall()
 {
 	global $db, $cache;
 
-	$installer = new MentionMeInstaller(MYBB_ROOT . 'inc/plugins/MentionMe/install_data.php');
-	$installer->uninstall();
+	MentionMeInstaller::getInstance()->uninstall();
 
 	// remove the task entry
 	$db->delete_query('tasks', "file='mentiome_namecache'");
@@ -279,7 +277,7 @@ function mention_uninstall()
 		$alertTypeManager->deleteByCode('mention');
 	}
 
-	mentionMeUnsetCacheVersion();
+	MentionMeCache::getInstance()->clear();
 }
 
 /**
@@ -381,57 +379,6 @@ EOF;
 }
 
 /*
- * versioning
- */
-
-/**
- * check cached version info
- *
- * derived from the work of pavemen in MyBB Publisher
- *
- * @return mixed string the version or int 0 for failure
- */
-function mentionMeGetCacheVersion()
-{
-	// get currently installed version, if there is one
-	$version = MentionMeCache::getInstance()->read('version');
-	if (trim($version)) {
-        return trim($version);
-	}
-    return 0;
-}
-
-/**
- * set cached version info
- *
- * derived from the work of pavemen in MyBB Publisher
- *
- * @return bool true on success
- */
-function mentionMeSetCacheVersion()
-{
-	// get version from this plugin file
-	$info = mention_info();
-
-	// update version cache to latest
-	MentionMeCache::getInstance()->update('version', $info['version']);
-    return true;
-}
-
-/**
- * remove cached version info
- *
- * derived from the work of pavemen in MyBB Publisher
- *
- * @return bool true on success
- */
-function mentionMeUnsetCacheVersion()
-{
-	MentionMeCache::getInstance()->clear();
-    return true;
-}
-
-/*
  * MyAlerts
  */
 
@@ -447,6 +394,10 @@ function mentionMeAdminLoad()
 	if ($page->active_action != 'plugins' ||
 		$mybb->input['action'] != 'mentionme') {
 		return;
+	}
+
+	if (!$lang->mention) {
+		$lang->load('mention');
 	}
 
 	if ($mybb->input['mode'] == 'myalerts_integrate') {
@@ -486,9 +437,14 @@ function mentionMeMyAlertsIntegrate()
 		$lang->load('mention');
 	}
 
-	if (!function_exists("myalerts_info") ||
-		myalerts_info()['version'] < "2.0.0" ||
-		$cache->read('mybbstuff_myalerts_alert_types')['mention']['code'] == 'mention') {
+	if (!function_exists("myalerts_info")) {
+		return;
+	}
+
+	$myAlertsVersion = myalerts_info()['version'];
+	if ((int) $myAlertsVersion === 0 ||
+		version_compare($myAlertsVersion, '2.0.0', '<') ||
+		isset($cache->read('mybbstuff_myalerts_alert_types')['mention']['code'])) {
 		return;
 	}
 

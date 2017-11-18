@@ -14,7 +14,7 @@ if (!defined('IN_MYBB')) {
 
 // checked by other plugin files
 define('IN_MENTIONME', true);
-define('MENTIONME_VERSION', '3.2');
+define('MENTIONME_VERSION', '3.2.1');
 
 // register custom class autoloader
 spl_autoload_register('mentionMeClassAutoLoad');
@@ -39,7 +39,7 @@ function mentionGetMyAlertsStatus()
 {
 	static $status = false, $checked = false;
 
-	if ($checked) {
+	if ($checked === true) {
 		return $status;
 	}
 
@@ -47,11 +47,7 @@ function mentionGetMyAlertsStatus()
 	$checked = true;
 	$myalerts_plugins = $cache->read('mybbstuff_myalerts_alert_types');
 
-	if ($myalerts_plugins['mention']['code'] == 'mention' &&
-		$myalerts_plugins['mention']['enabled'] == 1) {
-		return true;
-    }
-	return false;
+	return $status = ($myalerts_plugins['mention']['code'] == 'mention' && $myalerts_plugins['mention']['enabled'] == 1);
 }
 
 /**
