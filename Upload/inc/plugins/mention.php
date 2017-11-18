@@ -14,7 +14,7 @@ if (!defined('IN_MYBB')) {
 
 // checked by other plugin files
 define('IN_MENTIONME', true);
-define('MENTIONME_VERSION', '3.2');
+define('MENTIONME_VERSION', '3.2.1');
 
 // register custom class autoloader
 spl_autoload_register('mentionMeClassAutoLoad');
