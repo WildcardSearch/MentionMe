@@ -1,18 +1,16 @@
 <?php
-/*
- * Plugin Name: MentionMe for MyBB 1.8.x
- * Copyright 2014 WildcardSearch
- * http://www.rantcentralforums.com
+/**
+ * Wildcard Helper Classes - Plugin Cache
  *
  * this file defines a wrapper class for the caching functions
  */
 
-abstract class WildcardPluginCache010100 implements WildcardPluginCacheInterface010000
+abstract class WildcardPluginCache010200 implements WildcardPluginCacheInterface010100
 {
 	/**
 	 * @const version
 	 */
-	const VERSION = '1.1';
+	const VERSION = '1.2';
 
 	/**
 	 * @var array cache data
@@ -115,6 +113,31 @@ abstract class WildcardPluginCache010100 implements WildcardPluginCacheInterface
 		}
 
 		add_shutdown(array($this, 'save'));
+	}
+
+	/**
+	 * get the cached version
+	 *
+	 * @return string|int
+	 */
+	public function getVersion()
+	{
+		$version = trim($this->read('version'));
+		if (!$version) {
+			$version = 0;
+		}
+		return $version;
+	}
+
+	/**
+	 * set the cached version
+	 *
+	 * @param  string
+	 * @return string|int
+	 */
+	public function setVersion($version)
+	{
+		$this->update('version', trim($version));
 	}
 }
 

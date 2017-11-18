@@ -153,7 +153,7 @@ function mention_activate()
 
 	// version check
 	$info = mention_info();
-	$oldVersion = mentionMeGetCacheVersion();
+	$oldVersion = MentionMeCache::getInstance()->getVersion();
 	if (version_compare($oldVersion, $info['version'], '<') &&
 		$oldVersion != '' &&
 		$oldVersion != 0) {
@@ -180,7 +180,7 @@ function mention_activate()
     }
 
 	// update the version (so we don't try to upgrade next round)
-	mentionMeSetCacheVersion();
+	MentionMeCache::getInstance()->setVersion(MENTIONME_VERSION);
 
 	// edit the templates
 	find_replace_templatesets('showthread', "#" . preg_quote('</head>') . "#i", '{$mentionScript}</head>');
@@ -277,7 +277,7 @@ function mention_uninstall()
 		$alertTypeManager->deleteByCode('mention');
 	}
 
-	mentionMeUnsetCacheVersion();
+	MentionMeCache::getInstance()->clear();
 }
 
 /**
@@ -376,57 +376,6 @@ EOF;
 		}
 	}
 	return false;
-}
-
-/*
- * versioning
- */
-
-/**
- * check cached version info
- *
- * derived from the work of pavemen in MyBB Publisher
- *
- * @return mixed string the version or int 0 for failure
- */
-function mentionMeGetCacheVersion()
-{
-	// get currently installed version, if there is one
-	$version = MentionMeCache::getInstance()->read('version');
-	if (trim($version)) {
-        return trim($version);
-	}
-    return 0;
-}
-
-/**
- * set cached version info
- *
- * derived from the work of pavemen in MyBB Publisher
- *
- * @return bool true on success
- */
-function mentionMeSetCacheVersion()
-{
-	// get version from this plugin file
-	$info = mention_info();
-
-	// update version cache to latest
-	MentionMeCache::getInstance()->update('version', $info['version']);
-    return true;
-}
-
-/**
- * remove cached version info
- *
- * derived from the work of pavemen in MyBB Publisher
- *
- * @return bool true on success
- */
-function mentionMeUnsetCacheVersion()
-{
-	MentionMeCache::getInstance()->clear();
-    return true;
 }
 
 /*

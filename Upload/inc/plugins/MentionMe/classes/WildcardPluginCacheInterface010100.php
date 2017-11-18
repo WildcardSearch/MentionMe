@@ -7,12 +7,14 @@
  * this file defines an interface for the caching class
  */
 
-interface WildcardPluginCacheInterface010000
+interface WildcardPluginCacheInterface010100
 {
 	public function read($key);
 	public function update($key, $val, $hard = false);
 	public function save();
 	public function clear($hard = false);
+	public function getVersion();
+	public function setVersion($version);
 }
 
 ?>
