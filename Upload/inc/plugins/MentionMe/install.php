@@ -318,13 +318,10 @@ function mentionMeAddPeekers($peekers)
  */
 function mentionMeGetSettingsgroup()
 {
-	static $mentionSettingsGID;
+	static $gid;
 
 	// if we have already stored the value
-	if (isset($mentionSettingsGID)) {
-		// don't waste a query
-		$gid = (int) $mentionSettingsGID;
-	} else {
+	if (!isset($gid)) {
 		global $db;
 
 		// otherwise we will have to query the db
