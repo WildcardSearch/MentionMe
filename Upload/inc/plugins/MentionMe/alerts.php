@@ -24,27 +24,26 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
 {
 	global $db, $mybb, $post;
 
-	// grab the post data
-	$message = $thisPost->data['message'];
-	$fid = (int) $thisPost->data['fid'];
-	$tid = (int) $thisPost->data['tid'];
-	$pid = (int) $thisPost->data['pid'];
 	$postUID = (int) $post['uid'];
 	$editUID = (int) $mybb->user['uid'];
-	$subject = $post['subject'];
 
 	// if another user is editing (mod) don't do alerts
 	if ($editUID != $postUID) {
 		return;
 	}
 
+	// grab the post data
+	$message = $thisPost->data['message'];
+	$fid = (int) $thisPost->data['fid'];
+	$tid = (int) $thisPost->data['tid'];
+	$pid = (int) $thisPost->data['pid'];
+	$subject = $post['subject'];
+
 	$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
 	$alertTypeId = $alertType->getId();
-	$matches = array();
-	$alerts = array();
+	$mentionedAlready = $alerts = $matches = array();
 
 	// get all mentions
-	$matches = array();
 	mentionMeFindInPost($message, $matches);
 
 	// no results, no alerts
@@ -52,9 +51,6 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
 		empty($matches)) {
 		return;
 	}
-
-	// avoid duplicate mention alerts
-	$mentionedAlready = array();
 
 	// loop through all matches (if any)
 	foreach ($matches as $val) {
