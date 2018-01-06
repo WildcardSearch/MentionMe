@@ -39,6 +39,7 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
 	}
 
 	$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
+	$alertTypeId = $alertType->getId();
 	$matches = array();
 	$alerts = array();
 
@@ -79,7 +80,7 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
 		$mentionedAlready[$uid] = true;
 
 		// prevent multiple alerts when the user edits the post
-        $query = $db->simple_select('alerts', 'uid', "uid='{$uid}' AND extra_details LIKE '%pid\":{$pid},%'");
+        $query = $db->simple_select('alerts', 'uid', "alert_type_id='{$alertTypeId}' AND uid='{$uid}' AND extra_details LIKE '%pid\":{$pid},%'");
 		if ($db->num_rows($query) > 0) {
 			continue;
 		}
