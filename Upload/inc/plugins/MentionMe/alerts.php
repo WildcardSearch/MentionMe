@@ -110,9 +110,10 @@ $plugins->add_hook('newreply_do_newreply_end', 'mentionMeMyAlertsDoNewReplyEnd')
 $plugins->add_hook('newthread_do_newthread_end', 'mentionMeMyAlertsDoNewReplyEnd');
 function mentionMeMyAlertsDoNewReplyEnd()
 {
-	global $mybb, $pid, $tid, $post, $thread, $fid;
+	global $mybb, $pid, $tid, $post, $thread, $fid, $db;
 
 	$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
+	$alertTypeId = $alertType->getId();
     $alerts = array();
 
     // if creating a new thread the message comes from $_POST
@@ -153,10 +154,21 @@ function mentionMeMyAlertsDoNewReplyEnd()
         $uid = (int) $val[1];
         $username = $val[3];
 
-        // create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
-        if ($fromUser == $uid ||
-			$mentionedAlready[$uid] ||
+        /**
+		 * prevent:
+		 *	multiple mentions producing multiple alerts
+		 *	the user mentioning (and alerting) themselves
+		 *	creating an alert for users w/o permission to view post
+		 */
+		if ($mentionedAlready[$uid] ||
+			$fromUser == $uid ||
 			!mentionMeCheckPermissions($username, $uid, $fromUser, $fid)) {
+			continue;
+		}
+
+		// prevent multiple alerts when the post is merged
+        $query = $db->simple_select('alerts', 'uid', "alert_type_id='{$alertTypeId}' AND uid='{$uid}' AND extra_details LIKE '%pid\":{$pid},%'");
+		if ($db->num_rows($query) > 0) {
 			continue;
 		}
 
