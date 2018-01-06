@@ -65,18 +65,22 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
         $uid = (int) $val[1];
         $username = $val[3];
 
-        // prevent multiple alerts for duplicate mentions in the post and
-        // the user mentioning themselves
-        if ($mentionedAlready[$uid] ||
-			$editUID == $uid ) {
+		/**
+		 * prevent:
+		 *	multiple mentions producing multiple alerts
+		 *	the user mentioning (and alerting) themselves
+		 *	creating an alert for users w/o permission to view post
+		 */
+		if ($mentionedAlready[$uid] ||
+			$editUID == $uid ||
+			!mentionMeCheckPermissions($username, $uid, $editUID, $fid)) {
             continue;
         }
+		$mentionedAlready[$uid] = true;
 
-        // if the user was already alerted for being mentioned in this post
-        // do not create a duplicate
-        $mentionedAlready[$uid] = true;
-
-        if (!mentionMeCheckPermissions($username, $uid, $editUID, $fid)) {
+		// prevent multiple alerts when the user edits the post
+        $query = $db->simple_select('alerts', 'uid', "uid='{$uid}' AND extra_details LIKE '%pid\":{$pid},%'");
+		if ($db->num_rows($query) > 0) {
 			continue;
 		}
 
@@ -150,11 +154,8 @@ function mentionMeMyAlertsDoNewReplyEnd()
 
         // create an alert if MyAlerts and mention alerts are enabled and prevent multiple alerts for duplicate mentions in the post and the user mentioning themselves.
         if ($fromUser == $uid ||
-			$mentionedAlready[$uid]) {
-            continue;
-        }
-
-        if (!mentionMeCheckPermissions($username, $uid, $fromUser, $fid)) {
+			$mentionedAlready[$uid] ||
+			!mentionMeCheckPermissions($username, $uid, $fromUser, $fid)) {
 			continue;
 		}
 
