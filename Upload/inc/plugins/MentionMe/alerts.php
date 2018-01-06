@@ -64,7 +64,14 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
         }
 
         $uid = (int) $val[1];
-        $username = $val[3];
+		if ($uid <= 0) {
+			continue;
+		}
+		$user = get_user($uid);
+		if ($user['uid'] <= 0) {
+			continue;
+		}
+		$username = $user['username'];
 
 		/**
 		 * prevent:
@@ -152,7 +159,14 @@ function mentionMeMyAlertsDoNewReplyEnd()
         }
 
         $uid = (int) $val[1];
-        $username = $val[3];
+		if ($uid <= 0) {
+			continue;
+		}
+		$user = get_user($uid);
+		if ($user['uid'] <= 0) {
+			continue;
+		}
+		$username = $user['username'];
 
         /**
 		 * prevent:
