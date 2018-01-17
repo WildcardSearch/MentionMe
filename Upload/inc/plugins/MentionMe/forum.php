@@ -348,7 +348,7 @@ function mentionMeInitialize()
 
 	$addTemplates = '';
 	if ($mybb->settings['mention_auto_complete']) {
-		$plugins->add_hook('global_intermediate', mentionMeBuildPopup);
+		$plugins->add_hook('global_intermediate', 'mentionMeBuildPopup');
 		$addTemplates .= ',mentionme_popup';
 	}
 
