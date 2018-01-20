@@ -143,7 +143,7 @@ function mention_install()
  */
 function mention_activate()
 {
-	global $plugins, $db, $cache, $lang;
+	global $plugins, $db, $cache, $lang, $mmOldVersion;
 
 	if (!$lang->mention) {
 		$lang->load('mention');
@@ -152,31 +152,11 @@ function mention_activate()
 	require_once MYBB_ROOT . '/inc/adminfunctions_templates.php';
 
 	// version check
-	$info = mention_info();
-	$oldVersion = MentionMeCache::getInstance()->getVersion();
-	if (version_compare($oldVersion, $info['version'], '<') &&
-		$oldVersion != '' &&
-		$oldVersion != 0) {
-
-		if (version_compare($oldVersion, '3.1', '<')) {
-			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/cursor_position.js');
-			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/selection_range.js');
-			@unlink(MYBB_ROOT . 'jscripts/js_cursor_position/string_splitter.js');
-			@rmdir(MYBB_ROOT . 'jscripts/js_cursor_position');
-
-			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.js');
-			@unlink(MYBB_ROOT . 'jscripts/MentionMe/autocomplete.sceditor.min.js');
-
-			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/installer.php');
-		}
-
-		if (version_compare($oldVersion, '3.2', '<')) {
-			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php');
-			@unlink(MYBB_ROOT . 'inc/plugins/MentionMe/classes/WildcardPluginCache.php');
-		}
-
-		// check everything and upgrade if necessary
-		mention_install();
+	$mmOldVersion = MentionMeCache::getInstance()->getVersion();
+	if (version_compare($mmOldVersion, MENTIONME_VERSION, '<') &&
+		$mmOldVersion != '' &&
+		$mmOldVersion != 0) {
+		require MYBB_ROOT . 'inc/plugins/MentionMe/upgrade.php';
     }
 
 	// update the version (so we don't try to upgrade next round)
