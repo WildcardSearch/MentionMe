@@ -17,7 +17,7 @@ global $lang, $db, $mmOldVersion;
 
 MentionMeInstaller::getInstance()->install();
 
-$removedAdminFolders = $removedForumFolders = $removedAdminFiles = $removedForumFiles = array();
+$removedAdminFolders = $removedForumFolders = $removedAdminFiles = $removedForumFiles = $removedSettings = array();
 
 /* 3.1 */
 if (version_compare($mmOldVersion, '3.1', '<')) {
@@ -36,6 +36,13 @@ if (version_compare($mmOldVersion, '3.2', '<')) {
 		'inc/plugins/MentionMe/classes/WildcardPluginInstaller.php',
 		'inc/plugins/MentionMe/classes/WildcardPluginCache.php',
 	));
+}
+
+/* 3.2.3 */
+if (version_compare($mmOldVersion, '3.2.3', '<')) {
+	$removedSettings = array(
+		'mention_advanced_matching',
+	);
 }
 
 if (!empty($removedForumFiles)) {
@@ -62,6 +69,11 @@ if (!empty($removedAdminFolders)) {
 		@my_rmdir_recursive(MYBB_ADMIN_DIR . $folder);
 		@rmdir(MYBB_ADMIN_DIR . $folder);
 	}
+}
+
+if (!empty($removedSettings)) {
+	$deleteList = "'" . implode("','", (array) $removedSettings) . "'";
+	$this->db->delete_query($table, "name IN ({$deleteList})");
 }
 
 ?>
