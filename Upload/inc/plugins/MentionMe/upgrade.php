@@ -73,7 +73,7 @@ if (!empty($removedAdminFolders)) {
 
 if (!empty($removedSettings)) {
 	$deleteList = "'" . implode("','", (array) $removedSettings) . "'";
-	$this->db->delete_query($table, "name IN ({$deleteList})");
+	$db->delete_query($table, "name IN ({$deleteList})");
 }
 
 ?>
