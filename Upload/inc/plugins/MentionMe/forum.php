@@ -43,7 +43,7 @@ function mentionMeParseMessage($message)
 	 * unquoted
 	 */
 	$pattern = <<<EOF
-#@(?P<unquoted>[^<>&\\\;,.?\n]{{$mybb->settings['minnamelength']},{$mybb->settings['maxnamelength']}})#u
+#@(?P<unquoted>[^<>&\\\;,. ?\n]{1,{$mybb->settings['maxnamelength']}})#u
 EOF;
 
 	$message = preg_replace_callback($pattern, 'mentionDetect', $message);
@@ -63,12 +63,17 @@ EOF;
  */
 function mentionDetect($match)
 {
-	global $db, $mybb;
 	static $nameCache, $myCache;
-	$nameParts = array();
-	$unquoted = 0;
 
-	$cacheChanged = false;
+	if (!empty($match['quoted'])) {
+		$username = $match['quoted'];
+	} elseif (!empty($match['unquoted'])) {
+		$username = $match['unquoted'];
+	} else {
+		return $match[0];
+	}
+
+	$username = html_entity_decode(mb_strtolower($username));
 
 	// cache names to reduce queries
 	if ($myCache instanceof MentionMeCache == false) {
@@ -79,94 +84,22 @@ function mentionDetect($match)
 		$nameCache = $myCache->read('namecache');
 	}
 
-	/*
-	 * if the user entered the mention in quotes then it
-	 * will be returned in $match['quoted'], if not it will
-	 * be returned in $match['unquoted']
-	 */
-	if (strlen(trim($match['quoted'])) >= $mybb->settings['minnamelength']) {
-		$originalName = html_entity_decode($match['quoted']);
-	} elseif (strlen(trim($match['unquoted'])) >= $mybb->settings['minnamelength']) {
-		$originalName = html_entity_decode($match['unquoted']);
-		$unquoted = true;
-	} else {
-		return $match[0];
-	}
-
-	$match[0] = trim(mb_strtolower($originalName));
-
-	// if the name is already in the cache . . .
-	if (isset($nameCache[$match[0]])) {
-		return mentionBuild($nameCache[$match[0]]);
-	}
-
-	// if the array was shifted then no quotes were used
-	if ($unquoted) {
-		// no padding necessary
-		$padding = 0;
-
-		// split the string into an array of words
-		$nameParts = explode(' ', $match[0]);
-
-		// add the first part
-		$username = $nameParts[0];
-
-		// if the name part we have is shorter than the minimum user name length (set in ACP) we need to loop through all the name parts and keep adding them until we at least reach the minimum length
-		while (strlen($username) < $mybb->settings['minnamelength'] &&
-			!empty($nameParts)) {
-			// discard the first part (we have it stored)
-			array_shift($nameParts);
-			if (strlen($nameParts[0]) == 0) {
-				// no more parts?
-				break;
-			}
-
-			// if there is another part add it
-			$username .= ' ' . $nameParts[0];
-		}
-
-		if (strlen($username) < $mybb->settings['minnamelength']) {
-			return $originalName;
-		}
-	} else {
-		// @ and two double quotes
-		$padding = 3;
-
-		// grab the entire match
-		$username = $match[0];
-	}
-
-	// if the name is already in the cache . . .
 	if (isset($nameCache[$username])) {
-		// . . . simply return it and save the query
-		//  restore any surrounding characters from the original match
-		return mentionBuild($nameCache[$username]) . substr($originalName, strlen($username) + $padding);
+		return mentionBuild($nameCache[$username]);
 	}
 
 	// lookup the user name
 	$user = mentionTryName($username);
-
-	// if the user name exists . . .
-	if ($user['uid'] != 0) {
-		$cacheChanged = true;
-
-		// preserve any surrounding chars
-		$trailingChars = substr($originalName, strlen($user['username']) + $padding);
-	} else {
-		// no match found and advanced matching is disabled
-		return "@{$originalName}";
+	if ($user['uid'] == 0) {
+		return $match[0];
 	}
 
 	// store the mention
 	$nameCache[$username] = $user;
-
-	// if we had to query for this user's info then update the cache
-	if ($cacheChanged) {
-		$myCache->update('namecache', $nameCache);
-	}
+	$myCache->update('namecache', $nameCache);
 
 	// and return the mention
-	return mentionBuild($user) . $trailingChars;
+	return mentionBuild($user);
 }
 
 /**
@@ -610,7 +543,6 @@ function mentionMeBuildPopup() {
 		lang: {
 			instructions: '{$lang->mention_autocomplete_instructions}',
 		},
-		minLength: '{$mybb->settings['minnamelength']}',
 		maxLength: '{$mybb->settings['maxnamelength']}',
 		maxItems: '{$mybb->settings['mention_max_items']}',
 		tid: '{$mybb->input['tid']}',

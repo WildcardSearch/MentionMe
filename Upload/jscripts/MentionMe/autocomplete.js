@@ -10,7 +10,7 @@ var MentionMe = (function($, m) {
 	"use strict";
 
 	var options = {
-			minLength: 3,
+			minLength: 2,
 			maxLength: 30,
 			maxItems: 5,
 			tid: "",
@@ -1732,7 +1732,9 @@ var MentionMe = (function($, m) {
 		$.extend(options, opt || {});
 
 		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
-			options[this] = pi(options[this]);
+			if (typeof options[this] !== "undefined") {
+				options[this] = pi(options[this]);
+			}
 		});
 
 		options.defaultAvatar = options.imageDirectory + "/default_avatar.png";
