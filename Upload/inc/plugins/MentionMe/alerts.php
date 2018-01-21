@@ -290,7 +290,7 @@ function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
 		$nameCache = $myCache->read('namecache');
 	}
 
-    $username = mb_strtolower($username);
+    $username = html_entity_decode(mb_strtolower($username));
 
     /*
 	 * if the user name is in the cache

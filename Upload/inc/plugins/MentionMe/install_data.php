@@ -143,15 +143,6 @@ $settings = array(
 				'value' => '1',
 				'disporder' => '140',
 			),
-			'mention_advanced_matching' => array(
-				'sid' => '0',
-				'name' => 'mention_advanced_matching',
-				'title' => $lang->mention_advanced_matching,
-				'description' => $lang->mention_advanced_matching_desc,
-				'optionscode' => 'yesno',
-				'value' => '0',
-				'disporder' => '150',
-			),
 		)
 	)
 );

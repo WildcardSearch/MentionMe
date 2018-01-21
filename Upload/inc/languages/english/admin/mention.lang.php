@@ -65,9 +65,6 @@ $l['mention_open_link_in_new_window_desc'] = 'YES to add open mention links in a
 $l['mention_minify_js_title'] = 'Minify JavaScript?';
 $l['mention_minify_js_desc'] = 'YES (default) to serve client-side scripts minified to increase performance, NO to serve beautiful, commented code ;)';
 
-$l['mention_advanced_matching'] = 'Enable Advanced Matching?';
-$l['mention_advanced_matching_desc'] = 'This option allows user names with whitespace to be processed by MentionMe without the necessity of enclosing user names in double quotes.<br /><br />This feature can greatly increase the server load and is not recommended for large forums.';
-
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
 $l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! Click the link below to integrate.';

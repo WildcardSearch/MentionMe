@@ -10,7 +10,7 @@ var MentionMe = (function($, m) {
 	"use strict";
 
 	var options = {
-			minLength: 3,
+			minLength: 2,
 			maxLength: 30,
 			maxItems: 5,
 			tid: "",
@@ -1486,6 +1486,18 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function finalize() {
+			this.doFinalize();
+			this.lastState = this.editor.mode;
+			this.editor.on('mode', $.proxy(this.onModeChange, this));
+		}
+
+		/**
+		 * attach event listeners, capture copies of key elements
+		 * and create the popup
+		 *
+		 * @return void
+		 */
+		function doFinalize() {
 			this.$iFrame = $("#cke_" + this.id).find("iframe");
 			this.$container = this.$iFrame.closest("div");
 			this.$doc = $(this.editor.document.$);
@@ -1495,6 +1507,26 @@ var MentionMe = (function($, m) {
 
 			// go ahead and build the popup
 			this.popup = new Popup(this);
+		}
+
+		/**
+		 * handle editor state changes
+		 *
+		 * @return void
+		 */
+		function onModeChange(e) {
+			if (typeof e.sender.mode == "undefined" ||
+				e.sender.mode == this.lastState) {
+				return;
+			}
+
+			this.lastState = e.sender.mode;
+
+			if (e.sender.mode == "source") {
+				this.unbindKeyup();
+			} else {
+				this.doFinalize();
+			}
 		}
 
 		/**
@@ -1670,6 +1702,8 @@ var MentionMe = (function($, m) {
 			heightModifier: 0,
 			lineHeightModifier: 0,
 			finalize: finalize,
+			doFinalize: doFinalize,
+			onModeChange: onModeChange,
 			onKeyUp: onKeyUp,
 			quickReplyPosted: quickReplyPosted,
 			showPopup: showPopup,
@@ -1698,7 +1732,9 @@ var MentionMe = (function($, m) {
 		$.extend(options, opt || {});
 
 		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
-			options[this] = pi(options[this]);
+			if (typeof options[this] !== "undefined") {
+				options[this] = pi(options[this]);
+			}
 		});
 
 		options.defaultAvatar = options.imageDirectory + "/default_avatar.png";
