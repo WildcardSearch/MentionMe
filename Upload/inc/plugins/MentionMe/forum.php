@@ -131,7 +131,7 @@ function mentionBuild($user)
 	$url = get_profile_link($user['uid']);
 
 	$target = '';
-	if ($mybb->settings['mention_format_names']) {
+	if ($mybb->settings['mention_open_link_in_new_window']) {
 		$target = ' target="_blank"';
 	}
 
