@@ -131,7 +131,7 @@ function mentionBuild($user)
 	$url = get_profile_link($user['uid']);
 
 	$target = '';
-	if ($mybb->settings['mention_format_names']) {
+	if ($mybb->settings['mention_open_link_in_new_window']) {
 		$target = ' target="_blank"';
 	}
 
@@ -377,28 +377,24 @@ function mentionMeXMLHTTPgetNameCache()
 				SELECT p.username, u.avatar
 				FROM {$db->table_prefix}posts p
 				LEFT JOIN {$db->table_prefix}users u ON (p.uid=u.uid)
-				WHERE p.pid IN (
-					SELECT MAX(pid)
-					FROM {$db->table_prefix}posts
-					WHERE tid='{$tid}'
-					GROUP BY username
-				)
+				WHERE p.tid='{$tid}'
 				ORDER BY p.pid DESC
-				LIMIT {$limit}
 			");
 		} else {
-			$query = $db->simple_select('posts', 'username', "pid IN (
-				SELECT MAX(pid)
-				FROM {$db->table_prefix}posts
-				WHERE tid='{$tid}'
-				GROUP BY username
-			)", array("order_by" => 'pid', "order_dir" => 'DESC', "limit" => $limit));
+			$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'pid', "order_dir" => 'DESC'));
 		}
 
 		if ($db->num_rows($query) > 0) {
-			while ($user = $db->fetch_array($query)) {
+			$count = 0;
+			while ($count < $limit && $user = $db->fetch_array($query)) {
 				$key = mb_strtolower($user['username']);
+
+				if (isset($names['inThread'][$key])) {
+					continue;
+				}
+
 				$names['inThread'][$key] = $user;
+				$count++;
 			}
 		}
 	}
