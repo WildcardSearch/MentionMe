@@ -378,18 +378,23 @@ function mentionMeXMLHTTPgetNameCache()
 				FROM {$db->table_prefix}posts p
 				LEFT JOIN {$db->table_prefix}users u ON (p.uid=u.uid)
 				WHERE p.tid='{$tid}'
-				GROUP BY p.uid
-				ORDER BY MAX(p.pid) DESC
-				LIMIT {$limit}
+				ORDER BY p.pid DESC
 			");
 		} else {
-			$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("group_by" => "uid", "order_by" => 'MAX(pid)', "order_dir" => 'DESC', "limit" => $limit));
+			$query = $db->simple_select('posts', 'username', "tid='{$tid}'", array("order_by" => 'pid', "order_dir" => 'DESC'));
 		}
 
 		if ($db->num_rows($query) > 0) {
-			while ($user = $db->fetch_array($query)) {
+			$count = 0;
+			while ($count < $limit && $user = $db->fetch_array($query)) {
 				$key = mb_strtolower($user['username']);
+
+				if (isset($names['inThread'][$key])) {
+					continue;
+				}
+
 				$names['inThread'][$key] = $user;
+				$count++;
 			}
 		}
 	}
