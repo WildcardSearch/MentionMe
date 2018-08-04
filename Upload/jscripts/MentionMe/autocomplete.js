@@ -299,9 +299,13 @@ var MentionMe = (function($, m) {
 				avatar = "";
 				if (options.showAvatars) {
 					avatarPath = data[user]["avatar"];
-					if (avatarPath.length == 0) {
+
+					if (typeof avatarPath == "undefined") {
+						avatarPath = options.defaultAvatar;
+					} else if (avatarPath.length == 0) {
 						avatarPath = options.defaultAvatar;
 					}
+
 					avatar = $("<img/>", {
 						"class": "mention_user_avatar",
 						src: avatarPath,

@@ -39,7 +39,19 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
 	$pid = (int) $thisPost->data['pid'];
 	$subject = $post['subject'];
 
-	$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
+	$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
+
+    if (is_null($alertTypeManager) ||
+		$alertTypeManager === false) {
+		global $cache;
+
+        $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance(
+            $db,
+            $cache
+        );
+    }
+
+	$alertType = $alertTypeManager->getByCode('mention');
 	$alertTypeId = $alertType->getId();
 	$mentionedAlready = $alerts = $matches = array();
 
@@ -115,7 +127,19 @@ function mentionMeMyAlertsDoNewReplyEnd()
 {
 	global $mybb, $pid, $tid, $post, $thread, $fid, $db;
 
-	$alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('mention');
+	$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
+
+    if (is_null($alertTypeManager) ||
+		$alertTypeManager === false) {
+		global $cache;
+
+        $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance(
+            $db,
+            $cache
+        );
+    }
+
+	$alertType = $alertTypeManager->getByCode('mention');
 	$alertTypeId = $alertType->getId();
     $alerts = array();
 
