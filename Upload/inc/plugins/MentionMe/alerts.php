@@ -89,7 +89,7 @@ function mentionMeMyAlertsDatahandlerPostUpdate($thisPost)
 		 */
 		if ($mentionedAlready[$uid] ||
 			$editUID == $uid ||
-			!mentionMeCheckPermissions($username, $uid, $editUID, $fid)) {
+			!mentionMeCheckPermissions($username, $uid, $editUID, $fid, $tid)) {
             continue;
         }
 		$mentionedAlready[$uid] = true;
@@ -196,7 +196,7 @@ function mentionMeMyAlertsDoNewReplyEnd()
 		 */
 		if ($mentionedAlready[$uid] ||
 			$fromUser == $uid ||
-			!mentionMeCheckPermissions($username, $uid, $fromUser, $fid)) {
+			!mentionMeCheckPermissions($username, $uid, $fromUser, $fid, $tid)) {
 			continue;
 		}
 
@@ -300,10 +300,10 @@ function mentionMeStripQuotes($message)
  * @param  int id of the forum in which the mention occurred
  * @return bool true to allow, false to deny
  */
-function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
+function mentionMeCheckPermissions($username, $uid, $fromUID, $fid, $tid)
 {
     global $cache;
-	static $nameCache, $myCache;
+	static $nameCache, $myCache, $db;
 
 	// cache names to reduce queries
 	if ($myCache instanceof MentionMeCache == false) {
@@ -353,12 +353,24 @@ function mentionMeCheckPermissions($username, $uid, $fromUID, $fid)
         return true;
     }
 
+	// check if this is the user's thread
+	$query = $db->simple_select('thread', 'uid', "tid='{$tid}'");
+	$isOp = $uid > 0 && (int) $db->fetch_field($query, 'uid') == $uid;
+
     // check for permissions in all the user's groups
     foreach ($userGroups as $gid) {
         // empty 'displaygroup' and 'additionalgroups' are 0 or blank, skip them
         if ((int) $gid == 0) {
             continue;
         }
+
+		// if the user can only view their own threads and this thread isn't one of them...
+		if (isset($forum_permissions[$fid][$gid]) &&
+			$forum_permissions[$fid][$gid]['canonlyviewownthreads'] &&
+			!$isOp) {
+			// sorry charlie
+			return false;
+		}
 
         // the first 'yes' we hear gets us out of the loop with a valid return
         if (!isset($forum_permissions[$fid][$gid]) ||
