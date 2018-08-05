@@ -9,12 +9,12 @@
  *
  */
 
-class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface010000
+class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface010000
 {
 	/**
 	 * @const version
 	 */
-	const VERSION = '1.2.2';
+	const VERSION = '1.2.3';
 
 	/**
 	 * @var object a copy of the MyBB db object
@@ -551,7 +551,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 			// now cache the actual files
 			require_once MYBB_ROOT . "{$config['admin_dir']}/inc/functions_themes.php";
 
-			if(!cache_stylesheet(1, $data['cachefile'], $data['stylesheet']))
+			if(!cache_stylesheet(1, $styleSheet['cachefile'], $data['stylesheet']))
 			{
 				$this->db->update_query("themestylesheets", array('cachefile' => "css.php?stylesheet={$sid}"), "sid='{$sid}'", 1);
 			}
@@ -663,7 +663,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 				   !mkdir("{$path}/images", 0777, true)) ||
 				   ($mainFolder &&
 				    !is_dir("{$path}/images{$mainFolder}") &&
-				    !mkdir("{$path}/images{$mainFolder}", 0777, true))) {
+				    !$this->createContentFolder("{$path}/images{$mainFolder}"))) {
 					continue;
 				}
 
@@ -693,7 +693,7 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 				if (!is_dir($path) ||
 				   ($mainFolder &&
 				    !is_dir("{$path}{$mainFolder}") &&
-				    !mkdir("{$path}{$mainFolder}", 0777, true))) {
+				    !$this->createContentFolder("{$path}{$mainFolder}"))) {
 					continue;
 				}
 
@@ -866,6 +866,52 @@ class WildcardPluginInstaller010202 implements WildcardPluginInstallerInterface0
 		}
 
 		return $folderList;
+	}
+
+	/**
+	 * verify that path exists or can be created
+	 *
+	 * @param  folder path
+	 * @return bool
+	 */
+	private function createContentFolder($path)
+	{
+		if (mkdir($path, 0777, true)) {
+			file_put_contents($path . '/index.html', <<<EOF
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta name="robots" content="noindex, nofollow" />
+		<title>forbidden</title>
+		<style type="text/css">	
+		body {
+			background:		#F0F0F0;
+			color:			#010101;
+			font-family:	verdana,arial;
+			font-size:		14px;
+			font-weight:	bold;
+		}
+		#msg {
+			border:			1px solid #F08080;
+			background:		#FFF0F0;
+			padding:		20px;
+			margin:			5px;
+		}
+		</style>
+	</head>
+	<body>
+	<div id="msg">you don't have permission to access this resource</div>
+	</body>
+</html>
+EOF
+);
+
+			return true;
+		}
+
+		return false;
 	}
 }
 
