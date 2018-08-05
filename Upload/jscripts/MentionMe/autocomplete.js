@@ -1750,7 +1750,8 @@ var MentionMe = (function($, m) {
 	 * @return void
 	 */
 	function init() {
-		var id, key;
+		var id, key,
+			$shoutbox = $('.panel > form > input[class="text"]');
 
 		if (typeof CKEDITOR !== "undefined" &&
 			typeof CKEDITOR.instances !== "undefined") {
@@ -1782,6 +1783,11 @@ var MentionMe = (function($, m) {
 			}
 
 			new TextareaInterface(id);
+		}
+
+		if ($shoutbox.length) {
+			$shoutbox.prop("id", "dvz_shoutbox_input");
+			new TextareaInterface("dvz_shoutbox_input");
 		}
 
 		// quick edit
