@@ -302,9 +302,9 @@ var MentionMe = (function($, m) {
 				if (options.showAvatars) {
 					avatarPath = data[user]["avatar"];
 
-					if (typeof avatarPath == "undefined") {
-						avatarPath = options.defaultAvatar;
-					} else if (avatarPath.length == 0) {
+					if (typeof avatarPath == "undefined" ||
+						avatarPath == null ||
+						avatarPath.length == 0) {
 						avatarPath = options.defaultAvatar;
 					}
 
