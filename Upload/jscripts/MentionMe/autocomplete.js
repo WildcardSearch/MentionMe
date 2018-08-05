@@ -1737,7 +1737,7 @@ var MentionMe = (function($, m) {
 		delete opt.lang;
 		$.extend(options, opt || {});
 
-		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
+		$(["minLength", "maxLength", "minWidth", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
 			if (typeof options[this] !== "undefined") {
 				options[this] = pi(options[this]);
 			}
