@@ -29,6 +29,9 @@ $l['mention_auto_complete_description'] = 'YES (default) to autocomplete mention
 $l['mention_max_items_title'] = 'Maximum Items In Popup';
 $l['mention_max_items_description'] = 'If autocomplete is used, this setting will limit the size of the popup';
 
+$l['mention_min_width_title'] = 'Minimum Width';
+$l['mention_min_width_description'] = 'If autocomplete is used, this setting will provide a minimum width for the popup, in pixels';
+
 $l['mention_cache_time_title'] = 'Cache Cut-off Time';
 $l['mention_cache_time_description'] = 'The task caches usernames based on when they were last active. In days, specify how far back to go. (Large forums should stick with low numbers to reduce the size of the namecache)';
 

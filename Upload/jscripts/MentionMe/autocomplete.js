@@ -12,6 +12,7 @@ var MentionMe = (function($, m) {
 	var options = {
 			minLength: 2,
 			maxLength: 30,
+			minWidth: 120,
 			maxItems: 5,
 			tid: "",
 			fullText: 0,
@@ -193,6 +194,7 @@ var MentionMe = (function($, m) {
 			}
 
 			this.width += pi(this.$body.css("fontSize").replace("px", "") * longestName);
+			this.width = Math.max(options.minWidth, this.width);
 
 			style = {
 				height: this.getCurrentHeight() + this.inputHeight + "px",

@@ -529,6 +529,8 @@ function mentionMeBuildPopup() {
 		$min = '.min';
 	}
 
+	$mybb->settings['mention_min_width'] = (int) $mybb->settings['mention_min_width'];
+
 	$mentionAutocomplete = <<<EOF
 <!-- MentionMe Autocomplete Scripts -->
 <script type="text/javascript" src="{$mybb->asset_url}/jscripts/Caret.js/jquery.caret{$min}.js"></script>
@@ -541,6 +543,7 @@ function mentionMeBuildPopup() {
 		},
 		maxLength: '{$mybb->settings['maxnamelength']}',
 		maxItems: '{$mybb->settings['mention_max_items']}',
+		minWidth: '{$mybb->settings['mention_min_width']}',
 		tid: '{$mybb->input['tid']}',
 		fullText: '{$mybb->settings['mention_full_text_search']}',
 		showAvatars: '{$mybb->settings['mention_show_avatars']}',
