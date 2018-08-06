@@ -1,4 +1,4 @@
-## MentionMe 3.2.5
+## MentionMe 3.2.6
 
 A plugin for MyBB 1.8.x that allows Twitter-style tagging and integration with [MyAlerts](https://github.com/euantorano/MyAlerts)
 
@@ -6,9 +6,12 @@ While this plugin works with MyAlerts, it is not necessary for the tagging featu
 
 MyBB Release Thread: http://community.mybb.com/thread-131448.html
 
+Twitter Addons: https://github.com/Advanced-Sidebox/Twitter-Addons
+
 #Features
 * mention auto-completion while typing`*`
 * supports standard textarea, SCEditor (default WYSIWYG), CKEditor (Rin Editor, etc.), MHEditor (doylecc)
+* DVZ Shoutbox support
 * full text search`*`
 * displays avatars in autocomplete popup`*`
 * uses a prioritizes users from the current thread, when applicable`*`

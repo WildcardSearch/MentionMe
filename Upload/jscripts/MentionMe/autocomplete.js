@@ -12,6 +12,7 @@ var MentionMe = (function($, m) {
 	var options = {
 			minLength: 2,
 			maxLength: 30,
+			minWidth: 120,
 			maxItems: 5,
 			tid: "",
 			fullText: 0,
@@ -193,6 +194,7 @@ var MentionMe = (function($, m) {
 			}
 
 			this.width += pi(this.$body.css("fontSize").replace("px", "") * longestName);
+			this.width = Math.max(options.minWidth, this.width);
 
 			style = {
 				height: this.getCurrentHeight() + this.inputHeight + "px",
@@ -300,9 +302,9 @@ var MentionMe = (function($, m) {
 				if (options.showAvatars) {
 					avatarPath = data[user]["avatar"];
 
-					if (typeof avatarPath == "undefined") {
-						avatarPath = options.defaultAvatar;
-					} else if (avatarPath.length == 0) {
+					if (typeof avatarPath == "undefined" ||
+						avatarPath == null ||
+						avatarPath.length == 0) {
 						avatarPath = options.defaultAvatar;
 					}
 
@@ -1735,7 +1737,7 @@ var MentionMe = (function($, m) {
 		delete opt.lang;
 		$.extend(options, opt || {});
 
-		$(["minLength", "maxLength", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
+		$(["minLength", "maxLength", "minWidth", "maxItems", "fullText", "showAvatars", "lockSelection"]).each(function() {
 			if (typeof options[this] !== "undefined") {
 				options[this] = pi(options[this]);
 			}
@@ -1750,7 +1752,8 @@ var MentionMe = (function($, m) {
 	 * @return void
 	 */
 	function init() {
-		var id, key;
+		var id, key,
+			$shoutbox = $('.panel > form > input[class="text"]');
 
 		if (typeof CKEDITOR !== "undefined" &&
 			typeof CKEDITOR.instances !== "undefined") {
@@ -1782,6 +1785,11 @@ var MentionMe = (function($, m) {
 			}
 
 			new TextareaInterface(id);
+		}
+
+		if ($shoutbox.length) {
+			$shoutbox.prop("id", "dvz_shoutbox_input");
+			new TextareaInterface("dvz_shoutbox_input");
 		}
 
 		// quick edit

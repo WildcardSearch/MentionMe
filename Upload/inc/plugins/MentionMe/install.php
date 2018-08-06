@@ -281,7 +281,7 @@ function mentionMeAddPeekers($peekers)
 		return;
 	}
 
-	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_get_thread_participants, #row_setting_mention_max_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars, #row_setting_mention_lock_selection"), 1, true)';
+	$peekers[] = 'new Peeker($(".setting_mention_auto_complete"), $("#row_setting_mention_max_items, #row_setting_mention_min_width, #row_setting_mention_get_thread_participants, #row_setting_mention_max_thread_participants, #row_setting_mention_full_text_search, #row_setting_mention_show_avatars, #row_setting_mention_lock_selection"), 1, true)';
 
 	$peekers[] = 'new Peeker($(".setting_mention_add_postbit_button"), $("#row_setting_mention_multiple"), 1, true)';
 
