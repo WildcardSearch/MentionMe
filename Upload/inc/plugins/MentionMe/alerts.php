@@ -302,8 +302,8 @@ function mentionMeStripQuotes($message)
  */
 function mentionMeCheckPermissions($username, $uid, $fromUID, $fid, $tid)
 {
-    global $cache;
-	static $nameCache, $myCache, $db;
+    global $cache, $db;
+	static $nameCache, $myCache;
 
 	// cache names to reduce queries
 	if ($myCache instanceof MentionMeCache == false) {
@@ -354,7 +354,7 @@ function mentionMeCheckPermissions($username, $uid, $fromUID, $fid, $tid)
     }
 
 	// check if this is the user's thread
-	$query = $db->simple_select('thread', 'uid', "tid='{$tid}'");
+	$query = $db->simple_select('threads', 'uid', "tid='{$tid}'");
 	$isOp = $uid > 0 && (int) $db->fetch_field($query, 'uid') == $uid;
 
     // check for permissions in all the user's groups
