@@ -302,8 +302,8 @@ function mentionMeStripQuotes($message)
  */
 function mentionMeCheckPermissions($username, $uid, $fromUID, $fid, $tid)
 {
-    global $cache;
-	static $nameCache, $myCache, $db;
+    global $cache, $db;
+	static $nameCache, $myCache;
 
 	// cache names to reduce queries
 	if ($myCache instanceof MentionMeCache == false) {
