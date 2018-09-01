@@ -9,12 +9,12 @@
  *
  */
 
-class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface010000
+class WildcardPluginInstaller010302 implements WildcardPluginInstallerInterface010000
 {
 	/**
 	 * @const version
 	 */
-	const VERSION = '1.2.3';
+	const VERSION = '1.3.2';
 
 	/**
 	 * @var object a copy of the MyBB db object
@@ -145,8 +145,19 @@ class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface0
 				}
 				break;
 			case 'columns':
+				if ($db->engine == 'pgsql') {
+					$this->columns = $columns['pgsql'];
+				} else {
+					unset($this->columns['pgsql']);
+				}
 			case 'images':
 				break;
+			case 'tables':
+				if ($db->engine == 'pgsql') {
+					$this->tables = $tables['pgsql'];
+				} else {
+					unset($this->tables['pgsql']);
+				}
 			default:
 				$singular = substr($key, 0, strlen($key) - 1);
 				$property = "{$singular}Names";
@@ -216,8 +227,8 @@ class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface0
 
 		// create the table if it doesn't already exist
 		if (!$this->tableExists($table)) {
-			$table =  TABLE_PREFIX . $table;
-			$this->db->write_query("CREATE TABLE {$table} ({$columnList}) ENGINE={$this->db->table_type}{$collation};");
+			$queryExtra = ($this->db->engine == 'pgsql') ? '' : " ENGINE={$this->db->table_type}{$collation}";
+			$this->db->write_query("CREATE TABLE {$this->db->table_prefix}{$table} ({$columnList}){$queryExtra};");
 		}
 	}
 
@@ -256,8 +267,9 @@ class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface0
 			return;
 		}
 
-		$dropList = implode(', ' . TABLE_PREFIX, $this->tableNames);
-		$this->db->drop_table($dropList);
+		foreach ($this->tableNames as $table) {
+			$this->db->drop_table($table);
+		}
 	}
 
 	/**
@@ -274,16 +286,10 @@ class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface0
 		}
 
 		foreach ($columns as $table => $allColumns) {
-			$sep = $addedColumns = '';
 			foreach ($allColumns as $title => $definition) {
 				if (!$this->fieldExists($table, $title)) {
-					$addedColumns .= "{$sep}{$title} {$definition}";
-					$sep = ', ADD ';
+					$this->db->add_column($table, $title, $definition);
 				}
-			}
-			if (strlen($addedColumns) > 0) {
-				// trickery, again
-				$this->db->add_column($table, $addedColumns, '');
 			}
 		}
 	}
@@ -302,16 +308,10 @@ class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface0
 		}
 
 		foreach ($this->columns as $table => $columns) {
-			$sep = $droppedColumns = '';
 			foreach ($columns as $title => $definition) {
 				if ($this->fieldExists($table, $title)) {
-					$droppedColumns .= "{$sep}{$title}";
-					$sep = ', DROP ';
+					$this->db->drop_column($table, $title);
 				}
-			}
-			if (strlen($droppedColumns) > 0) {
-				// tricky, tricky xD
-				$result = $this->db->drop_column($table, $droppedColumns);
 			}
 		}
 	}
@@ -770,14 +770,23 @@ class WildcardPluginInstaller010203 implements WildcardPluginInstallerInterface0
 	{
 		global $config;
 
-		$query = $this->db->write_query("
-			SHOW TABLES
-			FROM `{$config['database']['database']}`
-		");
+		// PostgreSQL requires a little more work to grab the table names
+		if ($this->db->engine == 'pgsql') {
+			$tableArray = $this->db->list_tables($config['database']['database'], $this->db->table_prefix);
 
-		$tableList = array();
-		while ($row = $this->db->fetch_array($query)) {
-			$tableList[array_pop($row)] = 1;
+			foreach ($tableArray as $table) {
+				$tableList[$table] = 1;
+			}
+		} else {
+			$query = $this->db->write_query("
+				SHOW TABLES
+				FROM `{$config['database']['database']}`
+			");
+
+			$tableList = array();
+			while ($row = $this->db->fetch_array($query)) {
+				$tableList[array_pop($row)] = 1;
+			}
 		}
 		return $tableList;
 	}
