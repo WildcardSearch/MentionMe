@@ -1298,7 +1298,7 @@ var MentionMe = (function($, m) {
 			this.rangeHelper = this.editor.getRangeHelper();
 
 			this.$iFrame = $("iframe");
-			this.$container = this.$iFrame.closest("td");
+			this.$container = this.$iFrame.closest(".sceditor-container").parent();
 			this.$body = this.editor.getBody();
 
 			this.selection = {
