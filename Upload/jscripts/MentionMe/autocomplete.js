@@ -1297,7 +1297,7 @@ var MentionMe = (function($, m) {
 			this.editor = MyBBEditor;
 			this.rangeHelper = this.editor.getRangeHelper();
 
-			this.$iFrame = $("iframe");
+			this.$iFrame = $("div.sceditor-toolbar").next("iframe");
 			this.$container = this.$iFrame.closest(".sceditor-container").parent();
 			this.$body = this.editor.getBody();
 
