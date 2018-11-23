@@ -4,7 +4,7 @@
  * plugin specific extension
  */
 
-class MentionMeInstaller extends WildcardPluginInstaller010203
+class MentionMeInstaller extends WildcardPluginInstaller010302
 {
 	static public function getInstance()
 	{
