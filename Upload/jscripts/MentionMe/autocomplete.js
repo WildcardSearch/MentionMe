@@ -1473,11 +1473,11 @@ var MentionMe = (function($, m) {
 				return;
 			}
 
+			this.finalized = false;
 			this.id = textareaId;
 			this.editor = CKEDITOR.instances[this.id];
 
-			if (textareaId === "message" ||
-				textareaId === "signature") {
+			if (this.editor.status != "ready") {
 				this.editor.on("instanceReady", $.proxy(this.finalize, this));
 			} else {
 				this.finalize();
@@ -1492,7 +1492,10 @@ var MentionMe = (function($, m) {
 		 * @return void
 		 */
 		function finalize() {
-			this.doFinalize();
+			if (this.editor.mode == "wysiwyg") {
+				this.doFinalize();
+			}
+
 			this.lastState = this.editor.mode;
 			this.editor.on('mode', $.proxy(this.onModeChange, this));
 		}
@@ -1513,6 +1516,8 @@ var MentionMe = (function($, m) {
 
 			// go ahead and build the popup
 			this.popup = new Popup(this);
+
+			this.finalized = true;
 		}
 
 		/**
@@ -1528,9 +1533,11 @@ var MentionMe = (function($, m) {
 
 			this.lastState = e.sender.mode;
 
-			if (e.sender.mode == "source") {
+			if (this.finalized) {
 				this.unbindKeyup();
-			} else {
+			}
+
+			if (e.sender.mode != "source") {
 				this.doFinalize();
 			}
 		}
