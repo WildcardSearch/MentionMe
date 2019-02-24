@@ -37,17 +37,22 @@ if (defined('IN_ADMINCP')) {
  */
 function mentionGetMyAlertsStatus()
 {
-	static $status = false, $checked = false;
+	static $status = null;
 
-	if ($checked === true) {
+	if ($status !== null) {
 		return $status;
 	}
 
 	global $cache;
-	$checked = true;
+
 	$myalerts_plugins = $cache->read('mybbstuff_myalerts_alert_types');
 
-	return $status = ($myalerts_plugins['mention']['code'] == 'mention' && $myalerts_plugins['mention']['enabled'] == 1);
+	if (function_exists('myalerts_info') &&
+		($myalerts_plugins['mention']['code'] == 'mention' && $myalerts_plugins['mention']['enabled'] == 1)) {
+		$status = true;
+	}
+
+	return $status;
 }
 
 /**
