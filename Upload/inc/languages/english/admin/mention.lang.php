@@ -71,6 +71,7 @@ $l['mention_minify_js_desc'] = 'YES (default) to serve client-side scripts minif
 // MyAlerts
 $l['mention_myalerts_acpsetting_description'] = 'Alerts for mentions?';
 $l['mention_myalerts_integration_message'] = 'MyAlerts is detected as installed but has not yet been integrated with MentionMe! Click the link below to integrate.';
+$l['mention_myalerts_integration_message_mylaerts_deactivated'] = 'MyAlerts is detected as installed but is currently deactivated.';
 $l['mention_myalerts_integrate_link'] = 'Integrate With MyAlerts';
 $l['mention_myalerts_successfully_integrated'] = 'MentionMe has been successfully integrated with MyAlerts';
 

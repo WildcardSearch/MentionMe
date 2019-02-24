@@ -47,12 +47,18 @@ EOF;
 					{$lang->mention_myalerts_successfully_integrated}
 				</li>
 EOF;
-			} else {
+			} elseif (function_exists('myalerts_info')) {
 				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">{$lang->mention_myalerts_integration_message}
 				</li>
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/group.png)">
 					<a href="index.php?module=config-plugins&amp;action=mentionme&amp;mode=myalerts_integrate">{$lang->mention_myalerts_integrate_link}</a>
+				</li>
+EOF;
+			} else {
+				$myAlertsReport = <<<EOF
+				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">
+					{$lang->mention_myalerts_integration_message_mylaerts_deactivated}
 				</li>
 EOF;
 			}
