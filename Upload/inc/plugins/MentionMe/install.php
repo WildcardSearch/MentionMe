@@ -47,12 +47,18 @@ EOF;
 					{$lang->mention_myalerts_successfully_integrated}
 				</li>
 EOF;
-			} else {
+			} elseif (function_exists('myalerts_info')) {
 				$myAlertsReport = <<<EOF
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">{$lang->mention_myalerts_integration_message}
 				</li>
 				<li style="list-style-image: url(styles/{$cp_style}/images/icons/group.png)">
 					<a href="index.php?module=config-plugins&amp;action=mentionme&amp;mode=myalerts_integrate">{$lang->mention_myalerts_integrate_link}</a>
+				</li>
+EOF;
+			} else {
+				$myAlertsReport = <<<EOF
+				<li style="list-style-image: url(styles/{$cp_style}/images/icons/warning.png)">
+					{$lang->mention_myalerts_integration_message_mylaerts_deactivated}
 				</li>
 EOF;
 			}
@@ -360,7 +366,7 @@ EOF;
  */
 
 /**
- * integrate with MyAlerts
+ * router for ACP pages
  *
  * @return void
  */
@@ -384,21 +390,24 @@ function mentionMeAdminLoad()
 		admin_redirect('index.php?module=config-plugins');
 	} elseif ($mybb->input['mode'] == 'rebuild_namecache') {
 		require_once MYBB_ROOT.'/inc/functions_task.php';
-		$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
-		if ($db->num_rows($query) == 0) {
-			flash_message($lang->mention_rebuild_name_cache_error, 'error');
-			admin_redirect('index.php?module=config-plugins');
-		}
-
-		$tid = $db->fetch_field($query, 'tid');
-		if (run_task($tid)) {
-			flash_message($lang->mention_rebuild_name_cache_success, 'success');
-		} else {
-			flash_message($lang->mention_rebuild_name_cache_error, 'error');
-		}
-		admin_redirect('index.php?module=config-plugins');
+		mentionMeRebuildNameCache();
 	}
 	exit;
+}
+
+/**
+ * rebuild the name cache when our settings are updated
+ *
+ * @return void
+ */
+$plugins->add_hook('admin_config_settings_change', 'mentionMeAdminConfigSettingsChange');
+function mentionMeAdminConfigSettingsChange()
+{
+    global $mybb;
+
+	if (isset($mybb->input['upsetting']['mention_auto_complete'])) {
+		mentionMeRebuildNameCache(true);
+	}
 }
 
 /*
@@ -430,6 +439,46 @@ function mentionMeMyAlertsIntegrate()
 	$alertType->setCode("mention");
 	$alertType->setEnabled(true);
 	$alertTypeManager->add($alertType);
+}
+
+/**
+ * rebuild the name cache data by running the task directly
+ *
+ * @param  bool true to avoid messages/redirects
+ * @return void
+ */
+function mentionMeRebuildNameCache($silent=false)
+{
+	global $mybb, $db, $lang;
+	if (!$lang->mention) {
+		$lang->load('mention');
+	}
+
+	require_once MYBB_ROOT.'/inc/functions_task.php';
+	$query = $db->simple_select('tasks', 'tid', "file='mentiome_namecache'", array('limit' => '1'));
+	if ($db->num_rows($query) == 0) {
+		if ($silent) {
+			return false;
+		}
+
+		flash_message($lang->mention_rebuild_name_cache_error, 'error');
+		admin_redirect('index.php?module=config-plugins');
+	}
+
+	$tid = $db->fetch_field($query, 'tid');
+	$result = run_task($tid);
+
+	if ($silent) {
+		return $result;
+	}
+
+	if ($result) {
+		flash_message($lang->mention_rebuild_name_cache_success, 'success');
+	} else {
+		flash_message($lang->mention_rebuild_name_cache_error, 'error');
+	}
+
+	admin_redirect('index.php?module=config-plugins');
 }
 
 ?>
