@@ -28,7 +28,7 @@ function mentionMeParseMessage($message)
 	global $mybb;
 
 	// emails addresses cause issues, strip them before matching
-	$emailRegex = "#\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i";
+	$emailRegex = "#\b[^@[\"|'|`]][A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b#i";
 	preg_match_all($emailRegex, $message, $emails, PREG_SET_ORDER);
 	$message = preg_replace($emailRegex, "<mybb-email>\n", $message);
 
