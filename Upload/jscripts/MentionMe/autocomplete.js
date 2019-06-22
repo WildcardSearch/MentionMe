@@ -1299,7 +1299,7 @@ var MentionMe = (function($, m) {
 
 			this.$iFrame = $("div.sceditor-toolbar").next("iframe");
 			this.$container = this.$iFrame.closest(".sceditor-container").parent();
-			this.$body = this.editor.getBody();
+			this.$body = $(this.editor.getBody());
 
 			this.selection = {
 				start: 0,
@@ -1360,7 +1360,7 @@ var MentionMe = (function($, m) {
 			}
 
 			left = pi(coords.left) + containerOffset.left + pi(this.$container.css("paddingLeft").replace("px", "")) + fontSize + 2;
-			top = pi(coords.top + this.$container.find("div.sceditor-toolbar").height()) + containerOffset.top + pi(this.$container.css("paddingTop").replace("px", "")) + 3;
+			top = pi(coords.top + this.$container.find("div.sceditor-toolbar").height()) + containerOffset.top + pi(this.$container.css("paddingTop").replace("px", "")) + 6;
 
 			this.popup.show(left, top);
 		}
