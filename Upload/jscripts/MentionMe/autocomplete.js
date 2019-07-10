@@ -1353,6 +1353,16 @@ var MentionMe = (function($, m) {
 				}),
 				containerOffset = this.$container.offset();
 
+			if (typeof m.customSCEditorContainerOffset !== "undefined") {
+				if (typeof m.customSCEditorContainerOffset.left !== "undefined") {
+					containerOffset.left = pi(m.customSCEditorContainerOffset.left);
+				}
+
+				if (typeof m.customSCEditorContainerOffset.top !== "undefined") {
+					containerOffset.top = pi(m.customSCEditorContainerOffset.top);
+				}
+			}
+
 			fontSize = 7;
 			if (this.$currentNode.closest("div").length &&
 				typeof this.$currentNode.closest("div").css === "function") {
