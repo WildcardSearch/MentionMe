@@ -253,7 +253,7 @@ function mention_uninstall()
 	$db->delete_query('tasks', "file='mentiome_namecache'");
 
 	// undo changes to MyAlerts if installed
-	if ($db->table_exists('alerts')) {
+	if (function_exists('myalerts_info')) {
 		$alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
 
 		if (!$alertTypeManager) {
@@ -423,7 +423,7 @@ function mentionMeMyAlertsIntegrate()
 		$lang->load('mention');
 	}
 
-	if (!function_exists("myalerts_info")) {
+	if (!function_exists('myalerts_info')) {
 		return;
 	}
 
