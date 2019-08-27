@@ -1147,6 +1147,16 @@ var MentionMe = (function($, m) {
 				left = coords.left + 3,
 				top = coords.top - 5;
 
+			if (typeof m.customTextAreaContainerOffset !== "undefined") {
+				if (typeof m.customTextAreaContainerOffset.left !== "undefined") {
+					left = pi(m.customTextAreaContainerOffset.left);
+				}
+
+				if (typeof m.customTextAreaContainerOffset.top !== "undefined") {
+					top = pi(m.customTextAreaContainerOffset.top);
+				}
+			}
+
 			this.popup.show(left, top);
 		}
 
