@@ -37,7 +37,7 @@ function mentionMeParseMessage($message)
 	 *
 	 * quoted
 	 */
-	$message = preg_replace_callback('#@([\'|"|`])(?P<quoted>[^<>&\\\;,\n]+?)\1#u', 'mentionDetect', $message);
+	$message = preg_replace_callback('#@([\'|"|`](?!\s))(?P<quoted>[^<>&\\\;,\n]+?)\1#u', 'mentionDetect', $message);
 
 	/**
 	 * unquoted
