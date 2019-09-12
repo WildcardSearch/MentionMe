@@ -1147,6 +1147,16 @@ var MentionMe = (function($, m) {
 				left = coords.left + 3,
 				top = coords.top - 5;
 
+			if (typeof m.customTextAreaContainerOffset !== "undefined") {
+				if (typeof m.customTextAreaContainerOffset.left !== "undefined") {
+					left = pi(m.customTextAreaContainerOffset.left);
+				}
+
+				if (typeof m.customTextAreaContainerOffset.top !== "undefined") {
+					top = pi(m.customTextAreaContainerOffset.top);
+				}
+			}
+
 			this.popup.show(left, top);
 		}
 
@@ -1352,6 +1362,16 @@ var MentionMe = (function($, m) {
 					iframe: this.$iFrame[0],
 				}),
 				containerOffset = this.$container.offset();
+
+			if (typeof m.customSCEditorContainerOffset !== "undefined") {
+				if (typeof m.customSCEditorContainerOffset.left !== "undefined") {
+					containerOffset.left = pi(m.customSCEditorContainerOffset.left);
+				}
+
+				if (typeof m.customSCEditorContainerOffset.top !== "undefined") {
+					containerOffset.top = pi(m.customSCEditorContainerOffset.top);
+				}
+			}
 
 			fontSize = 7;
 			if (this.$currentNode.closest("div").length &&
