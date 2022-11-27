@@ -128,7 +128,7 @@ function mentionBuild($user)
 		// set up the user name link so that it displays correctly for the display group of the user
 		$username = format_name($username, $user['usergroup'], $user['displaygroup']);
 	}
-	$url = get_profile_link($user['uid']);
+	$url = $mybb->settings['bburl'] . '/' . get_profile_link($user['uid'])
 
 	$target = '';
 	if ($mybb->settings['mention_open_link_in_new_window']) {
