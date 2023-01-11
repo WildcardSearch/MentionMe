@@ -521,7 +521,7 @@ EOF;
 function mentionMeBuildPopup() {
 	global $mybb, $lang, $theme, $templates, $mentionAutocomplete;
 
-	if (!$lang->mention) {
+	if (!isset($lang->mention)) {
 		$lang->load('mention');
 	}
 
@@ -544,7 +544,7 @@ function mentionMeBuildPopup() {
 		maxLength: '{$mybb->settings['maxnamelength']}',
 		maxItems: '{$mybb->settings['mention_max_items']}',
 		minWidth: '{$mybb->settings['mention_min_width']}',
-		tid: '{$mybb->input['tid']}',
+		tid: '{$mybb->get_input('tid')}',
 		fullText: '{$mybb->settings['mention_full_text_search']}',
 		showAvatars: '{$mybb->settings['mention_show_avatars']}',
 		imageDirectory: '{$theme['imgdir']}',
