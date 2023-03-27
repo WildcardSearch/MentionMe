@@ -27,4 +27,7 @@ $l['myalerts_setting_mention'] = 'Receive alert when mentioned in a post?';
 // mention autocomplete
 $l['mention_autocomplete_instructions'] = 'type a user name';
 
+//forum
+$l['mention_autocomplete_loading'] = 'loading';
+
 ?>
